@@ -1,4 +1,4 @@
-from managers.UtilityManager import UtilityManager
+from MDP.managers.UtilityManager import UtilityManager
 
 class CoffeeRobotUtilityManager(UtilityManager):
     """Reports the utility of a state in the Coffee Robot Scenario."""

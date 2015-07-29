@@ -1,5 +1,5 @@
-from graph.State import State
-from managers.Scenario import Scenario
+from MDP.graph.State import State
+from MDP.managers.Scenario import Scenario
 
 def BreadthFirstSearch(goal, initialState, scenario):
     """Searches for the goal state using BFS."""

@@ -1,6 +1,6 @@
-from managers.StateTransitionManager import StateTransitionManager
-from graph.State import State
-from graph.StateDistribution import StateDistribution
+from MDP.managers.StateTransitionManager import StateTransitionManager
+from MDP.graph.State import State
+from MDP.graph.StateDistribution import StateDistribution
 
 class CoffeeRobotTransitionManager(StateTransitionManager):
     """description of class"""
@@ -37,7 +37,7 @@ class CoffeeRobotTransitionManager(StateTransitionManager):
 
         newState['Round'] += 1
 
-        return StateDistribution(newState)
+        return newState #StateDistribution(newState)
 
     def end(self, state):
         """

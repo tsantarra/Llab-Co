@@ -1,4 +1,4 @@
-from managers.ActionManager import ActionManager
+from MDP.managers.ActionManager import ActionManager
 
 class GridActionManager(ActionManager):
     """Manages actions for grid test."""

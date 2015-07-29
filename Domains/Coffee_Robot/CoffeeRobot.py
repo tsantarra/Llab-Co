@@ -1,13 +1,15 @@
-from CoffeeRobotTransitionManager import CoffeeRobotTransitionManager
-from CoffeeRobotActionManager import CoffeeRobotActionManager
-from CoffeeRobotUtilityManager import CoffeeRobotUtilityManager
-from solvers.BreadthFirstSearch import BreadthFirstSearch
-from solvers.MCTS import mcts, MCTSNode
-from solvers.ValueIteration import valueIteration
-from graph.State import State
-from graph.StateDistribution import StateDistribution
-from managers.Scenario import Scenario
+from Domains.Coffee_Robot.CoffeeRobotTransitionManager import CoffeeRobotTransitionManager
+from Domains.Coffee_Robot.CoffeeRobotActionManager import CoffeeRobotActionManager
+from Domains.Coffee_Robot.CoffeeRobotUtilityManager import CoffeeRobotUtilityManager
 
+from MDP.solvers.BreadthFirstSearch import BreadthFirstSearch
+from MDP.solvers.MCTS import mcts, MCTSNode
+from MDP.solvers.ValueIteration import valueIteration
+
+from MDP.graph.State import State
+from MDP.graph.StateDistribution import StateDistribution
+
+from MDP.managers.Scenario import Scenario
 
 def initialize():
     #Initialize managers 
@@ -70,4 +72,6 @@ def coffeeRobotVI(scenario):
 if __name__ == "__main__":
     #Initialize and run scenario
     scenario = initialize()
-    coffeeRobotVI(scenario)
+    #coffeeRobotVI(scenario)
+    #coffeeRobotBFS(scenario)
+    coffeeRobotMCTS(scenario)

@@ -1,4 +1,4 @@
-from graph.State import State
+from MDP.graph.State import State
 from random import uniform
 
 class StateDistribution(dict):

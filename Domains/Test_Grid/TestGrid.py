@@ -1,12 +1,12 @@
-from GridTransitionManager import GridTransitionManager
-from GridActionManager import GridActionManager
-from GridUtilityManager import GridUtilityManager
-from managers.Scenario import Scenario
-from solvers.BreadthFirstSearch import BreadthFirstSearch
-from solvers.MCTS import mcts, MCTSNode
-from solvers.ValueIteration import valueIteration
-from graph.State import State
-from graph.StateDistribution import StateDistribution
+from Domains.Test_Grid.GridTransitionManager import GridTransitionManager
+from Domains.Test_Grid.GridActionManager import GridActionManager
+from Domains.Test_Grid.GridUtilityManager import GridUtilityManager
+from MDP.managers.Scenario import Scenario
+from MDP.solvers.BreadthFirstSearch import BreadthFirstSearch
+from MDP.solvers.MCTS import mcts, MCTSNode
+from MDP.solvers.ValueIteration import valueIteration
+from MDP.graph.State import State
+from MDP.graph.StateDistribution import StateDistribution
 
 def initialize():
     #Initialize managers with scenario constraints (width, height) of grid
@@ -72,10 +72,11 @@ if __name__ == "__main__":
     #Initialize the scenario
     scenario = initialize()
 
+    print('VI Run:')
     GridTestVI(scenario)
 
     #Run tests
-    print('BFS Run:')
+    print('\nBFS Run:')
     GridTestBFS(scenario)
 
     print('\nMCTS Run:')

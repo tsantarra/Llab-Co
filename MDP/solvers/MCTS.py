@@ -1,6 +1,6 @@
-from graph.State import State
-from tree.TreeNode import TreeNode
-from managers.Scenario import Scenario
+from MDP.graph.State import State
+from MDP.tree.TreeNode import TreeNode
+from MDP.managers.Scenario import Scenario
 
 from random import choice
 from math import sqrt, log

@@ -1,4 +1,4 @@
-from managers.UtilityManager import UtilityManager
+from MDP.managers.UtilityManager import UtilityManager
 
 class GridUtilityManager(object):
     """Manages utility for GridTest"""

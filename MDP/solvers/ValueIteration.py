@@ -1,6 +1,6 @@
-from graph.State import State
-from graph.StateDistribution import StateDistribution
-from managers.Scenario import Scenario
+from MDP.graph.State import State
+from MDP.graph.StateDistribution import StateDistribution
+from MDP.managers.Scenario import Scenario
 
 
 def valueIteration(stateDist, scenario, horizon, gamma = 0.9):
