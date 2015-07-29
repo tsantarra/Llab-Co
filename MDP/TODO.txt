@@ -1,0 +1,48 @@
+
+
+BY PRIORITY (ISH)
+
+Make sure everything deals with state distributions, not states
+	BFS
+	MCTS
+	Examples
+
+Tests
+	Profile - test runtimes
+		- For visualization
+	Coffee robot 
+		- needs probabilistic transitions
+	Maze navigation
+
+Solvers
+	Asymmetric Value Iteration?
+
+graph/managers
+	Observation
+	ObservationManager
+	Transitions by probability (and returning such for decision theoretic planning)
+	StateVarConstraint
+
+Visualization
+	
+Tree
+
+Model
+	Plan/PartialPlan
+	Policy/PartialPolicy
+	Action preferences (murky with mdps)
+	Beliefs
+
+Learn
+	TreeFromPolicy
+	FMDP
+		TreeForTransition
+		TreeForUtility
+
+Hierarchical Graph Reduction 
+	Epsilon merging
+	Multi-level graph partitioning
+
+Authoring
+	Managers from specification
+	POMDP file input
