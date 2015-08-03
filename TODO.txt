@@ -3,6 +3,7 @@
 BY PRIORITY (ISH)
 
 Make sure everything deals with state distributions, not states
+	Check domains (in transition managers)
 	BFS
 	MCTS
 	Examples
