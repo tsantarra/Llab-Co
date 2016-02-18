@@ -1,17 +1,13 @@
 __author__ = 'Trevor'
 
-from MDP.graph.AbstractState import AbstractState
-from MDP.managers.StateTransitionManager import StateTransitionManager
+from MDP.graph.State import State
 
 if __name__ == "__main__":
-    s = AbstractState()
-    s[5] = 'hi'
-    print('s', s, sep='\t')
+    a = State(dict(zip([1,2,3,4], 'abcd')))
+    b = State(dict(zip([1,2,3,4], 'abcz')))
+    c = a.feature_intersection(b)
 
-    t = AbstractState()
-    t[5] = 'lo'
-    t[6] = 'new'
-    print('t', t, sep='\t')
 
-    print('union', t.union_state(s), sep='\t')
-    print('intersect t and union(s,t)', t.intersect_state(t.union_state(s)), sep='\t')
+    d = State(dict(zip([1,2], 'ab')))
+
+    print(d in c)

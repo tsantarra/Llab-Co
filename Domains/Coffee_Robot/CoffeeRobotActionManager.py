@@ -6,7 +6,7 @@ class CoffeeRobotActionManager(ActionManager):
     def __init__(self):
         pass
 
-    def getActions(self, state):
+    def get_actions(self, state):
         """Returns legal actions in the state."""
         actions = ['Go','BuyCoffee','DeliverCoffee','GetUmbrella']
 

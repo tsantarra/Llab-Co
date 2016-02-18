@@ -9,32 +9,32 @@ import pstats
 import io
 
 if __name__ == "__main__":
-    #Initialize profiler
+    # Initialize profiler
     profiler = cProfile.Profile()
 
-    #Initialize scenario
+    # Initialize scenario
     scenario = initialize()
 
-    #Run code
+    # Run code
     profiler.enable()
-    #GridTestBFS(scenario)
-    #GridTestMCTS(scenario)
+    # GridTestBFS(scenario)
+    # GridTestMCTS(scenario)
     GridTestVI(scenario)
     profiler.disable()
 
-    #Acquire stats (put into statsString via redirection)
+    # Acquire stats (put into statsString via redirection)
     statsString = io.StringIO()
     sortby = 'time' 
-    #calls, cumulative, file, line, module, name, 
-    #nfl (for name/file/line), pcalls, stdname, time
+    # calls, cumulative, file, line, module, name,
+    # nfl (for name/file/line), pcalls, stdname, time
 
     pstats.Stats(profiler, stream=statsString).strip_dirs().sort_stats(sortby).print_stats()
     
     results = statsString.getvalue()
     results = results.split('\n')
     
-    #Print top time intensive calls
-    for i in range(10+5): #5 header lines
+    # Print top time intensive calls
+    for i in range(10+5): # 5 header lines
         print(results[i])
 
 

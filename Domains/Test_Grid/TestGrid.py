@@ -2,85 +2,80 @@ from Domains.Test_Grid.GridTransitionManager import GridTransitionManager
 from Domains.Test_Grid.GridActionManager import GridActionManager
 from Domains.Test_Grid.GridUtilityManager import GridUtilityManager
 from MDP.managers.Scenario import Scenario
-from MDP.solvers.BreadthFirstSearch import BreadthFirstSearch
-from MDP.solvers.MCTS import mcts, MCTSNode
-from MDP.solvers.ValueIteration import valueIteration
+from MDP.solvers.bfs import breadth_first_search
+from MDP.solvers.mcts import mcts
+from MDP.solvers.vi import value_iteration
 from MDP.graph.State import State
-from MDP.graph.StateDistribution import StateDistribution
 
 def initialize():
-    #Initialize managers with scenario constraints (width, height) of grid
+    # Initialize managers with scenario constraints (width, height) of grid
     gtm = GridTransitionManager(25,25,5,5)
     gam = GridActionManager(25,25)
-    gum = GridUtilityManager(10,10)
+    gum = GridUtilityManager(5,5)
     return Scenario(gtm, gam, gum)
 
 def GridTestBFS(scenario):
-    #Identify goal state
+    # Identify goal state
     goal = State({'x':5, 'y':5})
 
-    #Retrieve initial state.
-    state = State({'x':0, 'y':0, 'Round':0})
+    # Retrieve initial state.
+    state = scenario.initial_state()
     print(state)
 
-    #Plan
-    plan = BreadthFirstSearch(goal, state, scenario)
+    # Plan
+    plan = breadth_first_search(goal, state, scenario)
 
-    #Execute plan
+    # Execute plan
     while plan:
         action = plan.pop(0)
-        state = scenario.transitionState(state, action)
+        state = scenario.transition_state(state, action)
         print(action)
         print(state)
 
 
 def GridTestMCTS(scenario):
-    #Retrieve initial state.
-    state = State({'x':0, 'y':0, 'Round':0})
+    # Retrieve initial state.
+    state = scenario.initial_state()
     print(state)
 
     utility = 0
     node = None
     while not scenario.end(state):
-        #Plan
+        # Plan
         (action, node) = mcts(state, scenario, 1000)
+        print(node.tree_to_string(horizon=2))
 
-        state = scenario.transitionState(state, action)
-        utility += scenario.getUtility(state)
+        state = scenario.transition_state(state, action)
+        utility += scenario.get_utility(state)
 
-        #print(node.TreeToString(3))
         print(action, utility)
         print(state)
 
 
 def GridTestVI(scenario):
-    #Retrieve initial state.
-    state = State({'x':0, 'y':0, 'Round':0})
-    stateDist = StateDistribution(state)
+    # Retrieve initial state.
+    state = scenario.initial_state()
     print(state)
 
-    while not scenario.end(stateDist.collapse()):
-        #Plan
-        action = valueIteration(stateDist, scenario, horizon = 21)
+    while not scenario.end(state):
+        # Plan
+        action = value_iteration(state, scenario, horizon=21)
 
-        stateDist = scenario.transitionState(stateDist.collapse(), action)
+        state = scenario.transition_state(state, action)
 
         print(action)
-        #print(stateDist.collapse())
+        print(state)
 
 if __name__ == "__main__":
-    #Initialize the scenario
+    # Initialize the scenario
     scenario = initialize()
 
+    # Run tests
     print('VI Run:')
     GridTestVI(scenario)
 
-    #Run tests
     print('\nBFS Run:')
     GridTestBFS(scenario)
 
     print('\nMCTS Run:')
     GridTestMCTS(scenario)
-
-
-

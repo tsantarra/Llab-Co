@@ -3,7 +3,7 @@ from MDP.managers.UtilityManager import UtilityManager
 class CoffeeRobotUtilityManager(UtilityManager):
     """Reports the utility of a state in the Coffee Robot Scenario."""
 
-    def getUtility(self, state):
+    def get_utility(self, state):
         """
         Returns the utility of the state.
         """

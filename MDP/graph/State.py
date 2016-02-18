@@ -1,11 +1,17 @@
-import copy
+from collections import OrderedDict
 
-class State(dict):
+class State(OrderedDict):
+    """
+    A state is represented as an assignment of state features, as given by the a dictionary of features (keys) and
+    their values (feature values). Here, states may be partially specified, creating an abstract state description. As
+    such, it is possible to check if a state is contained within another via the __contains__ method ('in').
+    """
+
     def __init__(self, args={}):
         """
         Constructs the dict as normal.
         """
-        dict.__init__(self, args)
+        super(State, self).__init__(args)
         self.hash = None
 
     def __repr__(self):
@@ -17,19 +23,13 @@ class State(dict):
             s += '\n\t' + str(key) + ':\t' + str(val)
         return s
 
-    def __ne__(self, other):
-        """
-        Checks if other state is not equivalent to this state.
-        """
-        return not self.__eq__(other)
-
     def __str__(self):
         """
         Returns a string representing the state.
         """
         return self.__repr__()
 
-    def copy(self):
+    def __copy__(self):
         """
         Returns a copy of the state instance.
         """
@@ -42,3 +42,19 @@ class State(dict):
         if not self.hash:
             self.hash = hash(tuple(self.items()))
         return self.hash
+
+    def __contains__(self, state):
+        """
+        Checks state features in self to see if the given state is a specific instance of self. Keys in
+        self must be a subset of state's keys.
+        """
+        if self.keys() - state.keys():
+            return False
+        else:
+            return all(val == state[key] for key, val in self.items())
+
+    def feature_intersection(self, state):
+        """
+        Returns a new state with features specified only where they are shared between self and state.
+        """
+        return State({key: self[key] for key in (self.keys() & state.keys()) if self[key] == state[key]})

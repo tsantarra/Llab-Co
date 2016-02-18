@@ -6,7 +6,7 @@ class UtilityManager(object):
     __metaclass__ = ABCMeta
     
     @abstractmethod
-    def getUtility(self, state):
+    def get_utility(self, state):
         """
         Returns the utility associated with being in a state.
         """

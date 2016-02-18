@@ -10,7 +10,7 @@ class GridUtilityManager(object):
         self.x = x
         self.y = y
 
-    def getUtility(self, state):
+    def get_utility(self, state):
         """
         Returns utility associated with given state.
         """

@@ -1,6 +1,5 @@
 from MDP.managers.StateTransitionManager import StateTransitionManager
 from MDP.graph.State import State
-from MDP.graph.StateDistribution import StateDistribution
 
 class GridTransitionManager(StateTransitionManager):
     """description of class"""
@@ -11,13 +10,14 @@ class GridTransitionManager(StateTransitionManager):
         self.x = x
         self.y = y
 
-    def initialState(self, collapse=False):
+    def initial_state(self):
         s = State()
         s['x'] = 0
         s['y'] = 0
+        s['Round'] = 0
         return s
 
-    def transition(self, state, action=None, collapse=False):
+    def transition(self, state, action=None, all_outcomes=False):
         s = state.copy()
         
         if action is 'right':
@@ -30,8 +30,11 @@ class GridTransitionManager(StateTransitionManager):
             s['y'] = s['y']-1
 
         s['Round'] += 1
-        s = StateDistribution(s) #returning state distributions now
-        return s
+
+        if not all_outcomes:
+            return s
+        else:
+            return [(s, 1.)] # a list of all possible outcomes and their associated probabilities
 
     def end(self, state):
-        return state['Round']==20 or (state['x'] == self.x and state['y'] == self.y)
+        return state['Round'] == 20 or (state['x'] == self.x and state['y'] == self.y)

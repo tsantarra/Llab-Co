@@ -8,7 +8,7 @@ class GridActionManager(ActionManager):
         self.h = h
         self.w = w
 
-    def getActions(self, state):
+    def get_actions(self, state):
         """Returns legal actions in the state."""
         actions = []
 

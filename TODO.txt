@@ -1,49 +1,51 @@
 
-
 BY PRIORITY (ISH)
 
-Make sure everything deals with state distributions, not states
-	Check domains (in transition managers)
-	BFS
-	MCTS
-	Examples
+    Fewer classes
+        More modules with imported functions that operate on structures (trees), like C
+        Less inheritance
 
-Tests
-	Profile - test runtimes
-		- For visualization
-	Coffee robot 
-		- needs probabilistic transitions
-	Maze navigation
+    MCTS
+        Add support for rollout heuristics
 
-Solvers
-	Asymmetric Value Iteration?
+    Models - for agents
+        Belief distribution
+        Naive frequentist
+        Barrett model?
+        SC build orders or other learning?
 
-graph/managers
-	Observation
-	ObservationManager
-	Transitions by probability (and returning such for decision theoretic planning)
-	StateVarConstraint
+    Plan-space reasoning
+        Find abstraction for MCTS, fh-VI, bfs(?)
+        Expectation over tree
+        Comm evaluation
+        Comm planning
 
-Visualization
-	
-Tree
+    Domains
+        Small - rendezvous
+        Cops and Robbers
+        StarCraft
 
-Model
-	Plan/PartialPlan
-	Policy/PartialPolicy
-	Action preferences (murky with mdps)
-	Beliefs
+    Tests
+        Profile - test runtimes
 
-Learn
-	TreeFromPolicy
-	FMDP
-		TreeForTransition
-		TreeForUtility
+    Documentation
+        Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
+        Can be set by PyCharm in settings, tools, python integrated tools, docstring format
 
-Hierarchical Graph Reduction 
-	Epsilon merging
-	Multi-level graph partitioning
+    Visualization
+        Tree visualizations for MCTS, fh-VI, and BFZ
 
-Authoring
-	Managers from specification
-	POMDP file input
+    Authoring
+        Managers from specification
+        POMDP file input
+
+    Learn
+        TreeFromPolicy
+        FMDP
+            TreeForTransition
+            TreeForUtility
+
+    Hierarchical Graph Reduction
+        Epsilon merging
+        Multi-level graph partitioning
+

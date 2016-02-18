@@ -13,23 +13,29 @@ class Scenario(object):
         self.AM = actionMngr
         self.UM = utilityMngr
 
-    def transitionState(self, state, action=None):
+    def initial_state(self):
+        """
+        Returns the initial state of the scenario.
+        """
+        return self.STM.initial_state()
+
+    def transition_state(self, state, action=None, all_outcomes=False):
         """
         Progresses the state given an action. Returns resulting state.
         """
-        return self.STM.transition(state, action)
+        return self.STM.transition(state, action, all_outcomes)
 
-    def getActions(self, state):
+    def get_actions(self, state):
         """
         Returns the actions available in the given state.
         """
-        return self.AM.getActions(state)
+        return self.AM.get_actions(state)
 
-    def getUtility(self, state):
+    def get_utility(self, state):
         """
         Returns the utility associated with the given state.
         """
-        return self.UM.getUtility(state)
+        return self.UM.get_utility(state)
 
     def end(self, state):
         """

@@ -4,17 +4,17 @@ class StateTransitionManager(object):
     __metaclass__ = ABCMeta
     
     @abstractmethod
-    def initialState( self, collapse = False ):
+    def initial_state(self):
         """
         Return the initial state.
         """
         pass
 
     @abstractmethod
-    def transition( self, state, action = None, collapse = False ):
+    def transition( self, state, action = None, all_outcomes = False ):
         """
-        Given an action in state, return the resulting state or distribution
-        of states. 
+        Given an action in state, return the resulting state or
+        a list of all possible outcomes and their associated probabilities
         """
         pass
 

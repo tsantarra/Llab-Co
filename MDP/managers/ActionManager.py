@@ -5,7 +5,7 @@ class ActionManager(object):
     __metaclass__ = ABCMeta
     
     @abstractmethod
-    def getActions(self, state):
+    def get_actions(self, state):
         """
         Returns legal actions given the state.
         """
