@@ -2,6 +2,7 @@
 BY PRIORITY (ISH)
 
     Fewer classes
+        Rule of thumb: if class has only one or two functions, don't use a class. See almost everything in managers.
         More modules with imported functions that operate on structures (trees), like C
         Less inheritance
 

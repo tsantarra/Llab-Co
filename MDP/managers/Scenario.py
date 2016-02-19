@@ -2,7 +2,7 @@ from MDP.managers.ActionManager import ActionManager
 from MDP.managers.StateTransitionManager import StateTransitionManager
 from MDP.managers.UtilityManager import UtilityManager
 
-class Scenario(object):
+class Scenario:
     """Organizes the operations of a scenario through manager."""
 
     def __init__(self, stateTransMngr, actionMngr, utilityMngr):

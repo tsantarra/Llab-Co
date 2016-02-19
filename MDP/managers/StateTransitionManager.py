@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-class StateTransitionManager(object):
+class StateTransitionManager:
     __metaclass__ = ABCMeta
     
     @abstractmethod

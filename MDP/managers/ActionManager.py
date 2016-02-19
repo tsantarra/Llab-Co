@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-class ActionManager(object):
+class ActionManager:
     """Manages actions. Primarily used for returning available actions given a state."""
     __metaclass__ = ABCMeta
     

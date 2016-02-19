@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class UtilityManager(object):
+class UtilityManager:
     """Manages the utility function of a scenario."""
     __metaclass__ = ABCMeta
     
