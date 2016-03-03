@@ -14,11 +14,11 @@ def value_iteration(state, scenario, horizon, gamma = 0.9):
     V = {}
 
     action_values = {}
-    for action in scenario.get_actions(state):
+    for action in scenario.actions(state):
         if action not in action_values:
             action_values[action] = 0
 
-        for resultingState, resultingStateProb in scenario.transition_state(state, action, all_outcomes=True):
+        for resultingState, resultingStateProb in scenario.transition(state, action).items():
             if (horizon-1, resultingState) not in V:
                 value(resultingState, scenario, horizon-1, V)
 
@@ -30,16 +30,16 @@ def value_iteration(state, scenario, horizon, gamma = 0.9):
 
 def value(state, scenario, horizon, V, gamma = 0.9):
     # (horizon, state) is not in V; make it
-    V[(horizon, state)] = scenario.get_utility(state)
+    V[(horizon, state)] = scenario.utility(state)
 
     if horizon == 0:
         return V[(horizon, state)]
 
     # find max action; add expected utility
     action_values = {}
-    for action in scenario.get_actions(state):
+    for action in scenario.actions(state):
         action_values[action] = 0
-        for resultingState, stateProb in scenario.transition_state(state, action, all_outcomes=True):
+        for resultingState, stateProb in scenario.transition(state, action).items():
             if (horizon-1, resultingState) not in V:
                 V[(horizon-1, resultingState)] = value(resultingState, scenario, horizon-1, V)
 

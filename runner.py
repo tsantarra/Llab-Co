@@ -1,6 +1,6 @@
 __author__ = 'Trevor'
 
-from MDP.graph.State import State
+from MDP.State import State
 
 if __name__ == "__main__":
     a = State(dict(zip([1,2,3,4], 'abcd')))

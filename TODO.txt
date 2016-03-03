@@ -9,12 +9,6 @@ BY PRIORITY (ISH)
     MCTS
         Add support for rollout heuristics
 
-    Models - for agents
-        Belief distribution
-        Naive frequentist
-        Barrett model?
-        SC build orders or other learning?
-
     Plan-space reasoning
         Find abstraction for MCTS, fh-VI, bfs(?)
         Expectation over tree
@@ -22,9 +16,15 @@ BY PRIORITY (ISH)
         Comm planning
 
     Domains
-        Small - rendezvous
+        Small - rendezvous?
         Cops and Robbers
         StarCraft
+
+    Models - for agents
+        Belief distribution
+        Naive frequentist
+        Barrett model?
+        SC build orders or other learning?
 
     Tests
         Profile - test runtimes
@@ -33,8 +33,10 @@ BY PRIORITY (ISH)
         Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
         Can be set by PyCharm in settings, tools, python integrated tools, docstring format
 
+
+Nice to have, but completely beyond the scope of the current project.
     Visualization
-        Tree visualizations for MCTS, fh-VI, and BFZ
+        Tree visualizations for MCTS, fh-VI, and BFS
 
     Authoring
         Managers from specification

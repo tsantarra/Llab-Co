@@ -1,7 +1,4 @@
-from MDP.graph.State import State
-
-
-def breadth_first_search(goal, initial_state, scenario):
+def breadth_first_search(initial_state, scenario):
     """
     Searches for the goal state using BFS.
 
@@ -31,13 +28,13 @@ def breadth_first_search(goal, initial_state, scenario):
 
         # If goal reached, return plan. Here, goal may only specify certain features, so we check if
         # current_state is covered by goal's target feature values.
-        if current_state in goal:
+        if scenario.end(current_state):
             return plan
 
         #  Expand state by one step. Add resulting state/plan pairs to queue.
-        for action in scenario.get_actions(current_state):
+        for action in scenario.actions(current_state):
             # Get new state after action
-            new_state = scenario.transition_state(current_state, action)
+            new_state = scenario.transition(current_state, action).sample()
 
             # Convert state to hashable representation. Check if search has already covered said state.
             state_rep = tuple(new_state.items())

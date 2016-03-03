@@ -1,18 +1,15 @@
-from MDP.graph.State import State
 from random import uniform
 
 
-class StateDistribution(dict):
-    """A distribution of possible states and their associated probabilities."""
+class Distribution(dict):
+    """A distribution of items and their associated probabilities."""
 
     def __init__(self, args=None):
         """
         Initializes state distribution from list or given distributions.
         """
-        if type(args) is State:
-            dict.__init__(self, {args:1.})
-        elif type(args) is list:
-            dict.__init__(self, {state: 1./len(args) for state in args})
+        if type(args) is list:
+            dict.__init__(self, {item: prob for item, prob in args})
         else:
             dict.__init__(self, args)
 
@@ -24,8 +21,8 @@ class StateDistribution(dict):
 
         assert total > 0, "State distribution probability total = 0."
 
-        for state in self.keys():
-            self[state] /= total
+        for item in self.keys():
+            self[item] /= total
 
     def sample(self):
         """
@@ -35,10 +32,10 @@ class StateDistribution(dict):
         cumulative = 0
 
         # Accumulate probability until target is reached, returning state.
-        for state, prob in self.items():
-            cumulative += prob
+        for item, probability in self.items():
+            cumulative += probability
             if cumulative > target:
-                return state
+                return item
 
         # Small rounding errors may cause probability to not reach target for last state.
-        return self.keys()[-1]
+        return item

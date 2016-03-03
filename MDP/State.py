@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+
 class State(OrderedDict):
     """
     A state is represented as an assignment of state features, as given by the a dictionary of features (keys) and

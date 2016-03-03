@@ -1,7 +1,7 @@
-from MDP.tree.TreeNode import TreeNode
-
-from random import choice
 from math import sqrt, log
+from random import choice
+
+from TreeNode import TreeNode
 
 
 def traverse_nodes(node, scenario):
@@ -12,8 +12,8 @@ def traverse_nodes(node, scenario):
     while node.untried_actions == [] and len(node.children) != 0 and not scenario.end(node.state):
         # Get UCT action. Progress game state.
         action = node.uct()
-        new_state = scenario.transition_state(node.state.copy(), action)
-        utility += scenario.get_utility(new_state)
+        new_state = scenario.transition(node.state.copy(), action).sample()
+        utility += scenario.utility(new_state)
 
         # Determine which node to traverse to next. Use double progressive widening due to stochastic robber behavior.
         next_node = None
@@ -45,8 +45,8 @@ def expand_leaf(node, scenario):
     if node.untried_actions != [] and not scenario.end(node.state) and node.visits >= 1:  
         # Randomly select move. Progress game state.
         action = choice(node.untried_actions)
-        new_state = scenario.transition_state(node.state.copy(), action)
-        utility = scenario.get_utility(new_state)
+        new_state = scenario.transition(node.state.copy(), action).sample()
+        utility = scenario.utility(new_state)
             
         # Add new node to tree.
         node = node.add_child(new_state, action, scenario)
@@ -61,9 +61,9 @@ def rollout(node, scenario):
     state = node.state.copy()
 
     while not scenario.end(state):
-        action = choice(scenario.get_actions(state))
-        state = scenario.transition_state(state, action)
-        utility += scenario.get_utility(state)
+        action = choice(scenario.actions(state))
+        state = scenario.transition(state, action).sample()
+        utility += scenario.utility(state)
 
     return utility
 
@@ -83,7 +83,7 @@ def mcts(state, scenario, iterations, root_node=None):
     """
     # If a rootNode is not specified, initialize a new one.
     if not root_node:
-        root_node = MCTSNode(state, action_list=scenario.get_actions(state), is_root=True)
+        root_node = MCTSNode(state, action_list=scenario.actions(state), is_root=True)
     passes = iterations - root_node.visits
 
     for step in range(passes):
@@ -157,7 +157,7 @@ class MCTSNode(TreeNode):
         Remove action from untried_actions and add a new child node for this move.
         Return the added child node.
         """
-        node = MCTSNode(state, action, scenario.get_actions(state), parent = self)
+        node = MCTSNode(state, action, scenario.actions(state), parent = self)
         if action in self.untried_actions:
             self.untried_actions.remove(action)
         if action in self.children:
