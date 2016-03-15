@@ -1,33 +1,37 @@
 
 BY PRIORITY (ISH)
 
-    Fewer classes
-        Rule of thumb: if class has only one or two functions, don't use a class. See almost everything in managers.
-        More modules with imported functions that operate on structures (trees), like C
-        Less inheritance
+    The difference between an actual scenario with perfect knowledge and the one with modeled agents
+        Create multiple scenarios differing by transition function.
+            True function: transition(state, action, agents)
+            Passed to Scenario: partial(transition, agents=agents)
+        Agent keeps a distribution over scenarios.
+        But planning becomes troublesome, as solvers take in a single scenario.
+
+        DUH. YOU NEED TO WRITE POMDP SOLVERS.
+
+    POMDP solvers
+        MCTS
+        VI      -> mostly just work on state distributions rather than states, oh, and update future beliefs....
 
     MCTS
         Add support for rollout heuristics
-
-    Plan-space reasoning
-        Find abstraction for MCTS, fh-VI, bfs(?)
-        Expectation over tree
-        Comm evaluation
-        Comm planning
 
     Domains
         Small - rendezvous?
         Cops and Robbers
         StarCraft
 
+    Plan-space reasoning
+        Expectation over tree
+        Comm evaluation
+        Comm planning
+
     Models - for agents
         Belief distribution
         Naive frequentist
         Barrett model?
         SC build orders or other learning?
-
-    Tests
-        Profile - test runtimes
 
     Documentation
         Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
