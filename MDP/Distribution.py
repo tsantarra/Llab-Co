@@ -11,8 +11,10 @@ class Distribution(OrderedDict):
         """
         if type(args) is list:
             dict.__init__(self, {item: prob for item, prob in args})
+        elif args:
+            super(Distribution, self).__init__(args)
         else:
-            dict.__init__(self, args)
+            super(Distribution, self).__init__()
 
     def expectation(self, values):
         """

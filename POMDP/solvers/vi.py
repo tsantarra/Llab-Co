@@ -19,26 +19,6 @@ def value_iteration(belief_state, scenario, horizon, gamma=1.0):
     """
     V = {}
 
-    action_values = {}
-    for state, state_prob in belief_state.items():
-        for action in scenario.actions(state):
-            # Set initial action value
-            if action not in action_values:
-                action_values[action] = 0
-
-            for resulting_state, resulting_state_prob in scenario.transition(state, action).items():
-                if (horizon - 1, resulting_state) not in V:
-                    value(resulting_state, scenario, horizon - 1, V, gamma)
-
-                # Add to the expectation over utility for the action
-                action_values[action] += state_prob * resulting_state_prob * V[(horizon - 1, resulting_state)]
-
-    # change such that ties are broken randomly
-    return max(action_values.items(), key=lambda x: x[1])[0]
-
-
-def value(belief_state, scenario, horizon, V, gamma=1.0):
-    # (horizon, state) is not in V; make it
     utility_dist = {state: scenario.utility(state) for state in belief_state}
     V[(horizon, belief_state)] = belief_state.expectation(utility_dist)  # expectation over states now!
 
@@ -46,7 +26,7 @@ def value(belief_state, scenario, horizon, V, gamma=1.0):
         return V[(horizon, belief_state)]
 
     resulting_state_distributions = defaultdict(Distribution)
-    actions = scenario.actions(belief_state.keys()[0])  # assume available actions are identical across potential states
+    actions = scenario.actions(list(belief_state.keys())[0])  # assume available actions are identical across potential states
 
     # Step 1: Consider resulting state distributions for each action.
     for action in actions:
@@ -59,13 +39,10 @@ def value(belief_state, scenario, horizon, V, gamma=1.0):
     #           - Each action/observation pair results in a new belief state.
     #           - From observation probabilities, can iterate on the value of the potential action.
     for action, state_dist in resulting_state_distributions.items():
-
         # Collect observation probs
-        observation_probs = {state: scenario.observations(state) for state in state_dist}  # state -> obs probs
-
-        possible_observations = set(key for dist in observation_probs for key in dist)
-
-        obs_probs_distributions = {obs: {state: dist[obs] for state, dist in observation_probs} for obs in
+        observation_probs = {state: scenario.observations(state, action) for state in state_dist}  # state -> obs probs
+        possible_observations = set(key for dist in observation_probs.values() for key in dist)
+        obs_probs_distributions = {obs: {state: dist[obs] for state, dist in observation_probs.items()} for obs in
                                    possible_observations}  # obs -> state probs
 
         # For each observation, construct new belief state, iterate
@@ -79,5 +56,48 @@ def value(belief_state, scenario, horizon, V, gamma=1.0):
 
     # find max action, add its value to V[(horizon, state)]
     max_action = max(action_values.items(), key=lambda x: x[1])  # tuple: (action, value)
+    V[(horizon, belief_state)] += gamma * max_action[1]  # add to immediate reward (at beginning of call)
+    return max_action[0]
+
+
+def value(belief_state, scenario, horizon, V, gamma=1.0):
+    # (horizon, state) is not in V; make it
+    utility_dist = {state: scenario.utility(state) for state in belief_state}
+    V[(horizon, belief_state)] = belief_state.expectation(utility_dist)  # expectation over states now!
+
+    if horizon == 0:
+        return V[(horizon, belief_state)]
+
+    resulting_state_distributions = defaultdict(Distribution)
+    actions = scenario.actions(list(belief_state.keys())[0])  # assume available actions are identical across potential states
+
+    # Step 1: Consider resulting state distributions for each action.
+    for action in actions:
+        for state, state_prob in belief_state.items():
+            for resulting_state, resulting_state_prob in scenario.transition(state, action).items():
+                resulting_state_distributions[action][resulting_state] += state_prob * resulting_state_prob
+
+    action_values = defaultdict(float)
+    # Step 2: Update resulting state distributions by considering how each observation would affect the belief state.
+    #           - Each action/observation pair results in a new belief state.
+    #           - From observation probabilities, can iterate on the value of the potential action.
+    for action, state_dist in resulting_state_distributions.items():
+        # Collect observation probs
+        observation_probs = {state: scenario.observations(state, action) for state in state_dist}  # state -> obs probs
+        possible_observations = set(key for dist in observation_probs.values() for key in dist)
+        obs_probs_distributions = {obs: {state: dist[obs] for state, dist in observation_probs.items()} for obs in
+                                   possible_observations}  # obs -> state probs
+
+        # For each observation, construct new belief state, iterate
+        for observation, state_probs_of_observation in obs_probs_distributions.items():
+            new_belief_state = state_dist.conditional_update(state_probs_of_observation)
+            if (horizon - 1, new_belief_state) not in V:
+                V[(horizon - 1, new_belief_state)] = value(new_belief_state, scenario, horizon - 1, V, gamma)
+
+            prob_of_obs = state_dist.expectation(state_probs_of_observation)
+            action_values[action] += prob_of_obs * V[(horizon - 1, new_belief_state)]
+
+    # find max action, add its value to V[(horizon, state)]
+    max_action = max(action_values.items(), key=lambda x: x[1], default=('None',0))  # tuple: (action, value)
     V[(horizon, belief_state)] += gamma * max_action[1]  # add to immediate reward (at beginning of call)
     return V[(horizon, belief_state)]
