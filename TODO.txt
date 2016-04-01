@@ -11,10 +11,11 @@ BY PRIORITY (ISH)
         DUH. YOU NEED TO WRITE POMDP SOLVERS.
 
     POMDP solvers
-        MCTS
+        THTS -> get MDP version implemented first
         VI      -> mostly just work on state distributions rather than states, oh, and update future beliefs....
 
     MCTS
+        Implement THTS as favored version
         Add support for rollout heuristics
 
     Domains
