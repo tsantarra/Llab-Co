@@ -1,61 +1,55 @@
+"""
+    Rather than implement normal UCT, we take elements from THTS as we are working with MDPs.
+
+    Paper: Trial-based Heuristic Tree Search for Finite Horizon MDPs
+    Link: http://www2.informatik.uni-freiburg.de/~ki/papers/keller-helmert-icaps2013.pdf
+
+    Differences:
+        - Partial Bellman backups. V(n) = R(n) + (sum(P(c|n) * V(c)) / (sum(P(c|n))
+          where c are explored children (i.e. denominator may not equal 1)
+        - Value is no longer average over children but maximum choice, reflecting policy choices.
+        - Solve label? Conditions: goal state OR all children are solved.
+            + if so, never choose solved node
+        - Cut off trial at expansion; do not simulate remainder? -> only if admissible heuristic
+"""
+
 from math import sqrt, log
 from random import choice
 
 from MDP.solvers.tree.TreeNode import TreeNode
+from MDP.Distribution import Distribution
 
 
 def traverse_nodes(node, scenario):
     """
     UCT down to leaf node.
     """
-    utility = 0
     while node.untried_actions == [] and len(node.children) != 0 and not scenario.end(node.state):
         # Get UCT action. Progress game state.
-        action = node.uct()
-        new_state = scenario.transition(node.state.copy(), action).sample()
-        utility += scenario.utility(new_state)
+        node = node.uct()
 
-        # Determine which node to traverse to next. Use double progressive widening due to stochastic robber behavior.
-        next_node = None
-        if action in node.children:
-            # If the action has been explored before, look for a matching childNode.
-            for childNode in node.children[action]:
-                if new_state == childNode.state:
-                    next_node = childNode
-
-        # If nextNode is still None, the new state is an undiscovered state; 
-        # add new leaf (childNode).
-        if next_node is None:
-            print('traverse new state')
-            next_node = node.add_child(new_state, action, scenario)
-
-        # Progress to next node.
-        node = next_node
-    return utility, node
+    return node
 
 
 def expand_leaf(node, scenario):
     """
     Expands a new node from current leaf node.
     """
-    utility = 0
 
     # If conditions are met, add a leaf node.
-    # Note: last condition covers indirectly adding a leaf through traverseNodes
     if node.untried_actions != [] and not scenario.end(node.state) and node.visits >= 1:
         # Randomly select move. Progress game state.
         action = choice(node.untried_actions)
-        new_state = scenario.transition(node.state.copy(), action).sample()
-        utility = scenario.utility(new_state)
 
-        # Add new node to tree.
-        node = node.add_child(new_state, action, scenario)
-    return utility, node
+        # Add new nodes to tree.
+        node.add_child(node.state, action, scenario)
+        node = node.children[action].sample()
+    return node
 
 
-def rollout(node, scenario):
+def heuristic(node, scenario):
     """
-    Plays remainder of game by minimizing manhattan distance.
+    Plays remainder of game randomly, accruing utility.
     """
     utility = 0
     state = node.state.copy()
@@ -89,18 +83,15 @@ def mcts(state, scenario, iterations, root_node=None):
     for step in range(passes):
         # Start at root
         node = root_node
-        utility = 0
 
         # UCT through existing nodes.
-        (value, node) = traverse_nodes(node, scenario)
-        utility += value
+        node = traverse_nodes(node, scenario)
 
         # Expand a new node from leaf.
-        (value, node) = expand_leaf(node, scenario)
-        utility += value
+        node = expand_leaf(node, scenario)
 
         # Simulate rest of game randomly.
-        utility += rollout(node, scenario)
+        utility = heuristic(node, scenario)
 
         # Backpropagate score.
         backpropagate(node, utility)
@@ -120,6 +111,7 @@ class MCTSNode(TreeNode):
         super().__init__(parent, children=None)
         if action_list is None:
             action_list = []
+
         self.state = state  # Current game state (clone of game instance).
         self.action = action  # The move that got us to this node - "None" for the root node.
         self.untried_actions = action_list  # Yet unexplored actions
@@ -127,7 +119,7 @@ class MCTSNode(TreeNode):
         self.is_root = is_root  # Is this node the root node of the tree?
 
         self.children = {}  # Action: childNode dictionary to keep links to children
-        self.value = 0.0  # Average score of all paths through this node.
+        self.value = 0.0  # Average score of all paths through this node. TODO Bellman backup/DP approach
         self.visits = 0  # Number of times this node has been visited.
 
     def uct(self, explore_factor=1):
@@ -136,49 +128,41 @@ class MCTSNode(TreeNode):
         lambda c: c.wins/c.visits + UCTK * sqrt(2*log(self.visits)/c.visits to vary the amount of
         exploration versus exploitation.
         """
-        move_reward_map = {}
+        action_values = {}
+        action_counts = {}
+        for action in self.children:
+            action_values[action] = sum(c.value * self.children[action][c] for c in self.children[action])
+            action_values[action] /= sum(self.children[action].values())
+            action_counts[action] = sum(c.visits for c in self.children[action])
 
-        for child in [childNode for action, result_children in self.children.items() for childNode in result_children]:
-            if child.action in move_reward_map:
-                prev_visits = move_reward_map[child.action][1]
-                new_value = (prev_visits * move_reward_map[child.action][0] + child.visits * child.value) / (
-                    prev_visits + child.visits)
-                move_reward_map[child.action] = [new_value, prev_visits + child.visits]
-            else:
-                move_reward_map[child.action] = [child.value, child.visits]
+        best_action = max(action_values, lambda a: action_values[a]
+                                                   + explore_factor * sqrt(2 * log(self.visits)/action_counts[a]))
+        best_val = action_values[best_action]
+        tied_actions = [a for a in action_values if action_values[a] == best_val]
 
-        # Changed to max from sorted.
-        best_move = max(move_reward_map, key=lambda c: (
-            move_reward_map[c][0] + explore_factor * sqrt(2 * log(self.visits) / move_reward_map[c][1])))
-        best_val = move_reward_map[best_move][0]
-
-        ties = [i for i in move_reward_map.keys() if move_reward_map[i][0] == best_val]
-
-        move = choice(ties)
-
-        return move
+        return self.children[choice(tied_actions)].sample()
 
     def add_child(self, state, action, scenario):
         """
-        Remove action from untried_actions and add a new child node for this move.
-        Return the added child node.
+        Remove action from untried_actions and add a new child nodes for possible transitions.
         """
-        node = MCTSNode(state, action, scenario.actions(state), parent=self)
         if action in self.untried_actions:
             self.untried_actions.remove(action)
-        if action in self.children:
-            self.children[action] += [node]
-        else:
-            self.children[action] = [node]
 
-        return node
+        transitions = scenario.transition(state, action)
+        new_children = Distribution({MCTSNode(new_state, action, scenario.actions(new_state), parent=self): prob
+                                     for new_state, prob in transitions.items()})
+
+        self.children[action] = new_children
 
     def update(self, utility):
         """
         Update this node - one additional visit and result additional wins.
         """
         self.visits += 1
-        self.value = (self.value * (self.visits - 1) + utility) / self.visits
+        # TODO
+        # also, need to figure out where and how utility is stored. In the node? In the backup ref? What's kept here?
+        ####self.value = (self.value * (self.visits - 1) + utility) / self.visits # TODO CONVERT TO POLICY CALC
 
     def __repr__(self):
         """

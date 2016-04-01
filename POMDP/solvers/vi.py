@@ -98,6 +98,6 @@ def value(belief_state, scenario, horizon, V, gamma=1.0):
             action_values[action] += prob_of_obs * V[(horizon - 1, new_belief_state)]
 
     # find max action, add its value to V[(horizon, state)]
-    max_action = max(action_values.items(), key=lambda x: x[1], default=('None',0))  # tuple: (action, value)
+    max_action = max(action_values.items(), key=lambda x: x[1], default=('None', 0))  # tuple: (action, value)
     V[(horizon, belief_state)] += gamma * max_action[1]  # add to immediate reward (at beginning of call)
     return V[(horizon, belief_state)]

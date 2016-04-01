@@ -34,7 +34,8 @@ def actions(state):
     """Returns legal actions in the state."""
     if state['Player'] == 'Middle':
         return ['Listen', 'Go left', 'Go right']
-    else: return []
+    else:
+        return []
 
 
 def observations(state, action):

@@ -1,7 +1,7 @@
 from math import sqrt, log
 from random import choice
 
-from TreeNode import TreeNode
+from POMDP.solvers.tree.TreeNode import TreeNode
 
 
 def traverse_nodes(node, scenario):
