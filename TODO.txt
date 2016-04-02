@@ -1,12 +1,21 @@
 
 BY PRIORITY (ISH)
 
+    The difference between an actual scenario with perfect knowledge and the one with modeled agents
+        Create multiple scenarios differing by transition function.
+            True function: transition(state, action, agents)
+            Passed to Scenario: partial(transition, agents=agents)
+        Agent keeps a distribution over scenarios.
+        But planning becomes troublesome, as solvers take in a single scenario.
+
+        DUH. YOU NEED TO WRITE POMDP SOLVERS.
+
     POMDP solvers
-        MCTS
+        THTS -> get MDP version implemented first
         DONE VI      -> mostly just work on state distributions rather than states, oh, and update future beliefs....
 
     MCTS
-        Adjust traversal to save simulation time.
+        Implement THTS as favored version
             Node should keep:
                 transition probs
                 distributions to child nodes via actions?

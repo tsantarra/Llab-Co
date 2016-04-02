@@ -3,7 +3,7 @@
 class TreeNode(object):
     """Represents a node in a tree."""
 
-    def __init__(self, parent = None, children = None):
+    def __init__(self, parent=None, children=None):
         """
         Initialize node with parent and child variables.
         """
