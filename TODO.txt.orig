@@ -1,0 +1,62 @@
+
+BY PRIORITY (ISH)
+
+    POMDP solvers
+<<<<<<< HEAD
+        MCTS
+        DONE VI      -> mostly just work on state distributions rather than states, oh, and update future beliefs....
+
+    MCTS
+        Adjust traversal to save simulation time.
+            Node should keep:
+                transition probs
+                distributions to child nodes via actions?
+=======
+        THTS -> get MDP version implemented first
+        VI      -> mostly just work on state distributions rather than states, oh, and update future beliefs....
+
+    MCTS
+        Implement THTS as favored version
+>>>>>>> 054a371121c505c3be032e29abcc838a699e2aa9
+        Add support for rollout heuristics
+
+    Domains
+        Small - rendezvous?
+        Cops and Robbers
+        DONE - Tiger
+        StarCraft
+
+    Plan-space reasoning
+        Expectation over tree
+        Comm evaluation
+        Comm planning
+
+    Models - for agents
+        Belief distribution
+        Naive frequentist
+        Barrett model?
+        SC build orders or other learning?
+
+    Documentation
+        Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
+        Can be set by PyCharm in settings, tools, python integrated tools, docstring format
+
+
+Nice to have, but completely beyond the scope of the current project.
+    Visualization
+        Tree visualizations for MCTS, fh-VI, and BFS
+
+    Authoring
+        Managers from specification
+        POMDP file input
+
+    Learn
+        TreeFromPolicy
+        FMDP
+            TreeForTransition
+            TreeForUtility
+
+    Hierarchical Graph Reduction
+        Epsilon merging
+        Multi-level graph partitioning
+
