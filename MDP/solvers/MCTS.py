@@ -1,8 +1,6 @@
 from math import sqrt, log
 from random import choice
 
-from MDP.solvers.tree.TreeNode import TreeNode
-
 
 def traverse_nodes(node, scenario):
     """
@@ -108,7 +106,7 @@ def mcts(state, scenario, iterations, root_node=None):
     return root_node.uct(), root_node
 
 
-class MCTSNode(TreeNode):
+class MCTSNode:
     """
     A node in the game tree. 
     """
@@ -117,7 +115,6 @@ class MCTSNode(TreeNode):
         """
         Initializes tree node with relevant information.
         """
-        super().__init__(parent, children=None)
         if action_list is None:
             action_list = []
         self.state = state  # Current game state (clone of game instance).

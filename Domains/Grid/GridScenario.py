@@ -5,7 +5,7 @@ from MDP.Scenario import Scenario
 from MDP.State import State
 
 GridParams = namedtuple('GridParams', ['x', 'y', 'w', 'h', 'rounds'])
-params = GridParams(5, 5, 10, 10, 20)
+params = GridParams(5, 5, 10, 10, 11)
 
 
 def initial_state():
@@ -49,12 +49,12 @@ def end(state):
     return state['Round'] == params.rounds or (state['x'] == params.x and state['y'] == params.y)
 
 
-def utility(state):
+def utility(state, action=None):
     """
     Returns utility associated with given state.
     """
-    return int(state['x'] == params.x and state['y'] == params.y)
+    return int(state['x'] == params.x and state['y'] == params.y)* 0.9**(state['Round'])
 
 
 grid_scenario = Scenario(initial_state=initial_state, actions=actions,
-                        transition=transition, utility=utility, end=end)
+                         transition=transition, utility=utility, end=end)

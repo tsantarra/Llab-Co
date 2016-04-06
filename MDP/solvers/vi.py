@@ -28,9 +28,9 @@ def value_iteration(state, scenario, horizon, gamma=1.0):
 
 def value(state, scenario, horizon, V, gamma=1.0):
     # (horizon, state) is not in V; make it
-    V[(horizon, state)] = scenario.utility(state)
+    V[(horizon, state)] = scenario.utility(state, None)
 
-    if horizon == 0:
+    if horizon == 0 or scenario.end(state):
         return V[(horizon, state)]
 
     # find max action; add expected utility
@@ -44,6 +44,6 @@ def value(state, scenario, horizon, V, gamma=1.0):
 
     # find max action, add its value to V[(horizon, state)]
     # this is where to add in action probabilities to get expectation
-    max_action = max(action_values.items(), key= lambda x: x[1])
+    max_action = max(action_values.items(), key=lambda x: x[1])
     V[(horizon, state)] += gamma * max_action[1]
     return V[(horizon, state)]

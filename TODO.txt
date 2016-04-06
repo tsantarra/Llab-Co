@@ -1,34 +1,24 @@
 
 BY PRIORITY (ISH)
 
-    The difference between an actual scenario with perfect knowledge and the one with modeled agents
-        Create multiple scenarios differing by transition function.
-            True function: transition(state, action, agents)
-            Passed to Scenario: partial(transition, agents=agents)
-        Agent keeps a distribution over scenarios.
-        But planning becomes troublesome, as solvers take in a single scenario.
+    Restructuring
+        Agent's perspective
+            - heuristic
+            - backup function
+            - partial observability
 
-        DUH. YOU NEED TO WRITE POMDP SOLVERS.
-
-    POMDP solvers
-        THTS -> get MDP version implemented first
-        DONE VI      -> mostly just work on state distributions rather than states, oh, and update future beliefs....
-
-    MCTS
-        Implement THTS as favored version
-            Node should keep:
-                transition probs
-                distributions to child nodes via actions?
-        Add support for rollout heuristics
+    POMDP wrapping into MDPs
+        Successful, however
+            - No connection to "actual" state, just sampled a possible belief state
+            - No recording of observations
+            - Not yet clear on how to plug in multigent model; may just have to be an interesting exercise.
 
     Domains
         Small - rendezvous?
         Cops and Robbers
-        DONE - Tiger
         StarCraft
 
     Plan-space reasoning
-        Expectation over tree
         Comm evaluation
         Comm planning
 
@@ -44,18 +34,9 @@ BY PRIORITY (ISH)
 
 
 Nice to have, but completely beyond the scope of the current project.
-    Visualization
-        Tree visualizations for MCTS, fh-VI, and BFS
+    Tree Visualizations
 
-    Authoring
-        Managers from specification
-        POMDP file input
-
-    Learn
-        TreeFromPolicy
-        FMDP
-            TreeForTransition
-            TreeForUtility
+    Authoring - POMDP file input
 
     Hierarchical Graph Reduction
         Epsilon merging

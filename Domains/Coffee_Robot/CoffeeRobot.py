@@ -1,7 +1,6 @@
-from MDP.solvers.mcts import mcts
-
-from MDP.Domains.Coffee_Robot.CoffeeRobotScenario import coffee_robot_scenario
+from Domains.Coffee_Robot.CoffeeRobotScenario import coffee_robot_scenario
 from MDP.solvers.bfs import breadth_first_search
+from MDP.solvers.mcts import mcts
 from MDP.solvers.vi import value_iteration
 
 

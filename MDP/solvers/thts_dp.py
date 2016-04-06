@@ -32,6 +32,7 @@
 
 from math import sqrt, log
 from random import choice
+from heapq import heappop, heappush
 
 from MDP.Distribution import Distribution
 
@@ -100,7 +101,7 @@ def rollout(node, scenario):
     return utility
 
 
-def expand_leaf(node, scenario, heuristic):
+def expand_leaf(node, scenario, heuristic, node_map):
     """
     Expands a new node from current leaf node.
     """
@@ -112,8 +113,15 @@ def expand_leaf(node, scenario, heuristic):
         node.untried_actions.remove(action)
 
         transitions = scenario.transition(node.state, action)
-        new_successors = Distribution({THTSNode(new_state, scenario, action=action, predecessor=node): prob
-                                       for new_state, prob in transitions.items()})
+        new_successors = Distribution()
+        for new_state, prob in transitions.items():
+            if new_state in node_map:
+                new_node = node_map[new_state]
+                new_node.predecessors.add(node)
+            else:
+                new_node = THTSNode(new_state, scenario, action=action, predecessor=node)
+                node_map[new_state] = new_node
+            new_successors[new_node] = prob
 
         # Provide initial heuristic evaluation of leaf
         for successor in new_successors:
@@ -128,7 +136,12 @@ def backup(node, scenario):
     """
     Updates tree along simulated path.
     """
-    while node:
+    queue = [(0, node)]
+    added = set([node])
+    while queue:
+        level, node = heappop(queue)
+        added.remove(node)
+
         node.visits += 1
 
         if node.successors:
@@ -146,7 +159,10 @@ def backup(node, scenario):
                 all(child.complete for child_set in node.successors.values() for child in child_set):
             node.complete = True
 
-        node = node.predecessor
+        for predecessor in node.predecessors:
+            if predecessor not in added:
+                heappush(queue, (level+1, predecessor))
+                added.add(predecessor)
 
 
 def tree_search(state, scenario, iterations, heuristic=rollout, root_node=None):
@@ -158,7 +174,10 @@ def tree_search(state, scenario, iterations, heuristic=rollout, root_node=None):
         root_node = THTSNode(state, scenario)
     passes = iterations - root_node.visits + 1
 
+    node_map = {root_node.state: root_node}
+
     for step in range(passes):
+        # If entire tree has been searched, halt iteration.
         if root_node.complete:
             break
 
@@ -169,7 +188,7 @@ def tree_search(state, scenario, iterations, heuristic=rollout, root_node=None):
         node = traverse_nodes(node, scenario)
 
         # Expand a new node from leaf.
-        node = expand_leaf(node, scenario, heuristic)
+        node = expand_leaf(node, scenario, heuristic, node_map)
 
         # Recalculate state values
         backup(node, scenario)
@@ -189,9 +208,13 @@ class THTSNode:
         self.state = state  # Current game state (clone of state instance).
         self.action = action  # The move that got us to this node - "None" for the root node.
         self.untried_actions = scenario.actions(state)  # Yet unexplored actions
-        self.complete = False  # A label to avoid sampling in complete subtrees.
+        self.complete = scenario.end(state)  # A label to avoid sampling in complete subtrees.
 
-        self.predecessor = predecessor  # Due to the dynamic programming approach, allow multiple "parents".
+        # Due to the dynamic programming approach, allow multiple "parents".
+        if predecessor:
+            self.predecessors = set([predecessor])
+        else:
+            self.predecessors = set()
         self.successors = {}  # Action: childNode dictionary to keep links to successors
 
         self.visits = 1  # visits of the node so far; count initialization as a visit
@@ -223,3 +246,9 @@ class THTSNode:
         unique = set()
         self.unique_nodes(unique)
         return len(unique)
+
+    def __lt__(self, other):
+        """
+        Required comparison operator for queueing, etc.
+        """
+        return True

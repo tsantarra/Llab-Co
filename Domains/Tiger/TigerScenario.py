@@ -8,7 +8,7 @@ Tiger problem:
 
 
 from MDP.Distribution import Distribution
-from POMDP.Scenario import Scenario
+from MDP.Scenario import Scenario
 from MDP.State import State
 
 
@@ -16,7 +16,7 @@ def initial_state():
     """
     Returns: An initial state for the Coffee Robot Scenario.
     """
-    return State({'Tiger': 'Left', 'Player': 'Middle'})
+    return State({'Tiger': 'Left', 'Player': 'Middle', 'Round': 0})
 
 
 def transition(state, action):
@@ -26,6 +26,8 @@ def transition(state, action):
         new_state['Player'] = 'Left'
     elif action == 'Go right':
         new_state['Player'] = 'Right'
+
+    new_state['Round'] += 1
 
     return Distribution({new_state: 1.0})  # all possible outcomes and their associated probabilities
 
@@ -57,7 +59,7 @@ def utility(state):
     elif state['Player'] == state['Tiger']:
         return -1
     elif state['Player'] != state['Tiger']:
-        return 1
+        return 1 * 0.9 ** state['Round']
 
 
 def end(state):
@@ -67,5 +69,4 @@ def end(state):
     return state['Player'] != 'Middle'
 
 
-tiger_scenario = Scenario(initial_state=initial_state, actions=actions,
-                          transition=transition, utility=utility, end=end, observations=observations)
+tiger_scenario = Scenario(initial_state=initial_state, actions=actions, transition=transition, utility=utility, end=end)

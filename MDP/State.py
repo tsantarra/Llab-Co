@@ -19,10 +19,7 @@ class State(OrderedDict):
         """
         Returns a string representing the state.
         """
-        s = ''
-        for key, val in self.items():
-            s += '\n\t' + str(key) + ':\t' + str(val)
-        return s
+        return '\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in self.items())
 
     def __str__(self):
         """

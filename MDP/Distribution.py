@@ -58,7 +58,7 @@ class Distribution(OrderedDict):
         """
         Returns a state probabilistically selected from the distribution.
         """
-        target = uniform(0, 1)
+        target = uniform(0, sum(self.values()))  # Corrected to sum of probabilities for non-normalized distributions.
         cumulative = 0
 
         # Accumulate probability until target is reached, returning state.
@@ -69,6 +69,10 @@ class Distribution(OrderedDict):
 
         # Small rounding errors may cause probability to not reach target for last state.
         return item
+
+    def __repr__(self):
+        return '\nDistribution {\n' + '\n'.join(str(key) + '\n\tP=' + str(val) + '\n' for key, val in self.items()) + '}'
+
 
     def __missing__(self, key):
         self[key] = 0.0

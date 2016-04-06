@@ -58,17 +58,17 @@ def actions(state):
     return ['Go', 'BuyCoffee', 'DeliverCoffee', 'GetUmbrella']
 
 
-def utility(state):
+def utility(state, action=None):
     """
     Returns the utility of the state.
     """
-    utility = 0
+    util = 0
     if state['W']:
-        utility += -0.5
+        util += -0.5
     if state['H']:
-        utility += 1*(0.9)**(state['Round'])
+        util += 1 * 0.9**(state['Round'])
 
-    return utility
+    return util
 
 
 def end(state):
