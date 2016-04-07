@@ -33,6 +33,7 @@
 from math import sqrt, log
 from random import choice
 from heapq import heappop, heappush
+import logging
 
 from MDP.Distribution import Distribution
 
@@ -125,7 +126,7 @@ def expand_leaf(node, scenario, heuristic, node_map):
 
         # Provide initial heuristic evaluation of leaf
         for successor in new_successors:
-            successor.value = successor.immediate_value + heuristic(successor, scenario)
+            successor.value = successor.immediate_value + heuristic(successor.state, scenario)
 
         node.successors[action] = new_successors
 
@@ -165,16 +166,42 @@ def backup(node, scenario):
                 added.add(predecessor)
 
 
-def tree_search(state, scenario, iterations, heuristic=rollout, root_node=None):
+def map_tree(node, map):
+    map[node.state] = node
+    for successor in [succ for dist in node.successors.values() for succ in dist if succ.state not in map]:
+        map_tree(successor, map)
+
+
+def prune(node, node_map):
+    for successor_dist in node.successors.values():
+        for successor in list(successor_dist.keys()):
+            if successor.state in node_map:
+                successor.predecessors.remove(node)
+                del successor_dist[successor]
+            else:
+                prune(successor, node_map)
+
+
+def graph_search(state, scenario, iterations, heuristic=rollout, root_node=None):
     """
     Search game tree according to THTS.
     """
+    logging.debug('graph_search')
+    logging.debug('Parameters:' + '\n\t'.join(str(i) for i in [state, scenario, iterations, heuristic, root_node]))
     # If a rootNode is not specified, initialize a new one.
-    if not root_node:
+    if root_node is None:
         root_node = THTSNode(state, scenario)
+        node_map = {root_node.state: root_node}
+    else:
+        node_map = {}
+        map_tree(root_node, node_map)
+        for predecessor in list(root_node.predecessors):
+            prune(predecessor, node_map)
+
     passes = iterations - root_node.visits + 1
 
-    node_map = {root_node.state: root_node}
+    logging.debug("Passes: " + str(passes))
+    logging.debug('Size of node map: ' + str(len(node_map)))
 
     for step in range(passes):
         # If entire tree has been searched, halt iteration.
@@ -206,7 +233,6 @@ class THTSNode:
         Initializes tree node with relevant information.
         """
         self.state = state  # Current game state (clone of state instance).
-        self.action = action  # The move that got us to this node - "None" for the root node.
         self.untried_actions = scenario.actions(state)  # Yet unexplored actions
         self.complete = scenario.end(state)  # A label to avoid sampling in complete subtrees.
 
@@ -225,7 +251,7 @@ class THTSNode:
         """
         Returns a string representation of the node.
         """
-        return "[" + str(self.action) + " Val:" + str(self.value) + " Vis:" + str(self.visits) + "] " + str(self.complete)
+        return "[" + " Val:" + str(self.value) + " Vis:" + str(self.visits) + "] " + str(self.complete)
 
     def tree_to_string(self, horizon=1, indent=0):
         """
@@ -237,15 +263,10 @@ class THTSNode:
                 string += child_node.tree_to_string(horizon - 1, indent + 1)
         return string
 
-    def unique_nodes(self, seen):
+    def unique_nodes(self, seen=set()):
         seen.add(self)
         for child_node in [node for successors in self.successors.values() for node in successors]:
             child_node.unique_nodes(seen)
-
-    def __len__(self):
-        unique = set()
-        self.unique_nodes(unique)
-        return len(unique)
 
     def __lt__(self, other):
         """

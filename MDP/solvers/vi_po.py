@@ -1,3 +1,9 @@
+"""
+Note: this solver has been deprecated since moving to the pure MDP approach. POMDP problems should be converted to
+MDPs in belief space, then solved via the MDP solvers. The code below will fail, as scenarios no longer have the
+'observations' method.
+"""
+
 from collections import defaultdict
 from MDP.Distribution import Distribution
 

@@ -77,7 +77,7 @@ def tigerWrappedTHTS():
     from MDP.Scenario import Scenario
     from MDP.Scenario import po_transition, po_utility, po_actions, po_end
     from Domains.Tiger.TigerScenario import initial_state, actions, transition, observations, utility, end
-    from MDP.solvers.thts_dp import tree_search
+    from MDP.solvers.thts_dp import graph_search
 
     scenario = Scenario(initial_state=initial_state,
                         actions=po_actions(actions),
@@ -93,7 +93,7 @@ def tigerWrappedTHTS():
 
     while not scenario.end(belief_state):
         # Plan
-        action, node = tree_search(belief_state, scenario, iterations=1000)
+        action, node = graph_search(belief_state, scenario, iterations=1000)
         belief_state = scenario.transition(belief_state, action).sample()
 
         print('------------------------')

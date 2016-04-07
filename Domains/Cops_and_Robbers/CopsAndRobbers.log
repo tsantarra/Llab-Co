@@ -1,0 +1,341 @@
+DEBUG:root:Beginning search.
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 3)
+	P:	(1, 7)
+	Round:	1
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	None
+DEBUG:root:Passes: 10000
+DEBUG:root:Size of node map: 1
+DEBUG:root:Action: A-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(5, 3)
+	P:	(1, 7)
+	Round:	2
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(5, 3)
+	P:	(1, 7)
+	Round:	2
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:144.21006107330322 Vis:8166] False
+DEBUG:root:Passes: 1835
+DEBUG:root:Size of node map: 5830
+DEBUG:root:Action: P-L
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(5, 3)
+	P:	(1, 6)
+	Round:	3
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(5, 3)
+	P:	(1, 6)
+	Round:	3
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:147.35835671424866 Vis:9969] False
+DEBUG:root:Passes: 32
+DEBUG:root:Size of node map: 7509
+DEBUG:root:Action: A-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(6, 3)
+	P:	(1, 6)
+	Round:	4
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(6, 3)
+	P:	(1, 6)
+	Round:	4
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:147.34575009346008 Vis:9175] False
+DEBUG:root:Passes: 826
+DEBUG:root:Size of node map: 7107
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(6, 3)
+	P:	(2, 6)
+	Round:	5
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(6, 3)
+	P:	(2, 6)
+	Round:	5
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:148.72366333007812 Vis:9557] False
+DEBUG:root:Passes: 444
+DEBUG:root:Size of node map: 7469
+DEBUG:root:Action: A-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(2, 6)
+	Round:	6
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(2, 6)
+	Round:	6
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:149.57521057128906 Vis:9612] False
+DEBUG:root:Passes: 389
+DEBUG:root:Size of node map: 7677
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(3, 6)
+	Round:	7
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(3, 6)
+	Round:	7
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:153.60406875610352 Vis:9570] False
+DEBUG:root:Passes: 431
+DEBUG:root:Size of node map: 7894
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(3, 6)
+	Round:	8
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(3, 6)
+	Round:	8
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:153.60407257080078 Vis:9639] False
+DEBUG:root:Passes: 362
+DEBUG:root:Size of node map: 8115
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(4, 6)
+	Round:	9
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(4, 6)
+	Round:	9
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:153.0634765625 Vis:8792] False
+DEBUG:root:Passes: 1209
+DEBUG:root:Size of node map: 7676
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 6)
+	Round:	10
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 6)
+	Round:	10
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:153.11865234375 Vis:9529] False
+DEBUG:root:Passes: 472
+DEBUG:root:Size of node map: 8493
+DEBUG:root:Action: P-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 7)
+	Round:	11
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 7)
+	Round:	11
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:159.00146484375 Vis:9104] False
+DEBUG:root:Passes: 897
+DEBUG:root:Size of node map: 8313
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(4, 7)
+	Round:	12
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(4, 7)
+	Round:	12
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:159.00146484375 Vis:9832] False
+DEBUG:root:Passes: 169
+DEBUG:root:Size of node map: 9079
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(5, 7)
+	Round:	13
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(5, 7)
+	Round:	13
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:163.78955078125 Vis:9125] False
+DEBUG:root:Passes: 876
+DEBUG:root:Size of node map: 8534
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(5, 7)
+	Round:	14
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(5, 7)
+	Round:	14
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:163.7896728515625 Vis:9916] False
+DEBUG:root:Passes: 85
+DEBUG:root:Size of node map: 9253
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(5, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(6, 7)
+	Round:	15
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(5, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(6, 7)
+	Round:	15
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:159.579345703125 Vis:9552] False
+DEBUG:root:Passes: 449
+DEBUG:root:Size of node map: 8886
+DEBUG:root:Action: A-U
+DEBUG:root:New state: 	Robber1:	(5, 7)
+	Robber2:	(1, 1)
+	A:	(6, 7)
+	P:	(6, 7)
+	Round:	16
+	Turn:	P
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(5, 7)
+	Robber2:	(1, 1)
+	A:	(6, 7)
+	P:	(6, 7)
+	Round:	16
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:159.579345703125 Vis:9910] False
+DEBUG:root:Passes: 91
+DEBUG:root:Size of node map: 9203
+DEBUG:root:Action: P-U
+DEBUG:root:New state: 	Robber1:	(5, 7)
+	Robber2:	(1, 1)
+	A:	(6, 7)
+	P:	(5, 7)
+	Round:	17
+	Turn:	A
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(5, 7)
+	Robber2:	(1, 1)
+	A:	(6, 7)
+	P:	(5, 7)
+	Round:	17
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x01236930>, transition=<function transition at 0x01236C90>, actions=<function actions at 0x01236C00>, utility=<function utility at 0x01236D20>, end=<function end at 0x01236CD8>)
+	10000
+	<function heuristic at 0x01236D68>
+	[ Val:164.0 Vis:8913] False
+DEBUG:root:Passes: 1088
+DEBUG:root:Size of node map: 8290
+DEBUG:root:Action: A-U
+DEBUG:root:New state: 	Robber1:	(5, 7)
+	Robber2:	(1, 1)
+	A:	(5, 7)
+	P:	(5, 7)
+	Round:	18
+	Turn:	P

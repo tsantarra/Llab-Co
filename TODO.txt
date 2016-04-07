@@ -1,6 +1,10 @@
 
 BY PRIORITY (ISH)
 
+    Cops and Robbers:
+        Node values are commonly > 100
+        Timing -> too much time pruning?
+
     Restructuring
         Agent's perspective
             - heuristic
@@ -35,6 +39,17 @@ BY PRIORITY (ISH)
 
 Nice to have, but completely beyond the scope of the current project.
     Tree Visualizations
+
+    Tree/graph abstraction for all solvers (fits a generic visualization framework too!)
+
+    Profiling and unit tests
+
+    Debug
+        - use logging module http://inventwithpython.com/blog/2012/04/06/stop-using-print-for-debugging-a-5-minute-quickstart-guide-to-pythons-logging-module/
+
+    Async
+        - far advanced, but consider doing something concurrent
+        - use coroutines via new asyncio features in python?
 
     Authoring - POMDP file input
 
