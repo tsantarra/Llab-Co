@@ -2,7 +2,9 @@ import cProfile
 import io
 import pstats
 
-from MDP.Domains.Grid.Grid import grid_test_dpthts
+from Domains.Cops_and_Robbers.CopsAndRobbers import carpy_dpthts
+from Domains.Cops_and_Robbers.CopsAndRobbersScenario import cops_and_robbers_scenario
+import logging
 
 from Domains.Grid.GridScenario import grid_scenario
 
@@ -10,13 +12,11 @@ if __name__ == "__main__":
     # Initialize profiler
     profiler = cProfile.Profile()
 
+    logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
     # Run code
     profiler.enable()
 
-    grid_test_dpthts(grid_scenario)
-    # grid_test_thts(grid_scenario)
-    # grid_test_mcts(grid_scenario)
-    # grid_test_vi(grid_scenario)
+    carpy_dpthts(cops_and_robbers_scenario)
 
     profiler.disable()
 

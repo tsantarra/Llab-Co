@@ -15,6 +15,7 @@ def carpy_dpthts(scenario):
 
     node = None
     logging.debug('Beginning search.')
+    count = 1
     while not scenario.end(state):
         # Plan
         (action, node) = dpthts.graph_search(state, scenario, 10000, heuristic=heuristic, root_node=node)
@@ -25,6 +26,9 @@ def carpy_dpthts(scenario):
 
         print(action)
         print(show_state(state))
+        count += 1
+        if count == 4:
+            break
         #print(node.tree_to_string(horizon=3))
 
 

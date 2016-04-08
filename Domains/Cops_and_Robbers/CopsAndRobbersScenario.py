@@ -123,7 +123,7 @@ def move_robbers(state):
         best_target = max(ties, key=lambda x: x[1])
         ties = [d for d in ties if d[1] == best_target[1]]
 
-        new_states = result.copy()
+        new_states = Distribution()
         for result_state, state_prob in result.items():
             tie_prob = 1/len(ties)
             for target, d1, d2 in ties:
@@ -131,6 +131,8 @@ def move_robbers(state):
                 new_state[robber] = target
                 new_states[new_state] = tie_prob * state_prob
         result = new_states
+
+    assert sum(result.values()) == 1.0, 'Resulting transition too large.'
 
     return result
 
@@ -170,7 +172,7 @@ def end(state):
 
 
 def utility(state, action):
-    return 100 - state['Round'] if end(state) else 0
+    return (100 - state['Round']) if end(state) else 0
 
 
 def heuristic(state, action):

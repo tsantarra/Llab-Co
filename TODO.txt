@@ -2,8 +2,8 @@
 BY PRIORITY (ISH)
 
     Cops and Robbers:
-        Node values are commonly > 100
         Timing -> too much time pruning?
+            PRUNE HAS INFINITE LOOP
 
     Restructuring
         Agent's perspective
