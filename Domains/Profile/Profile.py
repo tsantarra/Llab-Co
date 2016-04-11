@@ -6,13 +6,36 @@ from Domains.Cops_and_Robbers.CopsAndRobbers import carpy_dpthts
 from Domains.Cops_and_Robbers.CopsAndRobbersScenario import cops_and_robbers_scenario
 import logging
 
-from Domains.Grid.GridScenario import grid_scenario
+
+def profile(func):
+    """
+    Decorator for profiling individual functions. Creates a .profile file that can be viewed with
+    the pstats module.
+
+    python -m pstats function_name.profile
+
+    Commands:
+        - strip
+        - sort time (or other)
+        - stats 10 (displays top 10)
+
+    http://stefaanlippens.net/python_profiling_with_pstats_interactive_mode
+    """
+    def wrapper(*args, **kwargs):
+        datafn = func.__name__ + ".profile"  # Name the data file sensibly
+        prof = cProfile.Profile()
+        retval = prof.runcall(func, *args, **kwargs)
+        prof.dump_stats(datafn)
+        return retval
+
+    return wrapper
+
 
 if __name__ == "__main__":
     # Initialize profiler
     profiler = cProfile.Profile()
-
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
+
     # Run code
     profiler.enable()
 

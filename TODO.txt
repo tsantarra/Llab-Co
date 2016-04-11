@@ -1,9 +1,4 @@
-
 BY PRIORITY (ISH)
-
-    Cops and Robbers:
-        Timing -> too much time pruning?
-            PRUNE HAS INFINITE LOOP
 
     Restructuring
         Agent's perspective
@@ -11,20 +6,17 @@ BY PRIORITY (ISH)
             - backup function
             - partial observability
 
-    POMDP wrapping into MDPs
-        Successful, however
-            - No connection to "actual" state, just sampled a possible belief state
-            - No recording of observations
-            - Not yet clear on how to plug in multigent model; may just have to be an interesting exercise.
-
     Domains
-        Small - rendezvous?
         Cops and Robbers
         StarCraft
 
     Plan-space reasoning
         Comm evaluation
         Comm planning
+
+    Cython
+        MDP planner (thts_dp)
+        Domain scenarios
 
     Models - for agents
         Belief distribution
@@ -47,9 +39,8 @@ Nice to have, but completely beyond the scope of the current project.
     Debug
         - use logging module http://inventwithpython.com/blog/2012/04/06/stop-using-print-for-debugging-a-5-minute-quickstart-guide-to-pythons-logging-module/
 
-    Async
-        - far advanced, but consider doing something concurrent
-        - use coroutines via new asyncio features in python?
+    Multiprocessing
+        - far advanced, but consider doing something parallel
 
     Authoring - POMDP file input
 

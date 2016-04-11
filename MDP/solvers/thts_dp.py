@@ -149,15 +149,12 @@ def backup(node, scenario):
             action_values = {}
             for action in node.successors:
                 action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
-                assert action_values[action] <= 100, 'B: Total too high.' + str(list((node.value, val) for node, val in node.successors[action].items())) + ' \n' + node.tree_to_string(horizon=3)
-
                 action_values[action] /= sum(node.successors[action].values())
-                assert action_values[action] <= 100, 'B: Normalized too high.' + str(sum(node.successors[action].values()))
 
             node.value = node.immediate_value + max(action_values.values())
 
         # Labeling -> if all actions expanded and all child nodes complete, this node is complete
-        if scenario.end(node.state):
+        if not node.complete and scenario.end(node.state):
             node.complete = True
         elif node.untried_actions == [] and \
                 all(child.complete for child_set in node.successors.values() for child in child_set):
@@ -175,27 +172,12 @@ def map_tree(node, map):
         map_tree(successor, map)
 
 
-def prune2(node, node_map):
-    logging.debug('Prune:\n' + str(node.state))
-    for successor_dist in node.successors.values():
-        for successor in list(successor_dist.keys()):
-            if successor.state in node_map:
-                successor.predecessors.remove(node)
-                del successor_dist[successor]
-            else:
-                prune(successor, node_map)
-
-
 def prune(node, node_map, checked):
-    logging.debug('Prune:\n' + str(node.state))
     checked.add(node)
     node.predecessors = set(pred for pred in node.predecessors if pred.state in node_map)
     for successor_dist in node.successors.values():
-        logging.debug('Next dist')
         for successor in [succ for succ in successor_dist if succ not in checked]:
-            logging.debug('Child:')
             prune(successor, node_map, checked)
-    logging.debug('Back')
 
 
 def graph_search(state, scenario, iterations, heuristic=rollout, root_node=None):
@@ -213,8 +195,6 @@ def graph_search(state, scenario, iterations, heuristic=rollout, root_node=None)
         map_tree(root_node, node_map)
         logging.debug('Prune')
         prune(root_node, node_map, set())
-        #for predecessor in list(root_node.predecessors):
-        #    prune(predecessor, node_map)
 
     passes = iterations - root_node.visits + 1
 
