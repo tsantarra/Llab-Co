@@ -15,20 +15,18 @@ def carpy_dpthts(scenario):
 
     node = None
     logging.debug('Beginning search.')
-    count = 1
     while not scenario.end(state):
         # Plan
         (action, node) = dpthts.graph_search(state, scenario, 10000, heuristic=heuristic, root_node=node)
         state = scenario.transition(state, action).sample()
-        node = [node for node in node.successors[action] if node.state == state][0]
+
         logging.debug('Action: ' + str(action))
-        logging.debug('New state: ' + str(state))
+        logging.debug('New state: ' + str(state) + '\n' + show_state(state))
+
+        node = [node for node in node.successors[action] if node.state == state][0]
 
         print(action)
         print(show_state(state))
-        count += 1
-        if count == 4:
-            break
         #print(node.tree_to_string(horizon=3))
 
 

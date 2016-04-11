@@ -71,6 +71,8 @@ def show_state(state):
         for col in range(1 + max(k[1] for k in maze_copy.keys())):
             string += maze_copy[(row, col)]
         string += '\n'
+
+    string += str([state['A'], state['P'], state['Round']]) + '\n'
     return string
 
 
@@ -115,9 +117,9 @@ def move_robbers(state):
         def distance(p1, p2): return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
         distances = [(t, distance(t, agent), distance(t, partner)) for t in targets]
 
-        # find the best target maximizing distance to both players
-        best_target = max(distances, key=lambda x: x[1] + x[2])
-        ties = [d for d in distances if d[1] + d[2] == best_target[1] + best_target[2]]
+        # find the best target maximizing the minimum distance to the players
+        best_target = max(distances, key=lambda x: min(x[1], x[2]))
+        ties = [d for d in distances if min(d[1], d[2]) == min(best_target[1], best_target[2])]
 
         # break ties on distance to just agent
         best_target = max(ties, key=lambda x: x[1])
@@ -156,7 +158,11 @@ def transition(state, action):
 
     if actor == 'P':
         new_state['Turn'] = 'A'
-        return move_robbers(new_state)
+        if not end(new_state):
+            # Check if end first, otherwise impossible (robbers always escape).
+            return move_robbers(new_state)
+        else:
+            return Distribution({new_state: 1.0})
     else:
         new_state['Turn'] = 'P'
         return Distribution({new_state: 1.0})
@@ -165,8 +171,9 @@ def transition(state, action):
 def end(state):
     if state['Round'] >= 100:
         return True
-    for ID, loc in [(ID, loc) for ID, loc in state.items() if 'R' in ID]:
-        if state['A'] == state['P'] == loc:
+    a_loc, p_loc = state['A'], state['P']
+    for loc in [loc for ID, loc in state.items() if 'Robber' in ID]:
+        if a_loc == p_loc == loc:
             return True
     return False
 

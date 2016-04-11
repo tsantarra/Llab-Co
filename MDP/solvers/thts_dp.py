@@ -43,15 +43,17 @@ def greedy_action(node):
     UCT to next node.
     """
     action_values = {}
+    action_counts = {}
     for action in node.successors:
         action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
         action_values[action] /= sum(node.successors[action].values())
+        action_counts[action] = sum(child.visits for child in node.successors[action])
 
     best_action, best_value = max(action_values.items(), key=lambda av: av[1])
 
     tied_actions = [a for a, v in action_values.items() if v == best_value]
 
-    return choice(tied_actions)
+    return max(tied_actions, key=lambda a: action_counts[a])
 
 
 def traverse_nodes(node, scenario):
@@ -138,7 +140,7 @@ def backup(node, scenario):
     Updates tree along simulated path.
     """
     queue = [(0, node)]
-    added = set([node])
+    added = {node}
     while queue:
         level, node = heappop(queue)
         added.remove(node)
@@ -162,17 +164,25 @@ def backup(node, scenario):
 
         for predecessor in node.predecessors:
             if predecessor not in added:
-                heappush(queue, (level+1, predecessor))
+                heappush(queue, (level + 1, predecessor))
                 added.add(predecessor)
 
 
-def map_tree(node, map):
-    map[node.state] = node
-    for successor in [succ for dist in node.successors.values() for succ in dist if succ.state not in map]:
-        map_tree(successor, map)
+def map_tree(node, node_map):
+    """
+    Builds a dict mapping of states to corresponding nodes in the graph.
+    """
+    node_map[node.state] = node
+    for successor in [successor_dist for dist in node.successors.values()
+                      for successor_dist in dist if successor_dist.state not in node_map]:
+        map_tree(successor, node_map)
 
 
 def prune(node, node_map, checked):
+    """
+    Prunes currently unreachable nodes from the graph, which cuts down on policy computation time for
+    irrelevant areas of the state space.
+    """
     checked.add(node)
     node.predecessors = set(pred for pred in node.predecessors if pred.state in node_map)
     for successor_dist in node.successors.values():
@@ -193,14 +203,9 @@ def graph_search(state, scenario, iterations, heuristic=rollout, root_node=None)
     else:
         node_map = {}
         map_tree(root_node, node_map)
-        logging.debug('Prune')
         prune(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
-
-    logging.debug("Passes: " + str(passes))
-    logging.debug('Size of node map: ' + str(len(node_map)))
-
     for step in range(passes):
         # If entire tree has been searched, halt iteration.
         if root_node.complete:
@@ -236,7 +241,7 @@ class THTSNode:
 
         # Due to the dynamic programming approach, allow multiple "parents".
         if predecessor:
-            self.predecessors = set([predecessor])
+            self.predecessors = {predecessor}
         else:
             self.predecessors = set()
         self.successors = {}  # Action: childNode dictionary to keep links to successors
@@ -262,8 +267,14 @@ class THTSNode:
         return string
 
     def unique_nodes(self, seen=set()):
+        """
+        Traverses unique nodes in graph to calculate the size of the state space covered.
+        Note: this pattern is seen in the map and prune functions, which could be converted to an
+        iterable process.
+        """
         seen.add(self)
-        for child_node in [node for successors in self.successors.values() for node in successors]:
+        for child_node in [node for successors in self.successors.values()
+                           for node in successors if node not in seen]:
             child_node.unique_nodes(seen)
 
     def __lt__(self, other):
