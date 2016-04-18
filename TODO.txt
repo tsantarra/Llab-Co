@@ -1,5 +1,10 @@
 BY PRIORITY (ISH)
 
+    Visualization
+        - final coordinate calculation
+        - bottom later should have no crosses, yet it does, hmmmmmmm
+        - STORE AND RETURN BEST while iterating over median process; based on crossings
+
     Restructuring
         Agent's perspective
             - heuristic
@@ -30,8 +35,6 @@ BY PRIORITY (ISH)
 
 
 Nice to have, but completely beyond the scope of the current project.
-    Tree Visualizations
-
     Tree/graph abstraction for all solvers (fits a generic visualization framework too!)
 
     Profiling and unit tests
