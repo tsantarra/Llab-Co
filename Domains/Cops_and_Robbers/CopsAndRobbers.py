@@ -1,5 +1,6 @@
 
 from Domains.Cops_and_Robbers.CopsAndRobbersScenario import show_state, cops_and_robbers_scenario, initialize_maze, heuristic
+from Visualization.graph import show_graph
 
 import logging, sys, traceback
 
@@ -7,7 +8,7 @@ import logging, sys, traceback
 def carpy_dpthts(scenario):
     import MDP.solvers.thts_dp as dpthts
     # Initialize map
-    initialize_maze('C://Users//Trevor//Documents//GitHub//Llab-Co//Domains//Cops_and_Robbers//Mazes//a.maze')
+    initialize_maze('D://GitHub//Llab-Co//Domains//Cops_and_Robbers//Mazes//a.maze')
 
     # Retrieve initial state.
     state = scenario.initial_state()
@@ -17,8 +18,9 @@ def carpy_dpthts(scenario):
     logging.debug('Beginning search.')
     while not scenario.end(state):
         # Plan
-        (action, node) = dpthts.graph_search(state, scenario, 10000, heuristic=heuristic, root_node=node)
+        (action, node) = dpthts.graph_search(state, scenario, 1000, heuristic=heuristic, root_node=node)
         state = scenario.transition(state, action).sample()
+        show_graph(node)
 
         logging.debug('Action: ' + str(action))
         logging.debug('New state: ' + str(state) + '\n' + show_state(state))

@@ -2,13 +2,464 @@ DEBUG:root:Beginning search.
 DEBUG:root:graph_search
 DEBUG:root:Parameters:	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(2, 1)
-	P:	(3, 1)
+	A:	(4, 3)
+	P:	(1, 7)
 	Round:	1
 	Turn:	A
-	Scenario(initial_state=<function initial_state at 0x0139A588>, transition=<function transition at 0x0139A8E8>, actions=<function actions at 0x0139A858>, utility=<function utility at 0x0139A978>, end=<function end at 0x0139A930>)
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
 	10000
-	<function heuristic at 0x0139A9C0>
+	<function heuristic at 0x015A2930>
 	None
-DEBUG:root:Passes: 10000
-DEBUG:root:Size of node map: 1
+DEBUG:root:Action: A-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(5, 3)
+	P:	(1, 7)
+	Round:	2
+	Turn:	P
+*********
+*R**** P*
+*    * **
+* ** * **
+*       *
+* *A*** *
+* * *** *
+* *    R*
+*********
+[(5, 3), (1, 7), 2]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(5, 3)
+	P:	(1, 7)
+	Round:	2
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:6657] False
+DEBUG:root:Action: P-L
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(5, 3)
+	P:	(1, 6)
+	Round:	3
+	Turn:	A
+*********
+*R****P *
+*    * **
+* ** * **
+*       *
+* *A*** *
+* * *** *
+* *    R*
+*********
+[(5, 3), (1, 6), 3]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(5, 3)
+	P:	(1, 6)
+	Round:	3
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9987] False
+DEBUG:root:Action: A-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(6, 3)
+	P:	(1, 6)
+	Round:	4
+	Turn:	P
+*********
+*R****P *
+*    * **
+* ** * **
+*       *
+* * *** *
+* *A*** *
+* *    R*
+*********
+[(6, 3), (1, 6), 4]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(6, 3)
+	P:	(1, 6)
+	Round:	4
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:8114] False
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(6, 3)
+	P:	(2, 6)
+	Round:	5
+	Turn:	A
+*********
+*R****  *
+*    *P**
+* ** * **
+*       *
+* * *** *
+* *A*** *
+* *    R*
+*********
+[(6, 3), (2, 6), 5]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(6, 3)
+	P:	(2, 6)
+	Round:	5
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9937] False
+DEBUG:root:Action: A-D
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(2, 6)
+	Round:	6
+	Turn:	P
+*********
+*R****  *
+*    *P**
+* ** * **
+*       *
+* * *** *
+* * *** *
+* *A   R*
+*********
+[(7, 3), (2, 6), 6]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(2, 6)
+	Round:	6
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:8886] False
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(3, 6)
+	Round:	7
+	Turn:	A
+*********
+*R****  *
+*    * **
+* ** *P**
+*       *
+* * *** *
+* * ***R*
+* *A    *
+*********
+[(7, 3), (3, 6), 7]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 3)
+	P:	(3, 6)
+	Round:	7
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9436] False
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(3, 6)
+	Round:	8
+	Turn:	P
+*********
+*R****  *
+*    * **
+* ** *P**
+*       *
+* * *** *
+* * ***R*
+* * A   *
+*********
+[(7, 4), (3, 6), 8]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(3, 6)
+	Round:	8
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9362] False
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(4, 6)
+	Round:	9
+	Turn:	A
+*********
+*R****  *
+*    * **
+* ** * **
+*     P *
+* * *** *
+* * ***R*
+* * A   *
+*********
+[(7, 4), (4, 6), 9]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 4)
+	P:	(4, 6)
+	Round:	9
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9451] False
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 6)
+	Round:	10
+	Turn:	P
+*********
+*R****  *
+*    * **
+* ** * **
+*     P *
+* * *** *
+* * ***R*
+* *  A  *
+*********
+[(7, 5), (4, 6), 10]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 6)
+	Round:	10
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9588] False
+DEBUG:root:Action: P-W
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 6)
+	Round:	11
+	Turn:	A
+*********
+*R****  *
+*    * **
+* ** * **
+*     P *
+* * *** *
+* * ***R*
+* *  A  *
+*********
+[(7, 5), (4, 6), 11]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 5)
+	P:	(4, 6)
+	Round:	11
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9608] False
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(4, 6)
+	Round:	12
+	Turn:	P
+*********
+*R****  *
+*    * **
+* ** * **
+*     P *
+* * *** *
+* * ***R*
+* *   A *
+*********
+[(7, 6), (4, 6), 12]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(4, 6)
+	Round:	12
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9692] False
+DEBUG:root:Action: P-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(4, 7)
+	Round:	13
+	Turn:	A
+*********
+*R****  *
+*    * **
+* ** * **
+*      P*
+* * *** *
+* * ***R*
+* *   A *
+*********
+[(7, 6), (4, 7), 13]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 6)
+	P:	(4, 7)
+	Round:	13
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9702] False
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(4, 7)
+	Round:	14
+	Turn:	P
+*********
+*R****  *
+*    * **
+* ** * **
+*      P*
+* * *** *
+* * ***R*
+* *    A*
+*********
+[(7, 7), (4, 7), 14]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(4, 7)
+	Round:	14
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9769] False
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(5, 7)
+	Round:	15
+	Turn:	A
+*********
+*R****  *
+*    * **
+* ** * **
+*       *
+* * ***P*
+* * ***R*
+* *    A*
+*********
+[(7, 7), (5, 7), 15]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(7, 7)
+	P:	(5, 7)
+	Round:	15
+	Turn:	A
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9605] False
+DEBUG:root:Action: A-U
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(6, 7)
+	P:	(5, 7)
+	Round:	16
+	Turn:	P
+*********
+*R****  *
+*    * **
+* ** * **
+*       *
+* * ***P*
+* * ***R*
+* *     *
+*********
+[(6, 7), (5, 7), 16]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(6, 7)
+	P:	(5, 7)
+	Round:	16
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x015A2468>, transition=<function transition at 0x015A2540>, actions=<function actions at 0x015A2738>, utility=<function utility at 0x015A28E8>, end=<function end at 0x015A2810>)
+	10000
+	<function heuristic at 0x015A2930>
+	[ Val:83.0 Vis:9675] False
+DEBUG:root:Action: P-D
+DEBUG:root:New state: 	Robber1:	(6, 7)
+	Robber2:	(1, 1)
+	A:	(6, 7)
+	P:	(6, 7)
+	Round:	17
+	Turn:	A
+*********
+*R****  *
+*    * **
+* ** * **
+*       *
+* * *** *
+* * ***R*
+* *     *
+*********
+[(6, 7), (6, 7), 17]
+
