@@ -1,10 +1,8 @@
 from Domains.Coffee_Robot.CoffeeRobotScenario import coffee_robot_scenario
-from MDP.solvers.bfs import breadth_first_search
-from MDP.solvers.mcts import mcts
-from MDP.solvers.vi import value_iteration
 
 
 def coffeeRobotBFS(scenario):
+    from MDP.solvers.bfs import breadth_first_search
     # Initialize state.
     state = scenario.initial_state()
     print('Initial state:\n',state)
@@ -21,7 +19,28 @@ def coffeeRobotBFS(scenario):
         print(state)
 
 
+def coffeeRobot_dpthts(scenario):
+    import MDP.solvers.thts_dp as dpthts
+    from Visualization.graph import show_graph
+    # Initialize state.
+    state = scenario.initial_state()
+    print('Initial state:\n', state)
+
+    node = None
+    while not scenario.end(state):
+        # Plan
+        (action, node) = dpthts.graph_search(state, scenario, 1000, root_node=node)
+        state = scenario.transition(state, action).sample()
+
+        show_graph(node, width=10, height=10)
+        node = [n for n in node.successors[action] if n.state == state][0]
+
+        print(action)
+        print(state)
+
+
 def coffeeRobotMCTS(scenario):
+    from MDP.solvers.mcts import mcts
     # Initialize state.
     state = scenario.initial_state()
     print('Initial state:\n',state)
@@ -38,6 +57,8 @@ def coffeeRobotMCTS(scenario):
 
 
 def coffeeRobotVI(scenario):
+    from MDP.solvers.vi import value_iteration
+
     # Initialize state.
     state = scenario.initial_state()
     print('Initial state:\n',state)
@@ -53,5 +74,6 @@ def coffeeRobotVI(scenario):
 if __name__ == "__main__":
     # Run scenario
     #coffeeRobotVI(coffee_robot_scenario)
-    coffeeRobotBFS(coffee_robot_scenario)
+    #coffeeRobotBFS(coffee_robot_scenario)
     #coffeeRobotMCTS(coffee_robot_scenario)
+    coffeeRobot_dpthts(coffee_robot_scenario)

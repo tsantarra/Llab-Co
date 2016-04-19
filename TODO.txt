@@ -1,9 +1,9 @@
 BY PRIORITY (ISH)
 
-    Visualization
-        - final coordinate calculation
-        - bottom later should have no crosses, yet it does, hmmmmmmm
-        - STORE AND RETURN BEST while iterating over median process; based on crossings
+    Modeling - an interface
+        Predict, given state
+        Update, given state/action pair
+        Pickle?
 
     Restructuring
         Agent's perspective
@@ -18,6 +18,9 @@ BY PRIORITY (ISH)
     Plan-space reasoning
         Comm evaluation
         Comm planning
+
+    Visualization
+        Improving x coordinates never improves overall structure.
 
     Cython
         MDP planner (thts_dp)

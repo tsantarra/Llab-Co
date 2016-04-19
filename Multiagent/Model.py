@@ -49,20 +49,13 @@ What we want:
 """
 
 
-from MDP.Distribution import Distribution
-from collections import namedtuple
+class Model:
 
+    def predict(self, state):
+        raise NotImplementedError('Have not implemented predict method of Model class ' + str(self.__class__))
 
-class Model(dict):
-
-    def __init__(self, prior=None):
-        ...
-
-    def __getitem__(self, state):
-        ...
-
-    def __setitem__(self, state, distribution):
-        ...
+    def update(self, state, action):
+        raise NotImplementedError('Have not implemented update method of Model class ' + str(self.__class__))
 
 
 

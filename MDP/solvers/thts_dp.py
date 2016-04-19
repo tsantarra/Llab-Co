@@ -89,12 +89,11 @@ def traverse_nodes(node, scenario):
     return node
 
 
-def rollout(node, scenario):
+def rollout(state, scenario):
     """
     Provides an evaluation of the state at the node given, either through playouts or by an evaluation function.
     """
     utility = 0
-    state = node.state.copy()
 
     while not scenario.end(state):
         action = choice(scenario.actions(state))
@@ -122,13 +121,15 @@ def expand_leaf(node, scenario, heuristic, node_map):
                 new_node = node_map[new_state]
                 new_node.predecessors.add(node)
             else:
-                new_node = THTSNode(new_state, scenario, action=action, predecessor=node)
-                node_map[new_state] = new_node
-            new_successors[new_node] = prob
+                new_node = THTSNode(state=new_state, scenario=scenario, action=action, predecessor=node)
 
-        # Provide initial heuristic evaluation of leaf
-        for successor in new_successors:
-            successor.value = heuristic(successor.state, scenario)
+                # Provide initial heuristic evaluation of new leaf node
+                new_node.value = new_node.immediate_value + heuristic(new_node.state.copy(), scenario)
+
+                # Add to node map, so we can find it later.
+                node_map[new_state] = new_node
+
+            new_successors[new_node] = prob
 
         node.successors[action] = new_successors
 
@@ -147,13 +148,14 @@ def backup(node, scenario):
 
         node.visits += 1
 
+        node.value = node.immediate_value
         if node.successors:
             action_values = {}
             for action in node.successors:
                 action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
                 action_values[action] /= sum(node.successors[action].values())
 
-            node.value = node.immediate_value + max(action_values.values())
+            node.value += max(action_values.values())
 
         # Labeling -> if all actions expanded and all child nodes complete, this node is complete
         if not node.complete and scenario.end(node.state):
@@ -254,7 +256,7 @@ class THTSNode:
         """
         Returns a string representation of the node.
         """
-        return "<" + "Val:" + str(self.value) + " Vis:" + str(self.visits) + ">"
+        return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ">" + str(self.state)
 
     def tree_to_string(self, horizon=1, indent=0):
         """

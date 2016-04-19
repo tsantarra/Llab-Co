@@ -8,7 +8,7 @@ import logging, sys, traceback
 def carpy_dpthts(scenario):
     import MDP.solvers.thts_dp as dpthts
     # Initialize map
-    initialize_maze('D://GitHub//Llab-Co//Domains//Cops_and_Robbers//Mazes//a.maze')
+    initialize_maze('./Mazes/a.maze')
 
     # Retrieve initial state.
     state = scenario.initial_state()
@@ -20,7 +20,7 @@ def carpy_dpthts(scenario):
         # Plan
         (action, node) = dpthts.graph_search(state, scenario, 1000, heuristic=heuristic, root_node=node)
         state = scenario.transition(state, action).sample()
-        show_graph(node)
+        show_graph(node, width=10, height=10)
 
         logging.debug('Action: ' + str(action))
         logging.debug('New state: ' + str(state) + '\n' + show_state(state))
@@ -29,7 +29,6 @@ def carpy_dpthts(scenario):
 
         print(action)
         print(show_state(state))
-        #print(node.tree_to_string(horizon=3))
 
 
 if __name__ == "__main__":

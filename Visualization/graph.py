@@ -15,16 +15,31 @@ import matplotlib.pyplot as plt
 from collections import defaultdict, deque
 
 
-def _add_edges(node, graph, graph_map, node_set, horizon=0):
+def _add_edges(node, graph, graph_map, node_set=None, horizon=0):
     """
     Traverses the graph, storing nodes in the graph_map.
     """
+    if not node_set:
+        node_set = set()
     node_set.add(node)
     graph_map[horizon].append(node)
-    for successor in [successor_dist for dist in node.successors.values() for successor_dist in dist]:
+    for successor in [succ for successor_dist in node.successors.values() for succ in successor_dist]:
         graph.add_edge(node, successor)
         if successor not in node_set:
             _add_edges(successor, graph, graph_map, node_set, horizon+1)
+
+
+def _edge_labels(node, edge_labels, node_set=None):
+    """
+    Iterate over graph, adding action labels to edge_labels dictionary.
+    """
+    if not node_set:
+        node_set = set()
+    node_set.add(node)
+    for action, succ in [(action, succ) for action, succ_dist in node.successors.items() for succ in succ_dist]:
+        edge_labels[(node, succ)] += action
+        if succ not in node_set:
+            _edge_labels(succ, edge_labels, node_set)
 
 
 def _median_order(graph, go_up):
@@ -188,14 +203,39 @@ def _min_node(xcoords, up):
                 in_queue.add(neighbor_tuple)
 
 
-def _normalize(xcoords):
+def _normalize(xcoords, min_dist=1, max_width=7):
     """
     In place of packcut. To combat drift, shift all node coordinates back to the left by an offset of min node coord.
 
     Note: Initial version won't keep a minimum distance between nodes in a level. Hopefully we won't need
     to consider that.
     """
-    pass
+    sorted_levels = {horizon: sorted(level.items(), key=lambda x: x[1], reverse=True) for horizon, level in xcoords.items()}
+
+    condensed = [(node, horizon, coord) for horizon, level in xcoords.items() for node, coord in level.items()]
+    condensed = sorted(condensed, key=lambda x: x[2])
+
+    cumulative_offset = -1 * condensed[0][2]
+    for node, horizon, coord in condensed:
+        # Set current coordinate
+        xcoords[horizon][node] = coord + cumulative_offset
+
+        # Adjust future offset
+        current_level = sorted_levels[horizon]
+        current_level.pop()  # remove top from stack, as it is the current node
+
+        if current_level:
+            next_node, next_coord = current_level[-1]
+            distance_to_next_node = next_coord - (coord)  # offset?
+
+            if distance_to_next_node < min_dist:
+                cumulative_offset += min_dist - distance_to_next_node
+
+    # Scale back to target width.
+    divisor = max(coord for level in xcoords.values() for coord in level.values())
+    for level in xcoords.values():
+        for node, coord in level.items():
+            level[node] = coord/divisor * max_width
 
 
 def _xlength(xcoords):
@@ -211,15 +251,15 @@ def _xlength(xcoords):
     return total
 
 
-def show_graph(root):
-    width = 7
-    height = 7
-    graph = nx.MultiDiGraph()  # unlike digraph, supports multiple parallel edges between nodes
+def show_graph(root, width=7, height=7):
+    graph = nx.MultiGraph()  # DAG -> MultiDiGraph
     graph_map = defaultdict(list)
+    edge_labels = defaultdict(str)
 
     # Steps to position DAG
     # Traverse graph add nodes by horizon level (rank)
-    _add_edges(root, graph, graph_map, set())
+    _add_edges(root, graph, graph_map)
+    _edge_labels(root, edge_labels)
 
     graph_map = {rank: {node: index for index, node in enumerate(graph_map[rank])} for rank in graph_map}
 
@@ -256,8 +296,9 @@ def show_graph(root):
         up = (i % 2 == 0)
         _median_pos(x_coords, up)
         _min_node(x_coords, up)
-        #_normalize(x_coords)
+        _normalize(x_coords)
         if _xlength(x_coords) < _xlength(best):
+            print('improved coords')
             best = x_coords.copy()
     x_coords = best
 
@@ -268,9 +309,11 @@ def show_graph(root):
 
     node_values = [node.value for node in graph.nodes()]
     max_value = max(node_values)
-    node_values = [val/max_value for val in node_values]
+    if max_value:
+        node_values = [val/max_value for val in node_values]
 
-    plt.figure(figsize=(8, 8))
-    nx.draw(graph, cmap=plt.get_cmap('plasma'), pos=positions, node_color=node_values)#, with_labels=True)
+    plt.figure(figsize=(width, height))
+    nx.draw(graph, cmap=plt.get_cmap('plasma'), pos=positions, node_color=node_values)  # with_labels=True
+    nx.draw_networkx_edge_labels(graph, positions, edge_labels)
     plt.show()
 
