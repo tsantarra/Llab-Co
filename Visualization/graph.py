@@ -251,7 +251,7 @@ def _xlength(xcoords):
     return total
 
 
-def show_graph(root, width=7, height=7):
+def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=False):
     graph = nx.MultiGraph()  # DAG -> MultiDiGraph
     graph_map = defaultdict(list)
     edge_labels = defaultdict(str)
@@ -263,7 +263,7 @@ def show_graph(root, width=7, height=7):
 
     graph_map = {rank: {node: index for index, node in enumerate(graph_map[rank])} for rank in graph_map}
 
-    ###########################################################
+    #################### ORDERING ####################
     best_map = graph_map.copy()
     # Iterate n times (default 24)
     for i in range(24):
@@ -279,7 +279,7 @@ def show_graph(root, width=7, height=7):
 
     graph_map = best_map
 
-    ############################################################
+    ################### X COORDINATES ##################
     # X coordinate positioning
     x_coords = graph_map.copy()
     positions = {}
@@ -313,7 +313,8 @@ def show_graph(root, width=7, height=7):
         node_values = [val/max_value for val in node_values]
 
     plt.figure(figsize=(width, height))
-    nx.draw(graph, cmap=plt.get_cmap('plasma'), pos=positions, node_color=node_values)  # with_labels=True
-    nx.draw_networkx_edge_labels(graph, positions, edge_labels)
+    nx.draw(graph, cmap=plt.get_cmap('plasma'), pos=positions, node_color=node_values, with_labels=with_labels)
+    if with_edge_labels:
+        nx.draw_networkx_edge_labels(graph, positions, edge_labels)
     plt.show()
 

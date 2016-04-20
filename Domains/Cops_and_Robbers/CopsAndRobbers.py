@@ -31,12 +31,36 @@ def carpy_dpthts(scenario):
         print(show_state(state))
 
 
+def multiagent_carpy():
+    # Initialize scenario and beginning state.
+    scenario = cops_and_robbers_scenario
+    state = scenario.initial_state()
+    logging.debug('Initial state:\n' + str(state))
+
+    # Agents
+    agents = {}
+
+    # Main loop
+    logging.debug('Beginning simulation.')
+    while not scenario.end(state):
+        agent = agents[state['Turn']]
+
+        action = agent.get_action(state, scenario)
+        state = scenario.transition(state, action).sample()
+
+        logging.debug('Action: ' + str(action))
+        logging.debug('New state: ' + str(state) + '\n' + show_state(state))
+
+
 if __name__ == "__main__":
-    logging.basicConfig(filename=__file__[:-3] +'.log', filemode='w', level=logging.DEBUG)
+    logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
+
     try:
         carpy_dpthts(cops_and_robbers_scenario)
+
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')
+
     except Exception:
         traceback.print_exc(file=sys.stdout)
         logging.exception("Error.")

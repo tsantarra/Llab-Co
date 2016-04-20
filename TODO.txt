@@ -1,18 +1,16 @@
 BY PRIORITY (ISH)
 
-    Modeling - an interface
-        Predict, given state
-        Update, given state/action pair
-        Pickle?
+    DECORATE THE PLANNER COMPONENTS FUCK
 
     Restructuring
         Agent's perspective
-            - heuristic
-            - backup function
-            - partial observability
+            - multiagent scenario wrapper?
+                States need turns
+                Every transition should update the agents
+                The planner needs to consider future models, then (wrap into state POMDP style?)
+
 
     Domains
-        Cops and Robbers
         StarCraft
 
     Plan-space reasoning
@@ -27,8 +25,6 @@ BY PRIORITY (ISH)
         Domain scenarios
 
     Models - for agents
-        Belief distribution
-        Naive frequentist
         Barrett model?
         SC build orders or other learning?
 

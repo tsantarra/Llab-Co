@@ -136,26 +136,37 @@ def expand_leaf(node, scenario, heuristic, node_map):
     return node
 
 
-def backup(node, scenario):
+def expectation_max(node):
+    """
+    Sets a node's value to its immediate utility + the maximum expected utility of the
+    available actions.
+    """
+    node.value = node.immediate_value
+    if node.successors:
+        action_values = {}
+        for action in node.successors:
+            action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
+            action_values[action] /= sum(node.successors[action].values())
+
+        node.value += max(action_values.values())
+
+
+def backup(node, scenario, backup_op):
     """
     Updates tree along simulated path.
     """
     queue = [(0, node)]
     added = {node}
     while queue:
+        # Process next node
         level, node = heappop(queue)
         added.remove(node)
 
+        # Sample-based node update
         node.visits += 1
 
-        node.value = node.immediate_value
-        if node.successors:
-            action_values = {}
-            for action in node.successors:
-                action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
-                action_values[action] /= sum(node.successors[action].values())
-
-            node.value += max(action_values.values())
+        # Value backup operator
+        backup_op(node)
 
         # Labeling -> if all actions expanded and all child nodes complete, this node is complete
         if not node.complete and scenario.end(node.state):
@@ -164,6 +175,7 @@ def backup(node, scenario):
                 all(child.complete for child_set in node.successors.values() for child in child_set):
             node.complete = True
 
+        # Queue predecessors
         for predecessor in node.predecessors:
             if predecessor not in added:
                 heappush(queue, (level + 1, predecessor))
@@ -192,7 +204,7 @@ def prune(node, node_map, checked):
             prune(successor, node_map, checked)
 
 
-def graph_search(state, scenario, iterations, heuristic=rollout, root_node=None):
+def graph_search(state, scenario, iterations, backup_op=expectation_max, heuristic=rollout, root_node=None):
     """
     Search game tree according to THTS.
     """
@@ -223,7 +235,7 @@ def graph_search(state, scenario, iterations, heuristic=rollout, root_node=None)
         node = expand_leaf(node, scenario, heuristic, node_map)
 
         # Recalculate state values
-        backup(node, scenario)
+        backup(node, scenario, backup_op=backup_op)
 
     return greedy_action(root_node), root_node
 
