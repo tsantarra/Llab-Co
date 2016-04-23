@@ -38,13 +38,29 @@ class State(OrderedDict):
         Returns a hashable form of the state.
         """
         if not self.hash:
-            self.hash = hash(tuple(self.items()))
+            # flatten out dictionaries
+            items = list(self.keys()) + list(self.values())
+            hash_list = []
+            while items:
+                item = items.pop()
+                if isinstance(item, dict):
+                    for key, val in sorted(item.items()):
+                        items.append(key)
+                        items.append(val)
+                else:
+                    hash_list.append(item)
+
+            self.hash = hash(tuple(hash_list))
+
+            #self.hash = hash(tuple(self.items()))
         return self.hash
 
     def __contains__(self, state):
         """
         Checks state features in self to see if the given state is a specific instance of self. Keys in
         self must be a subset of state's keys.
+
+        Note: should having more keys be 'in' a fewer keys abstraction or vice versa?
         """
         if self.keys() - state.keys():
             return False

@@ -19,8 +19,8 @@ from MDP.Distribution import Distribution
 
 from random import shuffle
 
-(WALL, OPEN, AGENT, PARTNER, ROBBER,
- GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')
+(WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
+    ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')
 
 maze = {}
 
@@ -33,6 +33,7 @@ def initialize_maze(maze_file):
 
     global maze
     maze = {(row, col): char for row, line in enumerate(maze_lines) for col, char in enumerate(line)}
+    return maze
 
 
 def initial_state():

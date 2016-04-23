@@ -57,5 +57,10 @@ class Model:
     def update(self, state, action):
         raise NotImplementedError('Have not implemented update method of Model class ' + str(self.__class__))
 
+    def __eq__(self, other):
+        raise NotImplementedError('Have not implemented __eq__ method of Model class ' + str(self.__class__))
+
+    def __hash__(self):
+        raise NotImplementedError('Have not implemented __hash__ method of Model class ' + str(self.__class__))
 
 

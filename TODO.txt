@@ -1,14 +1,6 @@
 BY PRIORITY (ISH)
 
-    DECORATE THE PLANNER COMPONENTS FUCK
-
-    Restructuring
-        Agent's perspective
-            - multiagent scenario wrapper?
-                States need turns
-                Every transition should update the agents
-                The planner needs to consider future models, then (wrap into state POMDP style?)
-
+    Refactor module/package names to lower case.
 
     Domains
         StarCraft

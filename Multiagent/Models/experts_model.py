@@ -39,3 +39,6 @@ class ExpertsModel(Model):
             self.experts[expert_predict] *= predictions[action]
 
         self.experts.normalize()
+
+    def __hash__(self):
+        return hash(tuple(self.experts.items()))
