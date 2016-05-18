@@ -1,0 +1,422 @@
+{
+ "Initial": {}, 
+ "Goal": {
+ },
+ "Structures": [
+   "Nexus",
+   "Pylon",
+   "Assimilator",
+   "Gateway",
+   "Forge",
+   "Cybernetics Core",
+   "Shield Battery",
+   "Photon Cannon",
+   "Robotics Facility",
+   "Stargate",
+   "Citadel of Adun",
+   "Robotics Support Bay",
+   "Observatory",
+   "Fleet Beacon",
+   "Templar Archives",
+   "Arbiter Tribunal"
+ ], 
+ "Units": [
+	"Probe",
+	"Zealot",
+	"Dragoon",
+	"High Templar",
+	"Dark Templar",
+	"Scout",
+	"Carrier",
+	"Arbiter",
+	"Corsair",
+	"Shuttle",
+	"Reaver",
+	"Observer",	
+ ],
+ "Recipes": {
+	"Build Nexus": {
+		 "Produces": {
+		   "Nexus": 1
+		 }, 
+		 "Requires": {
+		 }, 
+		 "Consumes": {
+		   "Minerals": 400
+		 }, 
+		 "Time": 120,
+	}, 
+	"Build Pylon": {
+		"Produces": {
+			"Pylon": 1,
+			"Supply": 8
+		},
+		"Requires": {
+		},
+		"Consumes": {
+			"Minerals": 100
+		},
+		"Time": 30,
+	},
+	"Build Assimilator": {
+		"Produces": {
+			"Assimilator": 1
+		},
+		"Requires": {
+		},
+		"Consumes": {
+			"Minerals": 100
+		},
+		"Time": 40
+	},
+	"Build Gateway": {
+		"Produces": {
+			"Gateway": 1
+		},
+		"Requires": {
+			"Nexus": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 150
+		},
+		"Time": 60
+	},
+	"Build Forge": {
+		"Produces": {
+			"Forge": 1
+		},
+		"Requires": {
+			"Nexus": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 150
+		},
+		"Time": 40
+	},
+	"Build Cybernetics Core": {
+		"Produces": {
+			"Cybernetics Core": 1
+		},
+		"Requires": {
+			"Gateway": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 200
+		},
+		"Time": 60
+	},
+	"Build Shield Battery": {
+		"Produces": {
+			"Shield Battery": 1
+		},
+		"Requires": {
+			"Gateway": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 100
+		},
+		"Time": 30
+	},
+	"Build Photon Cannon": {
+		"Produces": {
+			"Photon Cannon": 1
+		},
+		"Requires": {
+			"Forge": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 150
+		},
+		"Time": 50
+	},
+	"Build Robotics Facility": {
+		"Produces": {
+			"Robotics Facility": 1
+		},
+		"Requires": {
+			"Cybernetics Core": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 200,
+			"Gas": 200
+		},
+		"Time": 80
+	},
+	"Build Stargate": {
+		"Produces": {
+			"Stargate": 1
+		},
+		"Requires": {
+			"Cybernetics Core": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 150,
+			"Gas": 150
+		},
+		"Time": 70
+	},
+	"Build Citadel of Adun": {
+		"Produces": {
+			"Citadel of Adun": 1
+		},
+		"Requires": {
+			"Cybernetics Core": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 150,
+			"Gas": 100
+		},
+		"Time": 60
+	},
+	"Build Robotics Support Bay": {
+		"Produces": {
+			"Robotics Support Bay": 1
+		},
+		"Requires": {
+			"Robotics Facility": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 150,
+			"Gas": 100
+		},
+		"Time": 30
+	},
+	"Build Observatory": {
+		"Produces": {
+			"Observatory": 1
+		},
+		"Requires": {
+			"Robotics Facility": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 50,
+			"Gas": 100
+		},
+		"Time": 30
+	},
+	"Build Fleet Beacon": {
+		"Produces": {
+			"Fleet Beacon": 1
+		},
+		"Requires": {
+			"Stargate": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 300,
+			"Gas": 200
+		},
+		"Time": 60
+	},
+	"Build Templar Archives": {
+		"Produces": {
+			"Templar Archives": 1
+		},
+		"Requires": {
+			"Citadel of Adun": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 150,
+			"Gas": 200
+		},
+		"Time": 60
+	},
+	"Build Arbiter Tribunal": {
+		"Produces": {
+			"Arbiter Tribunal": 1
+		},
+		"Requires": {
+			"Stargate": 1,
+			"Templar Archives": 1,
+			"Pylon": 1
+		},
+		"Consumes": {
+			"Minerals": 200,
+			"Gas": 150
+		},
+		"Time": 60
+	},
+	"Build Probe": {
+		"Produces": {
+			"Probe": 1
+		},
+		"Requires": {
+			"Nexus": 1		
+		},
+		"Consumes": {
+			"Minerals": 50,
+			"Supply": 1,
+		},
+		"Time": 20
+	},
+	"Build Zealot": {
+		"Produces": {
+			"Zealot": 1
+		},
+		"Requires": {
+			"Gateway": 1
+		},
+		"Consumes": {
+			"Minerals": 100,
+			"Supply": 2
+		},
+		"Time": 40
+	},
+	"Build Dragoon": {
+		"Produces": {
+			"Dragoon": 1
+		},
+		"Requires": {
+			"Gateway": 1,
+			"Cybernetics Core": 1
+		},
+		"Consumes": {
+			"Minerals": 125,
+			"Gas": 50, 
+			"Supply": 2,
+		},
+		"Time": 50
+	},
+	"Build High Templar": {
+		"Produces": {
+			"High Templar": 1
+		},
+		"Requires": {
+			"Gateway": 1,
+			"Templar Archives": 1,
+		},
+		"Consumes": {
+			"Minerals": 50,
+			"Gas": 150,
+			"Supply": 2,
+		},
+		"Time": 50
+	},
+	"Build Dark Templar": {
+		"Produces": {
+			"Dark Templar": 1
+		},
+		"Requires": {
+			"Gateway": 1,
+			"Templar Archives": 1
+		},
+		"Consumes": {
+			"Minerals": 125,
+			"Gas": 100,
+			"Supply": 2,
+		},
+		"Time": 50
+	},
+	"Build Scout": {
+		"Produces": {
+			"Scout": 1
+		},
+		"Requires": {
+			"Stargate": 1
+		},
+		"Consumes": {
+			"Minerals": 275,
+			"Gas": 125,
+			"Supply": 3
+		},
+		"Time": 80
+	},
+	"Build Carrier": {
+		"Produces": {
+			"Carrier": 1
+		},
+		"Requires": {
+			"Stargate": 1,
+			"Fleet Beacon": 1
+		},
+		"Consumes": {
+			"Minerals": 350,
+			"Gas": 250,
+			"Supply": 6
+		},
+		"Time": 140
+	},
+	"Build Arbiter": {
+		"Produces": {
+			"Arbiter": 1
+		},
+		"Requires": {
+			"Stargate": 1
+		},
+		"Consumes": {
+			"Minerals": 100,
+			"Gas": 350,
+			"Supply": 4
+		},
+		"Time": 160
+	},
+	"Build Corsair": {
+		"Produces": {
+			"Corsair": 1
+		},
+		"Requires": {
+			"Stargate": 1
+		},
+		"Consumes": {
+			"Minerals": 150,
+			"Gas": 100,
+			"Supply": 2
+		},
+		"Time": 40
+	},
+	"Build Shuttle": {
+		"Produces": {
+			"Shuttle": 1
+		},
+		"Requires": {
+			"Robotics Facility": 1
+		},
+		"Consumes": {
+			"Minerals": 200,
+			"Gas": 0,
+			"Supply": 2
+		},
+		"Time": 60
+	},
+	"Build Reaver": {
+		"Produces": {
+			"Reaver": 1
+		},
+		"Requires": {
+			"Robotics Facility": 1,
+			"Robotics Support Bay": 1
+		},
+		"Consumes": {
+			"Minerals": 200
+			"Gas": 100
+			"Supply": 4
+		},
+		"Time": 70
+	},
+	"Build Observer": {
+		"Produces": {
+			"Observer": 1
+		},
+		"Requires": {
+			"Robotics Facility": 1
+		},
+		"Consumes": {
+			"Minerals": 25,
+			"Gas": 75, 
+			"Supply": 1,
+		},
+		"Time": 40
+	},
+ }
+}
