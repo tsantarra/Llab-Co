@@ -5,12 +5,13 @@ import traceback
 from Visualization.graph import show_graph
 
 
-def carpy_dpthts(scenario):
+def carpy_dpthts():
     from Domains.Cops_and_Robbers.CopsAndRobbersScenario import show_state, initialize_maze, \
-        heuristic
+        heuristic, cops_and_robbers_scenario
     import MDP.solvers.thts_dp as dpthts
     # Initialize map
     initialize_maze('./Mazes/a.maze')
+    scenario = cops_and_robbers_scenario
 
     # Retrieve initial state.
     state = scenario.initial_state()
@@ -70,8 +71,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     try:
-        multiagent_carpy()
-
+        #multiagent_carpy()
+        carpy_dpthts()
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')
 

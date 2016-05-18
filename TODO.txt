@@ -1,9 +1,19 @@
 BY PRIORITY (ISH)
 
+    Ensure models return new copies, not modified instances.
+
     Refactor module/package names to lower case.
 
     Domains
         StarCraft
+            Note: will have to figure out queue in scenario; also, caps for research (cannot keep researching same thing over and over)
+            Evaluation? Battle simulator? Heuristic? Match to one or more possible goals?
+        Small domains:
+            Multi-armed bandit (introduce conflict in same bandit? shared obs? someone explores while the other exploits?)
+            Cooperative flocking (various roles?)
+            Blocks world (tagged blocks which can only be moved by certain agent)
+            Traditional pursuit?
+            Generated MDP (Noa Agmon's work "Leading Ad Hoc Agents...")
 
     Plan-space reasoning
         Comm evaluation

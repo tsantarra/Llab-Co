@@ -42,3 +42,6 @@ class ExpertsModel(Model):
 
     def __hash__(self):
         return hash(tuple(self.experts.items()))
+
+    def __eq__(self, other):
+        pass

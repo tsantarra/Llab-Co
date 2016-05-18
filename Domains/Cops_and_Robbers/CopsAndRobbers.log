@@ -1,11 +1,4 @@
-DEBUG:root:Initial state:
-	Robber1:	(7, 7)
-	Robber2:	(1, 1)
-	A:	(4, 3)
-	P:	(1, 7)
-	Round:	1
-	Turn:	A
-DEBUG:root:Beginning simulation.
+DEBUG:root:Beginning search.
 DEBUG:root:graph_search
 DEBUG:root:Parameters:	Robber1:	(7, 7)
 	Robber2:	(1, 1)
@@ -13,23 +6,41 @@ DEBUG:root:Parameters:	Robber1:	(7, 7)
 	P:	(1, 7)
 	Round:	1
 	Turn:	A
-	Models:	{'P': <Multiagent.Models.experts_model.ExpertsModel object at 0x047B2470>}
-	Scenario(initial_state=<function initial_state at 0x047AE6F0>, transition=<function modeler_transition.<locals>.new_transition_fn at 0x047A8D68>, actions=<function actions at 0x047AEA50>, utility=<function utility at 0x047AEB70>, end=<function end at 0x047AEB28>)
+	Scenario(initial_state=<function initial_state at 0x046DE0C0>, transition=<function transition at 0x046DE5D0>, actions=<function actions at 0x046DE540>, utility=<function utility at 0x046DE660>, end=<function end at 0x046DE618>)
 	1000
-	<function heuristic at 0x047AEBB8>
+	<function heuristic at 0x046DE6A8>
 	None
-ERROR:root:Error.
-Traceback (most recent call last):
-  File "D:/GitHub/Llab-Co/Domains/Cops_and_Robbers/CopsAndRobbers.py", line 73, in <module>
-    multiagent_carpy()
-  File "D:/GitHub/Llab-Co/Domains/Cops_and_Robbers/CopsAndRobbers.py", line 58, in multiagent_carpy
-    action = current_agent.get_action(state)
-  File "D:\GitHub\Llab-Co\Multiagent\Agents\modeling_agent.py", line 37, in get_action
-    root_node=self.policy_graph)
-  File "D:\GitHub\Llab-Co\MDP\solvers\thts_dp.py", line 238, in graph_search
-    backup(node, scenario, backup_op=backup_op)
-  File "D:\GitHub\Llab-Co\MDP\solvers\thts_dp.py", line 169, in backup
-    backup_op(node)
-  File "D:\GitHub\Llab-Co\Multiagent\Agents\modeling_agent.py", line 71, in policy_backup
-    action_distribution = node.state['Models'][agent_turn].predict(node.state)
-AttributeError: 'NoneType' object has no attribute 'predict'
+DEBUG:root:Action: A-R
+DEBUG:root:New state: 	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(1, 7)
+	Round:	2
+	Turn:	P
+*********
+*R**** P*
+*    * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (1, 7), 2]
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(1, 7)
+	Round:	2
+	Turn:	P
+	Scenario(initial_state=<function initial_state at 0x046DE0C0>, transition=<function transition at 0x046DE5D0>, actions=<function actions at 0x046DE540>, utility=<function utility at 0x046DE660>, end=<function end at 0x046DE618>)
+	1000
+	<function heuristic at 0x046DE6A8>
+	<Val:84.00 Vis:601>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(1, 7)
+	Round:	2
+	Turn:	P

@@ -32,20 +32,48 @@
 	"Corsair",
 	"Shuttle",
 	"Reaver",
-	"Observer",	
+	"Observer"
  ],
+  "Research": [
+    "Ground Weapons",
+    "Ground Armor",
+    "Plasma Shields",
+    "Air Armor",
+    "Air Weapons",
+    "Singularity Charge",
+    "Leg Enhancements",
+    "Scarab Damage",
+    "Increased Reaver Capacity",
+    "Gravitic Drive",
+    "Carrier Capacity",
+    "Apial Sensors",
+    "Gravitic Thrusters",
+    "Disruption Web",
+    "Argus Jewel",
+    "Psionic Storm",
+    "Hallucination",
+    "Khaydarin Amulet",
+    "Maelstrom",
+    "Mind Control",
+    "Argus Talisman",
+    "Sensor Array",
+    "Gravitic Booster",
+    "Stasis Field",
+    "Recall",
+    "Khaydarin Core"
+  ],
  "Recipes": {
 	"Build Nexus": {
 		 "Produces": {
 		   "Nexus": 1
-		 }, 
+		 },
 		 "Requires": {
-		 }, 
+		 },
 		 "Consumes": {
 		   "Minerals": 400
-		 }, 
-		 "Time": 120,
-	}, 
+		 },
+		 "Time": 120
+	},
 	"Build Pylon": {
 		"Produces": {
 			"Pylon": 1,
@@ -56,7 +84,7 @@
 		"Consumes": {
 			"Minerals": 100
 		},
-		"Time": 30,
+		"Time": 30
 	},
 	"Build Assimilator": {
 		"Produces": {
@@ -252,11 +280,11 @@
 			"Probe": 1
 		},
 		"Requires": {
-			"Nexus": 1		
+			"Nexus": 1
 		},
 		"Consumes": {
 			"Minerals": 50,
-			"Supply": 1,
+			"Supply": 1
 		},
 		"Time": 20
 	},
@@ -283,8 +311,8 @@
 		},
 		"Consumes": {
 			"Minerals": 125,
-			"Gas": 50, 
-			"Supply": 2,
+			"Gas": 50,
+			"Supply": 2
 		},
 		"Time": 50
 	},
@@ -294,12 +322,12 @@
 		},
 		"Requires": {
 			"Gateway": 1,
-			"Templar Archives": 1,
+			"Templar Archives": 1
 		},
 		"Consumes": {
 			"Minerals": 50,
 			"Gas": 150,
-			"Supply": 2,
+			"Supply": 2
 		},
 		"Time": 50
 	},
@@ -314,7 +342,7 @@
 		"Consumes": {
 			"Minerals": 125,
 			"Gas": 100,
-			"Supply": 2,
+			"Supply": 2
 		},
 		"Time": 50
 	},
@@ -398,8 +426,8 @@
 			"Robotics Support Bay": 1
 		},
 		"Consumes": {
-			"Minerals": 200
-			"Gas": 100
+			"Minerals": 200,
+			"Gas": 100,
 			"Supply": 4
 		},
 		"Time": 70
@@ -413,10 +441,10 @@
 		},
 		"Consumes": {
 			"Minerals": 25,
-			"Gas": 75, 
-			"Supply": 1,
+			"Gas": 75,
+			"Supply": 1
 		},
 		"Time": 40
-	},
+	}
  }
 }
