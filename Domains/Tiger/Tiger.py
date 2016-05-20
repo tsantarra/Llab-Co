@@ -1,5 +1,5 @@
 from MDP.Distribution import Distribution
-from MDP.State import State
+from source.MDP.State import State
 
 
 def update_beliefs(belief_state, scenario, action, observation):

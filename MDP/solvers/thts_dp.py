@@ -30,10 +30,10 @@
 
 """
 
+import logging
+from heapq import heappop, heappush
 from math import sqrt, log
 from random import choice
-from heapq import heappop, heappush
-import logging
 
 from MDP.Distribution import Distribution
 

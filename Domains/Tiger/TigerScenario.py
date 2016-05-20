@@ -6,9 +6,9 @@ Tiger problem:
     - reward: 1
 """
 
-
 from MDP.Distribution import Distribution
 from MDP.Scenario import Scenario
+
 from MDP.State import State
 
 

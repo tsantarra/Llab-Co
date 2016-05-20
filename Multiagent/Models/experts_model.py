@@ -1,6 +1,7 @@
 from collections import defaultdict
-from Multiagent.Model import Model
+
 from MDP.Distribution import Distribution
+from Multiagent.Model import Model
 
 
 class ExpertsModel(Model):

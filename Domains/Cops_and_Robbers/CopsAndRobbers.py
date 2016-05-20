@@ -71,8 +71,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     try:
-        #multiagent_carpy()
-        carpy_dpthts()
+        multiagent_carpy()
+        #carpy_dpthts()
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')
 

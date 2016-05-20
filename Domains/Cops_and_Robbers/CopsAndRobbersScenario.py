@@ -13,11 +13,11 @@ State variables:
 The state can also be extended with a partner model, taking the role of the 'belief state' in POMDPs. 
 """
 
+from random import shuffle
+
+from MDP.Distribution import Distribution
 from MDP.Scenario import Scenario
 from MDP.State import State
-from MDP.Distribution import Distribution
-
-from random import shuffle
 
 (WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
     ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')

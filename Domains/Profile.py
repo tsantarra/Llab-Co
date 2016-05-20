@@ -1,10 +1,10 @@
 import cProfile
 import io
+import logging
 import pstats
 
 from Domains.Cops_and_Robbers.CopsAndRobbers import carpy_dpthts
 from Domains.Cops_and_Robbers.CopsAndRobbersScenario import cops_and_robbers_scenario
-import logging
 
 
 def profile(func):

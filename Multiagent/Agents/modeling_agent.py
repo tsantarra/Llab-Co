@@ -7,12 +7,12 @@ of the teammate via the model).
 TODO: generalize solvers, low priority
 TODO: wrap planner in such a way to take into account future observations of teammate (POMDP)
 """
-from MDP.solvers.thts_dp import graph_search
-from MDP.Distribution import Distribution
-from Multiagent.Agent import Agent
-
 from collections import defaultdict
 from functools import partial
+
+from MDP.Distribution import Distribution
+from MDP.solvers.thts_dp import graph_search
+from Multiagent.Agent import Agent
 
 
 class ModelingAgent(Agent):

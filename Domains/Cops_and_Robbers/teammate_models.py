@@ -1,11 +1,10 @@
-from Multiagent.Models.experts_model import ExpertsModel
-from Multiagent.Agent import Agent
-from Domains.Cops_and_Robbers.CopsAndRobbersScenario import cops_and_robbers_scenario
-from MDP.Distribution import Distribution
-
-from functools import partial
 from collections import defaultdict
+from functools import partial
 from heapq import heappop, heappush
+
+from MDP.Distribution import Distribution
+from Multiagent.Agent import Agent
+from Multiagent.Models.experts_model import ExpertsModel
 
 (WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
     ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')
