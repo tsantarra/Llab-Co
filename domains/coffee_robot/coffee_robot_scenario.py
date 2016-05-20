@@ -9,10 +9,10 @@ Coffee robot domain:
     Round - how many turns have elapsed
 """
 
-from MDP.Distribution import Distribution
-from MDP.Scenario import Scenario
+from mdp.distribution import Distribution
+from mdp.scenario import Scenario
 
-from MDP.State import State
+from mdp.state import State
 
 
 def initial_state():

@@ -2,9 +2,8 @@ from collections import defaultdict
 from functools import partial
 from heapq import heappop, heappush
 
-from MDP.Distribution import Distribution
-from Multiagent.Agent import Agent
-from Multiagent.Models.experts_model import ExpertsModel
+from mdp.distribution import Distribution
+from multiagent.experts_model import ExpertsModel
 
 (WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
     ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')
@@ -137,7 +136,7 @@ def build_experts_model(scenario, maze, initial_state):
     return ExpertsModel(scenario, predictors)
 
 
-class AstarTeammate(Agent):
+class AstarTeammate:
 
     def __init__(self, scenario, target, maze):
         self.scenario = scenario

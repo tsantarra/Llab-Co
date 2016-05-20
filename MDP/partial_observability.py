@@ -1,4 +1,4 @@
-from MDP.Distribution import Distribution
+from mdp.distribution import Distribution
 
 
 def po_transition(transition, observations):

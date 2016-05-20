@@ -1,8 +1,8 @@
 from collections import namedtuple
 
-from MDP.Distribution import Distribution
-from MDP.Scenario import Scenario
-from MDP.State import State
+from mdp.distribution import Distribution
+from mdp.scenario import Scenario
+from mdp.state import State
 
 GridParams = namedtuple('GridParams', ['x', 'y', 'w', 'h', 'rounds'])
 params = GridParams(5, 5, 10, 10, 11)

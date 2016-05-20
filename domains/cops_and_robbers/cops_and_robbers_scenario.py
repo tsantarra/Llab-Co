@@ -15,9 +15,9 @@ The state can also be extended with a partner model, taking the role of the 'bel
 
 from random import shuffle
 
-from MDP.Distribution import Distribution
-from MDP.Scenario import Scenario
-from MDP.State import State
+from mdp.distribution import Distribution
+from mdp.scenario import Scenario
+from mdp.state import State
 
 (WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
     ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')

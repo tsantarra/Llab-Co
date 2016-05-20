@@ -1,8 +1,8 @@
-from Domains.Grid.GridScenario import grid_scenario
+from domains.grid.grid_scenario import grid_scenario
 
 
 def grid_test_bfs(scenario):
-    from MDP.solvers.bfs import breadth_first_search
+    from mdp.solvers.bfs import breadth_first_search
 
     # Retrieve initial state.
     state = scenario.initial_state()
@@ -20,7 +20,7 @@ def grid_test_bfs(scenario):
 
 
 def grid_test_mcts(scenario):
-    from MDP.solvers.mcts import mcts
+    from mdp.solvers.mcts import mcts
 
     # Retrieve initial state.
     state = scenario.initial_state()
@@ -37,7 +37,7 @@ def grid_test_mcts(scenario):
 
 
 def grid_test_vi(scenario):
-    from MDP.solvers.vi import value_iteration
+    from mdp.solvers.vi import value_iteration
 
     # Retrieve initial state.
     state = scenario.initial_state()
@@ -53,7 +53,7 @@ def grid_test_vi(scenario):
 
 
 def grid_test_thts(scenario):
-    from MDP.solvers.thts import tree_search
+    from mdp.solvers.thts import tree_search
 
     # Retrieve initial state.
     state = scenario.initial_state()
@@ -72,7 +72,7 @@ def grid_test_thts(scenario):
 
 
 def grid_test_dpthts(scenario):
-    import MDP.solvers.thts_dp as dpthts
+    import mdp.solvers.thts_dp as dpthts
     # Retrieve initial state.
     state = scenario.initial_state()
     print('Initial state:\n', state)

@@ -33,7 +33,7 @@
 from math import sqrt, log
 from random import choice
 
-from MDP.Distribution import Distribution
+from mdp.distribution import Distribution
 
 
 def greedy_action(node):

@@ -6,14 +6,14 @@ MDPs in belief space, then solved via the MDP solvers. The code below will fail,
 
 from collections import defaultdict
 
-from MDP.Distribution import Distribution
+from mdp.distribution import Distribution
 
 
 def value_iteration(belief_state, scenario, horizon, gamma=1.0):
     """
     Returns an action given the current state in a scenario.
 
-    https://web.engr.oregonstate.edu/~afern/classes/cs533/notes/finite-horizon-MDP.pdf
+    https://web.engr.oregonstate.edu/~afern/classes/cs533/notes/finite-horizon-mdp.pdf
     Finite horizon:
         Keep V hashes for every horizon depth
         Build V1 from V0, V2 from V1, etc

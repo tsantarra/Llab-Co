@@ -1,10 +1,9 @@
 from collections import defaultdict
 
-from MDP.Distribution import Distribution
-from Multiagent.Model import Model
+from mdp.distribution import Distribution
 
 
-class ExpertsModel(Model):
+class ExpertsModel:
 
     def __init__(self, scenario, expert_distribution):
         """
@@ -35,14 +34,16 @@ class ExpertsModel(Model):
 
         P(expert | action) = P(action | expert) * P(expert) / P(action)
         """
-        for expert_predict in self.experts:
+        new_model = self.copy()
+        for expert_predict in new_model.experts:
             predictions = expert_predict(state)
-            self.experts[expert_predict] *= predictions[action]
+            new_model.experts[expert_predict] *= predictions[action]
 
-        self.experts.normalize()
+        new_model.experts.normalize()
+        return new_model
 
-    def __hash__(self):
-        return hash(tuple(self.experts.items()))
-
-    def __eq__(self, other):
-        pass
+    def copy(self):
+        """
+        Creates a new instance of this model.
+        """
+        return ExpertsModel(scenario=self.scenario, expert_distribution=dict(self.experts))

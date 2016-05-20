@@ -1,12 +1,11 @@
 from collections import defaultdict
 
-from MDP.Distribution import Distribution
-from Multiagent.Model import Model
+from mdp.distribution import Distribution
 
 
-class FrequentistModel(Model):
+class FrequentistModel:
 
-    def __init__(self, scenario, prior=None, default=float):
+    def __init__(self, scenario, prior=None):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
@@ -16,10 +15,10 @@ class FrequentistModel(Model):
         self.scenario = scenario
 
         if not prior:
-            self.counts = defaultdict(default)
+            self.counts = defaultdict(float)
         else:
             assert isinstance(prior, dict)
-            self.counts = defaultdict(default, prior)
+            self.counts = defaultdict(float, prior)
 
     def predict(self, state):
         """
@@ -31,6 +30,14 @@ class FrequentistModel(Model):
 
     def update(self, state, action):
         """
-        Updates the count of observations of the action in the given state.
+        Updates the count of observations of the action in the given state. Returns a new version!
         """
-        self.counts[(state, action)] += 1
+        new_model = self.copy()
+        new_model.counts[(state, action)] += 1
+        return new_model
+
+    def copy(self):
+        """
+        Returns a new copy of this agent model.
+        """
+        return FrequentistModel(scenario=self.scenario, prior=dict(self.counts))

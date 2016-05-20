@@ -2,15 +2,15 @@ import logging
 import sys
 import traceback
 
-from Visualization.graph import show_graph
+from visualization.graph import show_graph
 
 
 def carpy_dpthts():
-    from Domains.Cops_and_Robbers.CopsAndRobbersScenario import show_state, initialize_maze, \
+    from domains.cops_and_robbers.cops_and_robbers_scenario import show_state, initialize_maze, \
         heuristic, cops_and_robbers_scenario
-    import MDP.solvers.thts_dp as dpthts
+    import mdp.solvers.thts_dp as dpthts
     # Initialize map
-    initialize_maze('./Mazes/a.maze')
+    initialize_maze('./mazes/a.maze')
     scenario = cops_and_robbers_scenario
 
     # Retrieve initial state.
@@ -35,13 +35,13 @@ def carpy_dpthts():
 
 
 def multiagent_carpy():
-    from Domains.Cops_and_Robbers.CopsAndRobbersScenario import heuristic, initialize_maze, cops_and_robbers_scenario, show_state
-    from Domains.Cops_and_Robbers.teammate_models import build_experts_model, AstarTeammate
-    from Multiagent.Agents.modeling_agent import ModelingAgent
+    from domains.cops_and_robbers.cops_and_robbers_scenario import heuristic, initialize_maze, cops_and_robbers_scenario, show_state
+    from domains.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
+    from multiagent.modeling_agent import ModelingAgent
     from random import choice
 
     # Initialize scenario and beginning state.
-    maze = initialize_maze('./Mazes/a.maze')
+    maze = initialize_maze('./mazes/a.maze')
     scenario = cops_and_robbers_scenario
     state = scenario.initial_state()
     logging.debug('Initial state:\n' + str(state))

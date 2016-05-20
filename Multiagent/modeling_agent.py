@@ -10,12 +10,11 @@ TODO: wrap planner in such a way to take into account future observations of tea
 from collections import defaultdict
 from functools import partial
 
-from MDP.Distribution import Distribution
-from MDP.solvers.thts_dp import graph_search
-from Multiagent.Agent import Agent
+from mdp.distribution import Distribution
+from mdp.solvers.thts_dp import graph_search
 
 
-class ModelingAgent(Agent):
+class ModelingAgent:
 
     def __init__(self, scenario, identity, models, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
@@ -24,7 +23,7 @@ class ModelingAgent(Agent):
         self.identity = identity
         self.models = models
         self.heuristic = heuristic
-        self.policy_graph = None
+        self.policy_graph_root = None
         self.policy_backup = partial(policy_backup, agent=self.identity)
 
     def get_action(self, state):
@@ -34,25 +33,26 @@ class ModelingAgent(Agent):
                                       iterations=1000,
                                       backup_op=self.policy_backup,
                                       heuristic=self.heuristic,
-                                      root_node=self.policy_graph)
-        self.policy_graph = node
+                                      root_node=self.policy_graph_root)
+        self.policy_graph_root = node
         return action
 
     def update(self, agent, state, observation, new_state):
         # Update model
         if agent in self.models:
-            self.models[agent] = self.models[agent].update(state, observation)
+            new_model = self.models[agent].update(state, observation)
+            self.models[agent] = new_model
 
         # Update location in policy graph
-        for node in self.policy_graph.successors[observation]:
+        for node in self.policy_graph_root.successors[observation]:
             if node.state == new_state:
-                self.policy_graph = node
+                self.policy_graph_root = node
                 break
 
 
 def policy_backup(node, agent):
     """
-    Function given to graph search planner to backup MDP state values based on
+    Function given to graph search planner to backup mdp state values based on
         - the agent's expectation maximization process
         - the agent's expectations of teammates' policies
     """
@@ -90,7 +90,8 @@ def modeler_transition(transition_fn):
             # Update models in resulting states.
             new_resulting_states = Distribution()
             for resulting_state, probability in resulting_states.items():
-                resulting_state['Models'][agent_turn] = resulting_state['Models'][agent_turn].update(state, action)
+                new_model = resulting_state['Models'][agent_turn].update(state, action)
+                resulting_state['Models'][agent_turn] = new_model
                 new_resulting_states[resulting_state] = probability
 
             return new_resulting_states

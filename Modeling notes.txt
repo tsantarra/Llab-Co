@@ -1,4 +1,4 @@
-"""
+
 An interface for an agent model which can make state-based predictions as well as update with new information.
 
 We can take the state + operators approach. It works for state because all scenarios have a similar underlying
@@ -46,21 +46,3 @@ A big problem is what to do when an agent is different from anything seen, when 
 What we want:
     - when behavior aligns with known instances: converge to plan
     - when behavior is different: remain uncertain (let comm handle it)
-"""
-
-
-class Model:
-
-    def predict(self, state):
-        raise NotImplementedError('Have not implemented predict method of Model class ' + str(self.__class__))
-
-    def update(self, state, action):
-        raise NotImplementedError('Have not implemented update method of Model class ' + str(self.__class__))
-
-    def __eq__(self, other):
-        raise NotImplementedError('Have not implemented __eq__ method of Model class ' + str(self.__class__))
-
-    def __hash__(self):
-        raise NotImplementedError('Have not implemented __hash__ method of Model class ' + str(self.__class__))
-
-

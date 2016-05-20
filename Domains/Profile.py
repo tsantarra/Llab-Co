@@ -3,8 +3,8 @@ import io
 import logging
 import pstats
 
-from Domains.Cops_and_Robbers.CopsAndRobbers import carpy_dpthts
-from Domains.Cops_and_Robbers.CopsAndRobbersScenario import cops_and_robbers_scenario
+from domains.cops_and_robbers.cops_and_robbers import carpy_dpthts
+from domains.cops_and_robbers.cops_and_robbers_scenario import cops_and_robbers_scenario
 
 
 def profile(func):

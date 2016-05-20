@@ -6,17 +6,17 @@ Tiger problem:
     - reward: 1
 """
 
-from MDP.Distribution import Distribution
-from MDP.Scenario import Scenario
+from mdp.distribution import Distribution
+from mdp.scenario import Scenario
 
-from MDP.State import State
+from mdp.state import State
 
 
 def initial_state():
     """
     Returns: An initial state for the Coffee Robot Scenario.
     """
-    return State({'Tiger': 'Left', 'Player': 'Middle', 'Round': 0})
+    return State({'tiger': 'Left', 'Player': 'Middle', 'Round': 0})
 
 
 def transition(state, action):
@@ -44,7 +44,7 @@ def observations(state, action):
     """
     Returns probability distributions for observations.
     """
-    if state['Tiger'] == 'Left':
+    if state['tiger'] == 'Left':
         return Distribution({'Roar left': 0.85, 'Roar right': 0.15})
     else:
         return Distribution({'Roar left': 0.15, 'Roar right': 0.85})
@@ -56,9 +56,9 @@ def utility(state):
     """
     if state['Player'] == 'Middle':
         return 0
-    elif state['Player'] == state['Tiger']:
+    elif state['Player'] == state['tiger']:
         return -1
-    elif state['Player'] != state['Tiger']:
+    elif state['Player'] != state['tiger']:
         return 1 * 0.9 ** state['Round']
 
 
