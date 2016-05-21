@@ -1,8 +1,6 @@
 BY PRIORITY (ISH)
 
-    Ensure models return new copies, not modified instances.
-
-    Refactor module/package names to lower case.
+    Probabilities seem to converge before strategies would differentiate. Happens right before teammate exits hallway.
 
     Domains
         StarCraft

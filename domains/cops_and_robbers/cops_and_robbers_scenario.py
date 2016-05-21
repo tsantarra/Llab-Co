@@ -135,7 +135,7 @@ def move_robbers(state):
                 new_states[new_state] = tie_prob * state_prob
         result = new_states
 
-    assert sum(result.values()) == 1.0, 'Resulting transition too large.'
+    assert abs(sum(result.values()) - 1.0) < 10e-5, 'Resulting transition too large. ' + str(sum(result.values()))
 
     return result
 
