@@ -52,5 +52,5 @@ if __name__ == "__main__":
     results = results.split('\n')
 
     # Print top time intensive calls
-    for i in range(10 + 5):  # 5 header lines
+    for i in range(15 + 5):  # 5 header lines
         print(results[i])
