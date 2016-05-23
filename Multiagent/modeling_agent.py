@@ -69,7 +69,7 @@ def policy_backup(node, agent):
             node.value += max(action_values.values())
         elif agent_turn in node.state['Models']:  # Agent predicts action distribution and resulting expected value
             action_distribution = node.state['Models'][agent_turn].predict(node.state)
-            node.value += action_distribution.expectation(action_values)
+            node.value += action_distribution.expectation(action_values, require_exact_keys=False)
 
 
 """

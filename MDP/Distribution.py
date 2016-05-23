@@ -16,15 +16,17 @@ class Distribution(OrderedDict):
         else:
             super(Distribution, self).__init__()
 
-    def expectation(self, values):
+    def expectation(self, values, require_exact_keys=True):
         """
         Returns an expectation over values using the probabilities in this distribution.
         """
-        assert self.keys() == values.keys(), \
-            'Conditional probabilities keys do not map to distribution.\n' + \
-            str(set(values.keys())) + ' != ' + str(self.keys())
-
-        return sum(values[key] * self[key] for key in self)
+        if require_exact_keys:
+            assert self.keys() == values.keys(), \
+                'Conditional probabilities keys do not map to distribution.\n' + \
+                str(set(values.keys())) + ' != ' + str(self.keys())
+            return sum(values[key] * self[key] for key in self)
+        else:
+            return sum(values[key] * self[key] for key in (self.keys() & values.keys()))
 
     def conditional_update(self, conditional_probs):
         """
@@ -72,7 +74,6 @@ class Distribution(OrderedDict):
 
     def __repr__(self):
         return '\nDistribution {\n' + '\n'.join(str(key) + '\n\tP=' + str(val) + '\n' for key, val in self.items()) + '}'
-
 
     def __missing__(self, key):
         self[key] = 0.0

@@ -21,12 +21,12 @@ class ExpertsModel:
         """
         Predicts based on number of prior observations of actions.
         """
-        action_distribution = defaultdict(float)
+        action_distribution = {action: 0.0 for action in self.scenario.actions(state)}
         for expert_predict, expert_prob in self.experts.items():
             for action, action_prob in expert_predict(state).items():
                 action_distribution[action] += expert_prob * action_prob
 
-        return action_distribution
+        return Distribution(action_distribution)
 
     def update(self, state, action):
         """
@@ -47,3 +47,6 @@ class ExpertsModel:
         Creates a new instance of this model.
         """
         return ExpertsModel(scenario=self.scenario, expert_distribution=dict(self.experts))
+
+    def __repr__(self):
+        return '\t'.join(str(prob) for expert, prob in self.experts.items())
