@@ -8,7 +8,7 @@ DEBUG:root:Initial state:
 DEBUG:root:Beginning simulation.
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
+	<function heuristic at 0x046DD618>
 	None
 
 DEBUG:root:Action: A	A-L
@@ -39,8 +39,8 @@ DEBUG:root:New state: *********
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:83.03 Vis:300>	Robber1:	(7, 7)
+	<function heuristic at 0x046DD618>
+	<Val:83.98 Vis:238>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
 	A:	(4, 2)
 	P:	(1, 6)
@@ -48,17 +48,17 @@ DEBUG:root:Parameters:1000
 	Turn:	A
 	Models:	{'P': 0.5	0.5}
 
-DEBUG:root:Action: A	A-R
+DEBUG:root:Action: A	A-W
 DEBUG:root:New state: *********
 *R****P *
 *    * **
 * ** * **
-*  A    *
+* A     *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 3), (1, 6), 4]
+[(4, 2), (1, 6), 4]
 
 
 DEBUG:root:Action: P	P-D
@@ -66,36 +66,36 @@ DEBUG:root:New state: *********
 *R****  *
 *    *P**
 * ** * **
-*  A    *
+* A     *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 3), (2, 6), 5]
+[(4, 2), (2, 6), 5]
 
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:81.91 Vis:204>	Robber1:	(7, 7)
+	<function heuristic at 0x046DD618>
+	<Val:80.99 Vis:130>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(4, 3)
+	A:	(4, 2)
 	P:	(2, 6)
 	Round:	5
 	Turn:	A
-	Models:	{'P': 0.009999999999999985	0.99}
+	Models:	{'P': 0.009999999999999992	0.99}
 
 DEBUG:root:Action: A	A-R
 DEBUG:root:New state: *********
 *R****  *
 *    *P**
 * ** * **
-*   A   *
+*  A    *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 4), (2, 6), 6]
+[(4, 3), (2, 6), 6]
 
 
 DEBUG:root:Action: P	P-D
@@ -103,147 +103,147 @@ DEBUG:root:New state: *********
 *R****  *
 *    * **
 * ** *P**
-*   A   *
+*  A    *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 4), (3, 6), 7]
+[(4, 3), (3, 6), 7]
 
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:78.04 Vis:108>	Robber1:	(7, 7)
+	<function heuristic at 0x046DD618>
+	<Val:77.57 Vis:115>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(4, 4)
+	A:	(4, 3)
 	P:	(3, 6)
 	Round:	7
 	Turn:	A
-	Models:	{'P': 0.99	0.010000000000000056}
+	Models:	{'P': 0.99	0.010000000000000042}
 
-DEBUG:root:Action: A	A-R
+DEBUG:root:Action: A	A-W
 DEBUG:root:New state: *********
 *R****  *
 *    * **
 * ** *P**
-*    A  *
+*  A    *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 5), (3, 6), 8]
+[(4, 3), (3, 6), 8]
 
 
-DEBUG:root:Action: P	P-U
+DEBUG:root:Action: P	P-D
 DEBUG:root:New state: *********
 *R****  *
-*    *P**
+*    * **
 * ** * **
-*    A  *
+*  A  P *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 5), (2, 6), 9]
+[(4, 3), (4, 6), 9]
 
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:76.93 Vis:311>	Robber1:	(7, 7)
+	<function heuristic at 0x046DD618>
+	<Val:74.54 Vis:143>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(4, 5)
-	P:	(2, 6)
+	A:	(4, 3)
+	P:	(4, 6)
 	Round:	9
 	Turn:	A
-	Models:	{'P': 0.9999989693909099	1.0306090899721767e-06}
+	Models:	{'P': 0.009999999999999959	0.99}
 
 DEBUG:root:Action: A	A-R
 DEBUG:root:New state: *********
 *R****  *
-*    *P**
+*    * **
 * ** * **
-*     A *
+*   A P *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 6), (2, 6), 10]
+[(4, 4), (4, 6), 10]
 
 
-DEBUG:root:Action: P	P-D
+DEBUG:root:Action: P	P-L
 DEBUG:root:New state: *********
 *R****  *
 *    * **
-* ** *P**
-*     A *
+* ** * **
+*   AP  *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 6), (3, 6), 11]
+[(4, 4), (4, 5), 11]
 
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:75.04 Vis:226>	Robber1:	(7, 7)
+	<function heuristic at 0x046DD618>
+	<Val:73.03 Vis:232>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(4, 6)
-	P:	(3, 6)
+	A:	(4, 4)
+	P:	(4, 5)
 	Round:	11
 	Turn:	A
-	Models:	{'P': 1.0410203448479782e-08	0.9999999895897965}
+	Models:	{'P': 0.00010201999591919969	0.9998979800040808}
 
 DEBUG:root:Action: A	A-L
 DEBUG:root:New state: *********
 *R****  *
 *    * **
-* ** *P**
-*    A  *
+* ** * **
+*  A P  *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 5), (3, 6), 12]
+[(4, 3), (4, 5), 12]
 
 
-DEBUG:root:Action: P	P-D
+DEBUG:root:Action: P	P-W
 DEBUG:root:New state: *********
 *R****  *
 *    * **
 * ** * **
-*    AP *
+*  A P  *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 5), (4, 6), 13]
+[(4, 3), (4, 5), 13]
 
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:39.41 Vis:232>	Robber1:	(7, 7)
+	<function heuristic at 0x046DD618>
+	<Val:0.74 Vis:9>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(4, 5)
-	P:	(4, 6)
+	A:	(4, 3)
+	P:	(4, 5)
 	Round:	13
 	Turn:	A
-	Models:	{'P': 0.9999999895897965	1.0410203448479865e-08}
+	Models:	{'P': 0.009999999999999955	0.99}
 
-DEBUG:root:Action: A	A-R
+DEBUG:root:Action: A	A-W
 DEBUG:root:New state: *********
 *R****  *
 *    * **
 * ** * **
-*     P *
+*  A P  *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 6), (4, 6), 14]
+[(4, 3), (4, 5), 14]
 
 
 DEBUG:root:Action: P	P-L
@@ -251,73 +251,36 @@ DEBUG:root:New state: *********
 *R****  *
 *    * **
 * ** * **
-*    PA *
+*  AP   *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 6), (4, 5), 15]
+[(4, 3), (4, 4), 15]
 
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:37.23 Vis:185>	Robber1:	(7, 7)
+	<function heuristic at 0x046DD618>
+	<Val:61.08 Vis:178>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(4, 6)
-	P:	(4, 5)
+	A:	(4, 3)
+	P:	(4, 4)
 	Round:	15
 	Turn:	A
-	Models:	{'P': 0.9899999999999999	0.010000000000000054}
+	Models:	{'P': 1.0515357127027719e-10	0.9999999998948464}
 
-DEBUG:root:Action: A	A-R
+DEBUG:root:Action: A	A-W
 DEBUG:root:New state: *********
 *R****  *
 *    * **
 * ** * **
-*    P A*
+*  AP   *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(4, 7), (4, 5), 16]
-
-
-DEBUG:root:Action: P	P-L
-DEBUG:root:New state: *********
-*R****  *
-*    * **
-* ** * **
-*   P  A*
-* * *** *
-* * *** *
-* *   R *
-*********
-[(4, 7), (4, 4), 17]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:36.93 Vis:608>	Robber1:	(7, 6)
-	Robber2:	(1, 1)
-	A:	(4, 7)
-	P:	(4, 4)
-	Round:	17
-	Turn:	A
-	Models:	{'P': 0.99	0.010000000000000047}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*R****  *
-*    * **
-* ** * **
-*   P A *
-* * *** *
-* * *** *
-* *   R *
-*********
-[(4, 6), (4, 4), 18]
+[(4, 3), (4, 4), 16]
 
 
 DEBUG:root:Action: P	P-U
@@ -325,1515 +288,1108 @@ DEBUG:root:New state: *********
 *R****  *
 *    * **
 * **P* **
-*     A *
+*  A    *
 * * *** *
 * * *** *
-* *  R  *
+* *    R*
 *********
-[(4, 6), (3, 4), 19]
+[(4, 3), (3, 4), 17]
 
 
 DEBUG:root:graph_search
 DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:2.05 Vis:10>	Robber1:	(7, 5)
+	<function heuristic at 0x046DD618>
+	<Val:70.44 Vis:100>	Robber1:	(7, 7)
 	Robber2:	(1, 1)
-	A:	(4, 6)
+	A:	(4, 3)
 	P:	(3, 4)
+	Round:	17
+	Turn:	A
+	Models:	{'P': 0.00010201999591919973	0.9998979800040808}
+
+DEBUG:root:Action: A	A-R
+DEBUG:root:New state: *********
+*R****  *
+*    * **
+* **P* **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (3, 4), 18]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*R****  *
+*   P* **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 4), 19]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:66.17 Vis:256>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 4)
 	Round:	19
 	Turn:	A
-	Models:	{'P': 0.9998979800040808	0.0001020199959192005}
+	Models:	{'P': 0.4999999999999993	0.5000000000000008}
+
+DEBUG:root:Action: A	A-R
+DEBUG:root:New state: *********
+*R****  *
+*   P* **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (2, 4), 20]
+
+
+DEBUG:root:Action: P	P-L
+DEBUG:root:New state: *********
+*R****  *
+*  P * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (2, 3), 21]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:63.21 Vis:466>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 5)
+	P:	(2, 3)
+	Round:	21
+	Turn:	A
+	Models:	{'P': 0.0001020199959191998	0.9998979800040808}
+
+DEBUG:root:Action: A	A-L
+DEBUG:root:New state: *********
+*R****  *
+*  P * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 3), 22]
+
+
+DEBUG:root:Action: P	P-L
+DEBUG:root:New state: *********
+*R****  *
+* P  * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 2), 23]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:64.10 Vis:303>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 2)
+	Round:	23
+	Turn:	A
+	Models:	{'P': 0.0001020199959191998	0.9998979800040808}
+
+DEBUG:root:Action: A	A-U
+DEBUG:root:New state: *********
+*R****  *
+* P  * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (2, 2), 24]
+
+
+DEBUG:root:Action: P	P-L
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (2, 1), 25]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:64.80 Vis:222>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(3, 4)
+	P:	(2, 1)
+	Round:	25
+	Turn:	A
+	Models:	{'P': 1.0515357127027724e-10	0.9999999998948464}
+
+DEBUG:root:Action: A	A-U
+DEBUG:root:New state: *********
+*R****  *
+*P  A* **
+* ** * **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(2, 4), (2, 1), 26]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R  A* **
+* ** * **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(2, 4), (1, 1), 27]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:61.39 Vis:281>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(2, 4)
+	P:	(1, 1)
+	Round:	27
+	Turn:	A
+	Models:	{'P': 0.9998979800040808	0.00010201999591920061}
+
+DEBUG:root:Action: A	A-D
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (1, 1), 28]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (2, 1), 29]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:60.42 Vis:328>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(3, 4)
+	P:	(2, 1)
+	Round:	29
+	Turn:	A
+	Models:	{'P': 0.4999999999999987	0.5000000000000013}
+
+DEBUG:root:Action: A	A-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 1), 30]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (1, 1), 31]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:57.38 Vis:371>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 4)
+	P:	(1, 1)
+	Round:	31
+	Turn:	A
+	Models:	{'P': 1.0306090899721725e-06	0.99999896939091}
+
+DEBUG:root:Action: A	A-R
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (1, 1), 32]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (2, 1), 33]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:52.28 Vis:163>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 5)
+	P:	(2, 1)
+	Round:	33
+	Turn:	A
+	Models:	{'P': 0.5000000000000008	0.4999999999999993}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (2, 1), 34]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (1, 1), 35]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:53.04 Vis:231>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 5)
+	P:	(1, 1)
+	Round:	35
+	Turn:	A
+	Models:	{'P': 0.010000000000000042	0.9899999999999999}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (1, 1), 36]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (2, 1), 37]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:49.51 Vis:222>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 5)
+	P:	(2, 1)
+	Round:	37
+	Turn:	A
+	Models:	{'P': 0.99999896939091	1.0306090899721676e-06}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (2, 1), 38]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (1, 1), 39]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:48.94 Vis:272>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 5)
+	P:	(1, 1)
+	Round:	39
+	Turn:	A
+	Models:	{'P': 1.0306090899721772e-06	0.99999896939091}
+
+DEBUG:root:Action: A	A-L
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (1, 1), 40]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 1), 41]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:47.01 Vis:494>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 1)
+	Round:	41
+	Turn:	A
+	Models:	{'P': 1.0	1.1057273553218774e-20}
+
+DEBUG:root:Action: A	A-U
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (2, 1), 42]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (1, 1), 43]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:46.30 Vis:153>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(3, 4)
+	P:	(1, 1)
+	Round:	43
+	Turn:	A
+	Models:	{'P': 1.0306090899721776e-06	0.99999896939091}
+
+DEBUG:root:Action: A	A-D
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (1, 1), 44]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 1), 45]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:44.03 Vis:108>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 1)
+	Round:	45
+	Turn:	A
+	Models:	{'P': 1.0515357127027817e-10	0.9999999998948464}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 1), 46]
+
+
+DEBUG:root:Action: P	P-R
+DEBUG:root:New state: *********
+*R****  *
+* P  * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 2), 47]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:41.03 Vis:79>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 2)
+	Round:	47
+	Turn:	A
+	Models:	{'P': 0.5000000000000011	0.49999999999999895}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*R****  *
+* P  * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 2), 48]
+
+
+DEBUG:root:Action: P	P-L
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 1), 49]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:40.01 Vis:282>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 1)
+	Round:	49
+	Turn:	A
+	Models:	{'P': 1.094670081768668e-18	1.0}
+
+DEBUG:root:Action: A	A-R
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (2, 1), 50]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*    A  *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 5), (1, 1), 51]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:35.70 Vis:173>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 5)
+	P:	(1, 1)
+	Round:	51
+	Turn:	A
+	Models:	{'P': 0.00010201999591920087	0.9998979800040808}
+
+DEBUG:root:Action: A	A-L
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (1, 1), 52]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 1), 53]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:32.41 Vis:913>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 1)
+	Round:	53
+	Turn:	A
+	Models:	{'P': 0.9999999999989378	1.0621572856689174e-12}
+
+DEBUG:root:Action: A	A-U
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (2, 1), 54]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (1, 1), 55]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:33.05 Vis:132>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(3, 4)
+	P:	(1, 1)
+	Round:	55
+	Turn:	A
+	Models:	{'P': 1.0306090899721793e-06	0.99999896939091}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (1, 1), 56]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (2, 1), 57]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:32.65 Vis:146>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(3, 4)
+	P:	(2, 1)
+	Round:	57
+	Turn:	A
+	Models:	{'P': 0.010000000000000056	0.99}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (2, 1), 58]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* **A* **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 4), (1, 1), 59]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:0.62 Vis:19>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(3, 4)
+	P:	(1, 1)
+	Round:	59
+	Turn:	A
+	Models:	{'P': 0.9999999998948464	1.05153571270277e-10}
+
+DEBUG:root:Action: A	A-D
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (1, 1), 60]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*   A   *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 4), (2, 1), 61]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:26.75 Vis:264>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 4)
+	P:	(2, 1)
+	Round:	61
+	Turn:	A
+	Models:	{'P': 0.99999896939091	1.0306090899721695e-06}
+
+DEBUG:root:Action: A	A-L
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*  A    *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 3), (2, 1), 62]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*  A    *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 3), (1, 1), 63]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:24.46 Vis:306>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 3)
+	P:	(1, 1)
+	Round:	63
+	Turn:	A
+	Models:	{'P': 0.9999999998948464	1.0515357127027726e-10}
+
+DEBUG:root:Action: A	A-L
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+* A     *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 2), (1, 1), 64]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+* A     *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 2), (2, 1), 65]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:24.52 Vis:147>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 2)
+	P:	(2, 1)
+	Round:	65
+	Turn:	A
+	Models:	{'P': 0.00010201999591920073	0.9998979800040808}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+* A     *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 2), (2, 1), 66]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+* A     *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 2), (1, 1), 67]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:22.77 Vis:207>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 2)
+	P:	(1, 1)
+	Round:	67
+	Turn:	A
+	Models:	{'P': 0.9999999999999892	1.0728861471414512e-14}
+
+DEBUG:root:Action: A	A-W
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+* A     *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 2), (1, 1), 68]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+* A     *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 2), (2, 1), 69]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:20.61 Vis:402>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(4, 2)
+	P:	(2, 1)
+	Round:	69
+	Turn:	A
+	Models:	{'P': 0.9999999895897965	1.0410203448479797e-08}
+
+DEBUG:root:Action: A	A-L
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*A      *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 1), (2, 1), 70]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+* ** * **
+*A      *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(4, 1), (1, 1), 71]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:19.00 Vis:248>	Robber1:	(7, 7)
+	Robber2:	(2, 1)
+	A:	(4, 1)
+	P:	(1, 1)
+	Round:	71
+	Turn:	A
+	Models:	{'P': 1.0410203448479837e-08	0.9999999895897965}
+
+DEBUG:root:Action: A	A-U
+DEBUG:root:New state: *********
+*P****  *
+*R   * **
+*A** * **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 1), (1, 1), 72]
+
+
+DEBUG:root:Action: P	P-D
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+*A** * **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(3, 1), (2, 1), 73]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:21.30 Vis:345>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(3, 1)
+	P:	(2, 1)
+	Round:	73
+	Turn:	A
+	Models:	{'P': 0.99	0.01000000000000001}
+
+DEBUG:root:Action: A	A-U
+DEBUG:root:New state: *********
+*R****  *
+*P   * **
+* ** * **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(2, 1), (2, 1), 74]
+
+
+DEBUG:root:Action: P	P-U
+DEBUG:root:New state: *********
+*R****  *
+*A   * **
+* ** * **
+*       *
+* * *** *
+* * *** *
+* *    R*
+*********
+[(2, 1), (1, 1), 75]
+
+
+DEBUG:root:graph_search
+DEBUG:root:Parameters:1000
+	<function heuristic at 0x046DD618>
+	<Val:48.00 Vis:386>	Robber1:	(7, 7)
+	Robber2:	(1, 1)
+	A:	(2, 1)
+	P:	(1, 1)
+	Round:	75
+	Turn:	A
+	Models:	{'P': 0.99	0.009999999999999997}
 
 DEBUG:root:Action: A	A-U
 DEBUG:root:New state: *********
 *R****  *
 *    * **
-* **P*A**
-*       *
-* * *** *
-* * *** *
-* *  R  *
-*********
-[(3, 6), (3, 4), 20]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*R****  *
-*   P* **
-* ** *A**
-*       *
-* * *** *
-* * *** *
-* * R   *
-*********
-[(3, 6), (2, 4), 21]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:64.00 Vis:239>	Robber1:	(7, 4)
-	Robber2:	(1, 1)
-	A:	(3, 6)
-	P:	(2, 4)
-	Round:	21
-	Turn:	A
-	Models:	{'P': 0.0001020199959191997	0.9998979800040807}
-
-DEBUG:root:Action: A	A-D
-DEBUG:root:New state: *********
-*R****  *
-*   P* **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* * R   *
-*********
-[(4, 6), (2, 4), 22]
-
-
-DEBUG:root:Action: P	P-L
-DEBUG:root:New state: *********
-*R****  *
-*  P * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (2, 3), 23]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:63.95 Vis:210>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 6)
-	P:	(2, 3)
-	Round:	23
-	Turn:	A
-	Models:	{'P': 0.4999999999999985	0.5000000000000016}
-
-DEBUG:root:Action: A	A-R
-DEBUG:root:New state: *********
-*R****  *
-*  P * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (2, 3), 24]
-
-
-DEBUG:root:Action: P	P-L
-DEBUG:root:New state: *********
-*R****  *
-* P  * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (2, 2), 25]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:60.83 Vis:470>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 7)
-	P:	(2, 2)
-	Round:	25
-	Turn:	A
-	Models:	{'P': 0.99999896939091	1.0306090899721778e-06}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*R****  *
-* P  * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (2, 2), 26]
-
-
-DEBUG:root:Action: P	P-L
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (2, 1), 27]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:60.42 Vis:438>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 6)
-	P:	(2, 1)
-	Round:	27
-	Turn:	A
-	Models:	{'P': 0.9999999999999999	1.0837233809509768e-16}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (2, 1), 28]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (1, 1), 29]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:58.75 Vis:269>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(4, 6)
-	P:	(1, 1)
-	Round:	29
-	Turn:	A
-	Models:	{'P': 0.99	0.010000000000000031}
-
-DEBUG:root:Action: A	A-R
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (1, 1), 30]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (2, 1), 31]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:55.05 Vis:241>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 7)
-	P:	(2, 1)
-	Round:	31
-	Turn:	A
-	Models:	{'P': 1.0621572856689188e-12	0.9999999999989378}
-
-DEBUG:root:Action: A	A-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (2, 1), 32]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (1, 1), 33]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:51.03 Vis:360>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(5, 7)
-	P:	(1, 1)
-	Round:	33
-	Turn:	A
-	Models:	{'P': 0.9999999895897965	1.041020344847987e-08}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (1, 1), 34]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (2, 1), 35]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:48.55 Vis:105>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(5, 7)
-	P:	(2, 1)
-	Round:	35
-	Turn:	A
-	Models:	{'P': 0.9998979800040808	0.00010201999591920066}
-
-DEBUG:root:Action: A	A-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (2, 1), 36]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (1, 1), 37]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:35.24 Vis:96>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(6, 7)
-	P:	(1, 1)
-	Round:	37
-	Turn:	A
-	Models:	{'P': 0.00010201999591919947	0.9998979800040808}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (1, 1), 38]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (2, 1), 39]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:24.68 Vis:30>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(6, 7)
-	P:	(2, 1)
-	Round:	39
-	Turn:	A
-	Models:	{'P': 0.009999999999999966	0.99}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (2, 1), 40]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (1, 1), 41]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:42.73 Vis:249>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(6, 7)
-	P:	(1, 1)
-	Round:	41
-	Turn:	A
-	Models:	{'P': 0.009999999999999955	0.9900000000000001}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (1, 1), 42]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (2, 1), 43]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:38.14 Vis:316>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(6, 7)
-	P:	(2, 1)
-	Round:	43
-	Turn:	A
-	Models:	{'P': 0.99	0.01000000000000004}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (2, 1), 44]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (1, 1), 45]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:19.84 Vis:40>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(5, 7)
-	P:	(1, 1)
-	Round:	45
-	Turn:	A
-	Models:	{'P': 1.0	1.1395738378807815e-26}
-
-DEBUG:root:Action: A	A-D
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (1, 1), 46]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * *** *
-* * ***A*
-* *R    *
-*********
-[(6, 7), (2, 1), 47]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:35.72 Vis:866>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(6, 7)
-	P:	(2, 1)
-	Round:	47
-	Turn:	A
-	Models:	{'P': 0.99	0.010000000000000044}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (2, 1), 48]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (1, 1), 49]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:34.84 Vis:346>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(5, 7)
-	P:	(1, 1)
-	Round:	49
-	Turn:	A
-	Models:	{'P': 0.49999999999999895	0.5000000000000011}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (1, 1), 50]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (2, 1), 51]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:30.44 Vis:723>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 7)
-	P:	(2, 1)
-	Round:	51
-	Turn:	A
-	Models:	{'P': 1.0	1.128178099501976e-24}
-
-DEBUG:root:Action: A	A-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (2, 1), 52]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*       *
-* * ***A*
-* * *** *
-* *R    *
-*********
-[(5, 7), (1, 1), 53]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:30.93 Vis:202>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(5, 7)
-	P:	(1, 1)
-	Round:	53
-	Turn:	A
-	Models:	{'P': 0.009999999999999938	0.9900000000000001}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (1, 1), 54]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (2, 1), 55]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:27.66 Vis:871>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 7)
-	P:	(2, 1)
-	Round:	55
-	Turn:	A
-	Models:	{'P': 1.0410203448479758e-08	0.9999999895897965}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (2, 1), 56]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (1, 1), 57]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:27.97 Vis:181>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(4, 7)
-	P:	(1, 1)
-	Round:	57
-	Turn:	A
-	Models:	{'P': 0.9998979800040808	0.00010201999591920085}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (1, 1), 58]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*      A*
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 7), (2, 1), 59]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:27.09 Vis:108>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 7)
-	P:	(2, 1)
-	Round:	59
-	Turn:	A
-	Models:	{'P': 0.009999999999999953	0.9900000000000001}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (2, 1), 60]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (1, 1), 61]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:24.99 Vis:522>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(4, 6)
-	P:	(1, 1)
-	Round:	61
-	Turn:	A
-	Models:	{'P': 0.9999999999999892	1.07288614714146e-14}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*    A  *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 5), (1, 1), 62]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*    A  *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 5), (2, 1), 63]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:22.88 Vis:120>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 5)
-	P:	(2, 1)
-	Round:	63
-	Turn:	A
-	Models:	{'P': 0.009999999999999945	0.9900000000000001}
-
-DEBUG:root:Action: A	A-R
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (2, 1), 64]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (1, 1), 65]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:18.17 Vis:277>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(4, 6)
-	P:	(1, 1)
-	Round:	65
-	Turn:	A
-	Models:	{'P': 0.00999999999999992	0.9900000000000001}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (1, 1), 66]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*     A *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 6), (2, 1), 67]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:21.39 Vis:228>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 6)
-	P:	(2, 1)
-	Round:	67
-	Turn:	A
-	Models:	{'P': 0.9998979800040808	0.00010201999591920145}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*    A  *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 5), (2, 1), 68]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*    A  *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 5), (1, 1), 69]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:20.00 Vis:301>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(4, 5)
-	P:	(1, 1)
-	Round:	69
-	Turn:	A
-	Models:	{'P': 0.9999999895897965	1.041020344847997e-08}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 4), (1, 1), 70]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 4), (2, 1), 71]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:16.96 Vis:161>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 4)
-	P:	(2, 1)
-	Round:	71
-	Turn:	A
-	Models:	{'P': 0.49999999999999595	0.5000000000000041}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*  A    *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 3), (2, 1), 72]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*  A    *
-* * *** *
-* * *** *
-* * R   *
-*********
-[(4, 3), (1, 1), 73]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:13.96 Vis:194>	Robber1:	(7, 4)
-	Robber2:	(2, 1)
-	A:	(4, 3)
-	P:	(1, 1)
-	Round:	73
-	Turn:	A
-	Models:	{'P': 0.9899999999999999	0.010000000000000168}
-
-DEBUG:root:Action: A	A-R
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* * R   *
-*********
-[(4, 4), (1, 1), 74]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 4), (2, 1), 75]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:15.02 Vis:68>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 4)
-	P:	(2, 1)
-	Round:	75
-	Turn:	A
-	Models:	{'P': 0.00010201999591919841	0.9998979800040808}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 4), (2, 1), 76]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 4), (1, 1), 77]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:11.07 Vis:139>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(4, 4)
-	P:	(1, 1)
-	Round:	77
-	Turn:	A
-	Models:	{'P': 0.9998979800040808	0.00010201999591920207}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* **A* **
-*       *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(3, 4), (1, 1), 78]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* **A* **
-*       *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(3, 4), (2, 1), 79]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:8.13 Vis:348>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(3, 4)
-	P:	(2, 1)
-	Round:	79
-	Turn:	A
-	Models:	{'P': 1.030609089972154e-06	0.99999896939091}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* **A* **
-*       *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(3, 4), (2, 1), 80]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* **A* **
-*       *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(3, 4), (1, 1), 81]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:8.50 Vis:261>	Robber1:	(7, 3)
-	Robber2:	(2, 1)
-	A:	(3, 4)
-	P:	(1, 1)
-	Round:	81
-	Turn:	A
-	Models:	{'P': 0.9999999999999892	1.0728861471414726e-14}
-
-DEBUG:root:Action: A	A-D
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 4), (1, 1), 82]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*   A   *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 4), (2, 1), 83]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:6.02 Vis:383>	Robber1:	(7, 3)
-	Robber2:	(1, 1)
-	A:	(4, 4)
-	P:	(2, 1)
-	Round:	83
-	Turn:	A
-	Models:	{'P': 0.9899999999999999	0.010000000000000174}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*  A    *
-* * *** *
-* * *** *
-* *R    *
-*********
-[(4, 3), (2, 1), 84]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*  A    *
-* * *** *
-* * *** *
-* * R   *
-*********
-[(4, 3), (1, 1), 85]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:5.02 Vis:156>	Robber1:	(7, 4)
-	Robber2:	(2, 1)
-	A:	(4, 3)
-	P:	(1, 1)
-	Round:	85
-	Turn:	A
-	Models:	{'P': 0.00010201999591919843	0.9998979800040808}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-* A     *
-* * *** *
-* * *** *
-* * R   *
-*********
-[(4, 2), (1, 1), 86]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-* A     *
-* * *** *
-* * *** *
-* *  R  *
-*********
-[(4, 2), (2, 1), 87]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:3.24 Vis:304>	Robber1:	(7, 5)
-	Robber2:	(1, 1)
-	A:	(4, 2)
-	P:	(2, 1)
-	Round:	87
-	Turn:	A
-	Models:	{'P': 0.4999999999999955	0.5000000000000046}
-
-DEBUG:root:Action: A	A-L
-DEBUG:root:New state: *********
-*R****  *
-*P   * **
-* ** * **
-*A      *
-* * *** *
-* * *** *
-* *  R  *
-*********
-[(4, 1), (2, 1), 88]
-
-
-DEBUG:root:Action: P	P-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-* ** * **
-*A      *
-* * *** *
-* * *** *
-* *   R *
-*********
-[(4, 1), (1, 1), 89]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:2.01 Vis:202>	Robber1:	(7, 6)
-	Robber2:	(2, 1)
-	A:	(4, 1)
-	P:	(1, 1)
-	Round:	89
-	Turn:	A
-	Models:	{'P': 1.0515357127027584e-10	0.9999999998948464}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-*P****  *
-*R   * **
-*A** * **
-*       *
-* * *** *
-* * *** *
-* *   R *
-*********
-[(3, 1), (1, 1), 90]
-
-
-DEBUG:root:Action: P	P-D
-DEBUG:root:New state: *********
-* ****  *
-*PR  * **
-*A** * **
-*       *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(3, 1), (2, 1), 91]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:-1.06 Vis:360>	Robber1:	(7, 7)
-	Robber2:	(2, 2)
-	A:	(3, 1)
-	P:	(2, 1)
-	Round:	91
-	Turn:	A
-	Models:	{'P': 1.1057273553218611e-20	1.0}
-
-DEBUG:root:Action: A	A-D
-DEBUG:root:New state: *********
-* ****  *
-*PR  * **
-* ** * **
-*A      *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(4, 1), (2, 1), 92]
-
-
-DEBUG:root:Action: P	P-R
-DEBUG:root:New state: *********
-* ****  *
-* PR * **
-* ** * **
-*A      *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(4, 1), (2, 2), 93]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:-1.99 Vis:71>	Robber1:	(7, 7)
-	Robber2:	(2, 3)
-	A:	(4, 1)
-	P:	(2, 2)
-	Round:	93
-	Turn:	A
-	Models:	{'P': 1.1168963185069306e-22	1.0}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-* ****  *
-* PR * **
-*A** * **
-*       *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(3, 1), (2, 2), 94]
-
-
-DEBUG:root:Action: P	P-R
-DEBUG:root:New state: *********
-* ****  *
-*  PR* **
-*A** * **
-*       *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(3, 1), (2, 3), 95]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:-2.00 Vis:2>	Robber1:	(7, 7)
-	Robber2:	(2, 4)
-	A:	(3, 1)
-	P:	(2, 3)
-	Round:	95
-	Turn:	A
-	Models:	{'P': 1.1057273553218622e-20	1.0}
-
-DEBUG:root:Action: A	A-W
-DEBUG:root:New state: *********
-* ****  *
-*  PR* **
-*A** * **
-*       *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(3, 1), (2, 3), 96]
-
-
-DEBUG:root:Action: P	P-R
-DEBUG:root:New state: *********
-* ****  *
-*  RP* **
-*A** * **
-*       *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(3, 1), (2, 4), 97]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:-2.99 Vis:46>	Robber1:	(7, 7)
-	Robber2:	(2, 3)
-	A:	(3, 1)
-	P:	(2, 4)
-	Round:	97
-	Turn:	A
-	Models:	{'P': 1.1057273553218622e-20	1.0}
-
-DEBUG:root:Action: A	A-U
-DEBUG:root:New state: *********
-* ****  *
-*A RP* **
 * ** * **
 *       *
 * * *** *
 * * *** *
 * *    R*
 *********
-[(2, 1), (2, 4), 98]
-
-
-DEBUG:root:Action: P	P-L
-DEBUG:root:New state: *********
-* ****  *
-*A PR* **
-* ** * **
-*       *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(2, 1), (2, 3), 99]
-
-
-DEBUG:root:graph_search
-DEBUG:root:Parameters:1000
-	<function heuristic at 0x047ABB70>
-	<Val:-3.00 Vis:5>	Robber1:	(7, 7)
-	Robber2:	(2, 4)
-	A:	(2, 1)
-	P:	(2, 3)
-	Round:	99
-	Turn:	A
-	Models:	{'P': 1.0946700817686434e-18	1.0}
-
-DEBUG:root:Action: A	A-R
-DEBUG:root:New state: *********
-* ****  *
-* APR* **
-* ** * **
-*       *
-* * *** *
-* * *** *
-* *    R*
-*********
-[(2, 2), (2, 3), 100]
+[(1, 1), (1, 1), 76]
 
 
