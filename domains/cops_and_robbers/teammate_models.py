@@ -124,6 +124,7 @@ def a_star_predict(state, target, actions, map_cache):
     return action_probs
 
 
+# Used for constructing the models of the teammate from the ad hoc coordinator's perspective.
 def build_experts_model(scenario, maze, initial_state):
     map_cache = init_map_cache(maze)
     predictors = Distribution({partial(a_star_predict,
@@ -136,6 +137,7 @@ def build_experts_model(scenario, maze, initial_state):
     return ExpertsModel(scenario, predictors)
 
 
+# The actual teammate
 class AstarTeammate:
 
     def __init__(self, scenario, target, maze):

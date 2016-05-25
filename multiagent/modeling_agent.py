@@ -9,13 +9,13 @@ TODO: wrap planner in such a way to take into account future observations of tea
 """
 from collections import defaultdict
 from functools import partial
+import logging
 
 from mdp.distribution import Distribution
 from mdp.solvers.thts_dp import graph_search
 
 
 class ModelingAgent:
-
     def __init__(self, scenario, identity, models, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
         self.scenario = scenario._replace(transition=modeler_transition(scenario.transition))
@@ -27,8 +27,9 @@ class ModelingAgent:
         self.policy_backup = partial(policy_backup, agent=self.identity)
 
     def get_action(self, state):
-        state['Models'] = self.models
-        (action, node) = graph_search(state=state,
+        local_state = state.copy()
+        local_state['Models'] = self.models
+        (action, node) = graph_search(state=local_state,
                                       scenario=self.scenario,
                                       iterations=1000,
                                       backup_op=self.policy_backup,
@@ -38,16 +39,31 @@ class ModelingAgent:
         return action
 
     def update(self, agent, state, observation, new_state):
+        print('Before:',self.models)
+        print(state)
         # Update model
         if agent in self.models:
+            print(self.models[agent].predict(state))
             new_model = self.models[agent].update(state, observation)
             self.models[agent] = new_model
 
+        logging.debug('ROOT:' + str(self.policy_graph_root))
+        logging.debug('Successors:' + str(self.policy_graph_root.successors))
+
+        new_state = new_state.copy()
+        new_state['Models'] = self.models
+        print('After:',self.models)
+        print(new_state)
         # Update location in policy graph
         for node in self.policy_graph_root.successors[observation]:
             if node.state == new_state:
                 self.policy_graph_root = node
                 break
+        else:
+            raise ValueError(
+                "Observation not consistent with predicted transitions." +
+                "\n\tObs: {0}\n\tNew state: {1}\n\tSuccessors: {2}".format(
+                    str(observation), str(new_state), str(self.policy_graph_root.successors)))
 
 
 def policy_backup(node, agent):
@@ -78,7 +94,6 @@ Wrappers for scenario from the position of the modeling agent.
 
 
 def modeler_transition(transition_fn):
-
     def new_transition_fn(state, action):
         # Get basic information
         agent_turn = state['Turn']
@@ -90,14 +105,18 @@ def modeler_transition(transition_fn):
             # Update models in resulting states.
             new_resulting_states = Distribution()
             for resulting_state, probability in resulting_states.items():
-                new_model = resulting_state['Models'][agent_turn].update(state, action)
-                resulting_state['Models'][agent_turn] = new_model
+                resulting_state['Models'][agent_turn] = state['Models'][agent_turn].update(state, action)
                 new_resulting_states[resulting_state] = probability
 
             return new_resulting_states
         else:
-            return resulting_states
+            # Copy to new models in agent's state (which includes mutable state features)
+            new_resulting_states = Distribution()
+            for resulting_state, probability in resulting_states.items():
+                new_models = {key: model.copy() for key, model in resulting_state['Models'].items()}
+                resulting_state['Models'] = new_models
+                new_resulting_states[resulting_state] = probability
+
+            return new_resulting_states
 
     return new_transition_fn
-
-

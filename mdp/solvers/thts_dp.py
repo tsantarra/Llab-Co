@@ -208,8 +208,6 @@ def graph_search(state, scenario, iterations, backup_op=expectation_max, heurist
     """
     Search game tree according to THTS.
     """
-    logging.debug('graph_search')
-    logging.debug('Parameters:' + '\n\t'.join(str(i) for i in [iterations, heuristic, root_node]) + '\n')
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
         root_node = THTSNode(state, scenario)

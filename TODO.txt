@@ -1,6 +1,15 @@
 BY PRIORITY (ISH)
 
-    Probabilities seem to converge before strategies would differentiate. Happens right before teammate exits hallway.
+    Look over planning code to see if namedtuple may be sufficient
+    Otherwise, begin altering state for immutability, same for models dictionary
+
+
+    What is fixed: state transitions now ensure new copies of models
+    What is broken: equality of models doesn't work. When implemented, it has to be followed via a hash problem too. Doing that the most direct way broke the predicted belief updates. They're there, but commented out.
+
+
+    Branch and bound (not alpha-beta pruning)
+        Not positive this is helpful, but I should look into it.
 
     Domains
         StarCraft
@@ -30,7 +39,7 @@ BY PRIORITY (ISH)
 
     Documentation
         Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
-        Can be set by PyCharm in settings, tools, python integrated tools, docstring format
+            Can be set by PyCharm in settings, tools, python integrated tools, docstring format
 
 
 Nice to have, but completely beyond the scope of the current project.

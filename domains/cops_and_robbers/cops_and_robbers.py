@@ -59,11 +59,12 @@ def multiagent_carpy():
         action = current_agent.get_action(state)
         new_state = scenario.transition(state, action).sample()
 
+        logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))
+        logging.debug('New state: ' + show_state(new_state) + '\n')
+
         for agent in agents.values():
             agent.update(state['Turn'], state, action, new_state)
 
-        logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))
-        logging.debug('New state: ' + show_state(new_state) + '\n')
         state = new_state
 
 
@@ -72,10 +73,8 @@ if __name__ == "__main__":
 
     try:
         multiagent_carpy()
-        #carpy_dpthts()
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')
-
     except Exception:
         traceback.print_exc(file=sys.stdout)
         logging.exception("Error.")
