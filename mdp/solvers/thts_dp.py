@@ -266,7 +266,7 @@ class THTSNode:
         """
         Returns a string representation of the node.
         """
-        return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ">" + str(self.state)
+        return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ">\n" + str(self.state)
 
     def tree_to_string(self, horizon=1, indent=0):
         """

@@ -62,8 +62,11 @@ def multiagent_carpy():
         logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))
         logging.debug('New state: ' + show_state(new_state) + '\n')
 
-        for agent in agents.values():
-            agent.update(state['Turn'], state, action, new_state)
+        for participating_agent in agents.values():
+            participating_agent.update(state['Turn'], state, action, new_state)
+
+        print(show_state(new_state))
+        print(agent.models)
 
         state = new_state
 

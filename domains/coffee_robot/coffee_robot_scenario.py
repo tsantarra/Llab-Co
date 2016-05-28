@@ -23,35 +23,35 @@ def initial_state():
 
 
 def transition(state, action):
-    new_state = state.copy()
+    new_state_dict = dict(state.copy())
 
     if action is 'Go':
         # Move to other location.
-        new_state['O'] = not new_state['O']
+        new_state_dict['O'] = not new_state_dict['O']
 
         # Check if the robot gets wet.
-        if new_state['R'] and not new_state['U']:
-            new_state['W'] = True
+        if new_state_dict['R'] and not new_state_dict['U']:
+            new_state_dict['W'] = True
 
     elif action is 'BuyCoffee':
         # If in in coffee shop, buy coffee.
-        if not new_state['O']:
-            new_state['C'] = True
+        if not new_state_dict['O']:
+            new_state_dict['C'] = True
 
     elif action is 'DeliverCoffee':
         # If in office and have coffee, deliver coffee.
-        if new_state['O'] and new_state['C']:
-            new_state['H'] = True
-            new_state['C'] = False
+        if new_state_dict['O'] and new_state_dict['C']:
+            new_state_dict['H'] = True
+            new_state_dict['C'] = False
 
     elif action is 'GetUmbrella':
         # If in office, pick up umbrella.
-        if new_state['O']:
-            new_state['U'] = True
+        if new_state_dict['O']:
+            new_state_dict['U'] = True
 
-    new_state['Round'] += 1
+    new_state_dict['Round'] += 1
 
-    return Distribution({new_state: 1.0})  # all possible outcomes and their associated probabilities
+    return Distribution({State(new_state_dict): 1.0})  # all possible outcomes and their associated probabilities
 
 
 def actions(state):

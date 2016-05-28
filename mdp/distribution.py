@@ -1,8 +1,7 @@
 from random import uniform
-from collections import OrderedDict
 
 
-class Distribution(OrderedDict):
+class Distribution(dict):
     """ A distribution of items and their associated probabilities. """
 
     def __init__(self, args=None):
@@ -73,11 +72,15 @@ class Distribution(OrderedDict):
         return item
 
     def __repr__(self):
-        return '\nDistribution {\n' + '\n'.join(str(key) + '\n\tP=' + str(val) + '\n' for key, val in self.items()) + '}'
+        return '\nDistribution {\n' + '\n'.join(str(key) + '\nP=' + str(val) + '\n'
+                                                for key, val in sorted(self.items())) + '} /Distribution\n'
 
     def __missing__(self, key):
         self[key] = 0.0
         return 0.0
+
+    def __eq__(self, other):
+        return all(self[key] == other[key] for key in self) and (len(self) == len(other))
 
     def __key(self):
         return tuple(self.items())

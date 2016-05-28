@@ -29,20 +29,20 @@ def actions(state):
 
 
 def transition(state, action):
-    new_state = state.copy()
+    new_state_dict = dict(state.copy())
 
     if action is 'right':
-        new_state['x'] += 1
+        new_state_dict['x'] += 1
     elif action is 'left':
-        new_state['x'] += -1
+        new_state_dict['x'] += -1
     elif action is 'up':
-        new_state['y'] += 1
+        new_state_dict['y'] += 1
     elif action is 'down':
-        new_state['y'] += -1
+        new_state_dict['y'] += -1
 
-    new_state['Round'] += 1
+    new_state_dict['Round'] += 1
 
-    return Distribution({new_state: 1})  # a list of all possible outcomes and their associated probabilities
+    return Distribution({State(new_state_dict): 1})  # a list of all possible outcomes and their associated probabilities
 
 
 def end(state):

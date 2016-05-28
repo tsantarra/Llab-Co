@@ -80,12 +80,11 @@ def grid_test_dpthts(scenario):
     node = None
     while not scenario.end(state):
         # Plan
-        (action, node) = dpthts.graph_search(state, scenario, 10000)  # 4 ** 7 - 1
+        (action, node) = dpthts.graph_search(state, scenario, 10000)
         state = scenario.transition(state, action).sample()
 
         print(action)
         print(state)
-        print("Tree size:", len(node))
         #print(node.tree_to_string(horizon=3))
 
 

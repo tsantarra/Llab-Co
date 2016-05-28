@@ -1,4 +1,5 @@
 BY PRIORITY (ISH)
+    Adjust planner to add horizon to state rep, not rely on scenario to have such.
 
     Look over planning code to see if namedtuple may be sufficient
     Otherwise, begin altering state for immutability, same for models dictionary

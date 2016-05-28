@@ -1,5 +1,5 @@
 from mdp.distribution import Distribution
-from source.MDP.State import State
+from mdp.state import State
 
 
 def update_beliefs(belief_state, scenario, action, observation):
@@ -46,7 +46,7 @@ def tigerPOVI(scenario):
 
 def tigerWrappedVI():
     from mdp.scenario import Scenario
-    from mdp.partial_observability import po_transition, po_utility, po_actions, po_end
+    from deprecated.partial_observability import po_transition, po_utility, po_actions, po_end
     from domains.tiger.tiger_scenario import initial_state, actions, transition, observations, utility, end
     from mdp.solvers.vi import value_iteration
 
@@ -75,7 +75,7 @@ def tigerWrappedVI():
 
 def tigerWrappedTHTS():
     from mdp.scenario import Scenario
-    from mdp.scenario import po_transition, po_utility, po_actions, po_end
+    from deprecated.partial_observability import po_transition, po_utility, po_actions, po_end
     from domains.tiger.tiger_scenario import initial_state, actions, transition, observations, utility, end
     from mdp.solvers.thts_dp import graph_search
 

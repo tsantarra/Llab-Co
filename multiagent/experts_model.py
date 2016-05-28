@@ -55,6 +55,12 @@ class ExpertsModel:
     def __repr__(self):
         return '\t'.join(str(prob) for expert, prob in self.experts.items())
 
+    def __eq__(self, other):
+        return self.experts == other.experts
+
+    def __hash__(self):
+        return hash(self.experts)
+
     """ #BAD DOES BAD THINGS.
     def __eq__(self, other):
         return all((key in other.experts) for key in self.experts) and \

@@ -111,6 +111,7 @@ if __name__ == '__main__':
     type3 = MappingState(data)
     type4 = State(data)
 
+
     print('\ncopy times')
     t1 = timeit.Timer("o2 = type1.copy()", "from __main__ import type1")
     t2 = timeit.Timer("o2 = type2.copy()", "from __main__ import type2")

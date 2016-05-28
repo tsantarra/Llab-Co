@@ -20,16 +20,16 @@ def initial_state():
 
 
 def transition(state, action):
-    new_state = state.copy()
+    new_state_dict = dict(state.copy())
 
     if action == 'Go left':
-        new_state['Player'] = 'Left'
+        new_state_dict['Player'] = 'Left'
     elif action == 'Go right':
-        new_state['Player'] = 'Right'
+        new_state_dict['Player'] = 'Right'
 
-    new_state['Round'] += 1
+    new_state_dict['Round'] += 1
 
-    return Distribution({new_state: 1.0})  # all possible outcomes and their associated probabilities
+    return Distribution({State(new_state_dict): 1.0})  # all possible outcomes and their associated probabilities
 
 
 def actions(state):

@@ -1,3 +1,10 @@
+"""
+This file contains a set of wrappers for the elements of MDPs, such that we can adapt them to POMDPs and retain
+utilization of the generic MDP solvers. This was a proof of concept more than anything. As such, the methods
+contained here are DEPRECATED.
+"""
+
+
 from mdp.distribution import Distribution
 
 

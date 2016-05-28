@@ -38,25 +38,25 @@ def initialize_maze(maze_file):
 
 def initial_state():
     global maze
-    state = State()
+    state_dict = dict()
 
     robber_count = 0
     for loc, char in maze.items():
         if char == AGENT:
-            state['A'] = loc
+            state_dict['A'] = loc
             maze[loc] = OPEN
         elif char == PARTNER:
-            state['P'] = loc
+            state_dict['P'] = loc
             maze[loc] = OPEN
         elif char == ROBBER:
             robber_count += 1
-            state['Robber' + str(robber_count)] = loc
+            state_dict['Robber' + str(robber_count)] = loc
             maze[loc] = OPEN
 
-    state['Round'] = 1
-    state['Turn'] = 'A'
+    state_dict['Round'] = 1
+    state_dict['Turn'] = 'A'
 
-    return state
+    return State(state_dict)
 
 
 def show_state(state):
@@ -126,14 +126,13 @@ def move_robbers(state):
         best_target = max(ties, key=lambda x: x[1])
         ties = [d for d in ties if d[1] == best_target[1]]
 
-        new_states = Distribution()
+        new_state_dist = Distribution()
         for result_state, state_prob in result.items():
             tie_prob = 1/len(ties)
             for target, d1, d2 in ties:
-                new_state = result_state.copy()
-                new_state[robber] = target
-                new_states[new_state] = tie_prob * state_prob
-        result = new_states
+                new_state = result_state.update({robber: target})  # state.update() returns a modified copy
+                new_state_dist[new_state] = tie_prob * state_prob
+        result = new_state_dist
 
     assert abs(sum(result.values()) - 1.0) < 10e-5, 'Resulting transition too large. ' + str(sum(result.values()))
 
@@ -141,10 +140,10 @@ def move_robbers(state):
 
 
 def transition(state, action):
-    new_state = state.copy()
+    new_state_dict = dict(state.copy())
     actor, direction = action.split('-')
 
-    row, col = new_state[actor]
+    row, col = new_state_dict[actor]
     if direction == 'D':
         row += 1
     elif direction == 'U':
@@ -154,18 +153,20 @@ def transition(state, action):
     elif direction == 'L':
         col -= 1
 
-    new_state[actor] = (row, col)
-    new_state['Round'] += 1
+    new_state_dict[actor] = (row, col)
+    new_state_dict['Round'] += 1
 
     if actor == 'P':
-        new_state['Turn'] = 'A'
+        new_state_dict['Turn'] = 'A'
+        new_state = State(new_state_dict)
         if not end(new_state):
             # Check if end first, otherwise impossible (robbers always escape).
             return move_robbers(new_state)
         else:
             return Distribution({new_state: 1.0})
     else:
-        new_state['Turn'] = 'P'
+        new_state_dict['Turn'] = 'P'
+        new_state = State(new_state_dict)
         return Distribution({new_state: 1.0})
 
 
@@ -189,7 +190,7 @@ def heuristic(state, action):
     robbers = [robloc for rob, robloc in state.items() if 'Robber' in rob]
 
     def dist(loc1, loc2): return abs(loc1[0] - loc2[0]) + abs(loc1[1] - loc2[1])
-    closest = min(dist(agent, rob) + dist(partner, rob) for rob in robbers)
+    closest = min(max(dist(agent, rob), dist(partner, rob)) for rob in robbers)
 
     return 100 - (state['Round'] + closest)
 

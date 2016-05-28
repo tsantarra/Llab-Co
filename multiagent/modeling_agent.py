@@ -3,15 +3,13 @@ Basic interface for an agent holding beliefs about the behavior of its teammate.
 implementation will use 'Trial-based Heuristic Tree Search for Finite Horizon MDPs' for planning, though
 a future version may accept any solver with a custom backup function (required for predicting the actions
 of the teammate via the model).
-
-TODO: generalize solvers, low priority
-TODO: wrap planner in such a way to take into account future observations of teammate (POMDP)
 """
 from collections import defaultdict
 from functools import partial
 import logging
 
 from mdp.distribution import Distribution
+from mdp.state import State
 from mdp.solvers.thts_dp import graph_search
 
 
@@ -21,14 +19,13 @@ class ModelingAgent:
         self.scenario = scenario._replace(transition=modeler_transition(scenario.transition))
 
         self.identity = identity
-        self.models = models
+        self.models = State(models)
         self.heuristic = heuristic
         self.policy_graph_root = None
         self.policy_backup = partial(policy_backup, agent=self.identity)
 
     def get_action(self, state):
-        local_state = state.copy()
-        local_state['Models'] = self.models
+        local_state = state.update({'Models': self.models})
         (action, node) = graph_search(state=local_state,
                                       scenario=self.scenario,
                                       iterations=1000,
@@ -39,21 +36,12 @@ class ModelingAgent:
         return action
 
     def update(self, agent, state, observation, new_state):
-        print('Before:',self.models)
-        print(state)
         # Update model
         if agent in self.models:
-            print(self.models[agent].predict(state))
             new_model = self.models[agent].update(state, observation)
-            self.models[agent] = new_model
+            self.models = self.models.update({agent: new_model})
 
-        logging.debug('ROOT:' + str(self.policy_graph_root))
-        logging.debug('Successors:' + str(self.policy_graph_root.successors))
-
-        new_state = new_state.copy()
-        new_state['Models'] = self.models
-        print('After:',self.models)
-        print(new_state)
+        new_state = new_state.update({'Models': self.models})
         # Update location in policy graph
         for node in self.policy_graph_root.successors[observation]:
             if node.state == new_state:
@@ -62,7 +50,7 @@ class ModelingAgent:
         else:
             raise ValueError(
                 "Observation not consistent with predicted transitions." +
-                "\n\tObs: {0}\n\tNew state: {1}\n\tSuccessors: {2}".format(
+                "\nObs: {0}\nNew state: \n{1}\nSuccessors: \n{2}".format(
                     str(observation), str(new_state), str(self.policy_graph_root.successors)))
 
 
@@ -105,18 +93,13 @@ def modeler_transition(transition_fn):
             # Update models in resulting states.
             new_resulting_states = Distribution()
             for resulting_state, probability in resulting_states.items():
-                resulting_state['Models'][agent_turn] = state['Models'][agent_turn].update(state, action)
+                new_model = state['Models'][agent_turn].update(state, action)
+                new_model_state = resulting_state['Models'].update({agent_turn: new_model})
+                resulting_state = resulting_state.update({'Models': new_model_state})
                 new_resulting_states[resulting_state] = probability
 
             return new_resulting_states
         else:
-            # Copy to new models in agent's state (which includes mutable state features)
-            new_resulting_states = Distribution()
-            for resulting_state, probability in resulting_states.items():
-                new_models = {key: model.copy() for key, model in resulting_state['Models'].items()}
-                resulting_state['Models'] = new_models
-                new_resulting_states[resulting_state] = probability
-
-            return new_resulting_states
+            return resulting_states
 
     return new_transition_fn
