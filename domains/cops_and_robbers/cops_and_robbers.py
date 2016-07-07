@@ -57,6 +57,7 @@ def multiagent_carpy():
         current_agent = agents[state['Turn']]
 
         action = current_agent.get_action(state)
+        if current_agent == agent: print(agent.policy_graph_root.tree_to_string(horizon=4))
         new_state = scenario.transition(state, action).sample()
 
         logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))

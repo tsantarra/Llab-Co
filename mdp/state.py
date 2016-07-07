@@ -29,10 +29,14 @@ class State(Mapping):
         return self.__class__({key: copy(value) for key, value in self.items()})
 
     def __copy__(self):
+        """
+        Returns a copy of the state via the copy method.
+        """
         return self.copy()
 
     def update(self, args):
         """
+        Returns a copy with updated state vars, as given by args.
         """
         return State(self.copy(), **args)
 
@@ -55,11 +59,11 @@ class State(Mapping):
         return len(self.__dict)
 
     def __eq__(self, other):
-        #print('STATE COMP1:',self.values(), '\t', other.values())
-        #print(list((key, type(self[key])) for key in self))
-        #print('STATE COMP2:',all(self[key] == other[key] for key in self) and (len(self) == len(other)))
+        # print('STATE COMP1:',self.values(), '\t', other.values())
+        # print(list((key, type(self[key])) for key in self))
+        # print('STATE COMP2:',all(self[key] == other[key] for key in self) and (len(self) == len(other)))
 
-        return all(self[key] == other[key] for key in self) and (len(self) == len(other))
+        return (len(self) == len(other)) and all(self[key] == other[key] for key in self)
 
     def __lt__(self, other):
         return tuple(self.items()) < tuple(other.items())

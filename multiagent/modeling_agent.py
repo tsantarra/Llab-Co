@@ -61,7 +61,7 @@ def policy_backup(node, agent):
         - the agent's expectations of teammates' policies
     """
     agent_turn = node.state['Turn']
-    node.value = node.immediate_value
+    #node.value = node.immediate_value
     if node.successors:
         # Calculate expected return for each action at the given node
         action_values = defaultdict(float)
@@ -70,10 +70,10 @@ def policy_backup(node, agent):
             action_values[action] /= sum(node.successors[action].values())
 
         if agent_turn == agent:  # Agent maximized expectation
-            node.value += max(action_values.values())
+            node.value = node.immediate_value + max(action_values.values())
         elif agent_turn in node.state['Models']:  # Agent predicts action distribution and resulting expected value
             action_distribution = node.state['Models'][agent_turn].predict(node.state)
-            node.value += action_distribution.expectation(action_values, require_exact_keys=False)
+            node.value = node.immediate_value + action_distribution.expectation(action_values, require_exact_keys=False)
 
 
 """

@@ -1,16 +1,27 @@
 BY PRIORITY (ISH)
+
+    Something is off with modeling. Low util values, likely because low predicted action
+    prob. Except that all possible actions should be accounted for. And the heuristics
+    should be close to the actual value. What I see:
+        - only one child, and it has decent util (71.48)
+        - parent node has expected util of 0.72, indicating ~ 0.01 * 71.48
+        - possible place to look: is expand_leaf expanding ALL possible actions?
+            + No. It does not.
+            + Two possible solutions:
+                -> expand all possible actions
+                -> normalize action probs based on which HAVE been expanded
+
     Adjust planner to add horizon to state rep, not rely on scenario to have such.
+        - extend state with '_horizon'
+        - make sure to adjust tree map for non-planner uses (so they don't have to deal with states containing _horizon)
+        -
 
-    Look over planning code to see if namedtuple may be sufficient
-    Otherwise, begin altering state for immutability, same for models dictionary
-
-
-    What is fixed: state transitions now ensure new copies of models
-    What is broken: equality of models doesn't work. When implemented, it has to be followed via a hash problem too. Doing that the most direct way broke the predicted belief updates. They're there, but commented out.
-
-
-    Branch and bound (not alpha-beta pruning)
-        Not positive this is helpful, but I should look into it.
+    Thoughts on comm strategies:
+        - Exact (not scalable) vs greedy
+        - Limit communication content: limited states considered (what to communicate paper)
+        - Limit computation: Heuristic: Util x Info x likelihood of state
+        - Limit search space: Limiting to similar payoffs
+        - Alternate strategy (like conditional value at risk): Maximizing expected util vs raise lower bound on util.
 
     Domains
         StarCraft
@@ -31,8 +42,8 @@ BY PRIORITY (ISH)
         Improving x coordinates never improves overall structure.
 
     Cython
-        MDP planner (thts_dp)
-        Domain scenarios
+        MDP planner (thts_dp)? Profile first.
+        Domain scenarios - state transitions are likely a major factor
 
     Models - for agents
         Barrett model?
@@ -52,11 +63,14 @@ Nice to have, but completely beyond the scope of the current project.
         - use logging module http://inventwithpython.com/blog/2012/04/06/stop-using-print-for-debugging-a-5-minute-quickstart-guide-to-pythons-logging-module/
 
     Multiprocessing
-        - far advanced, but consider doing something parallel
+        - far advanced, but consider doing something parallel. You know, maybe you should do an initial search until X
+        branches, where X = #processors, then have each process handle a subtree. That's interesting. Probably not a huge
+        gain, however. Doesn't keep the philosophy of put more resources into Y process because it is more promising. As
+        X -> inf, you just have breadth first search.
 
     Authoring - POMDP file input
 
-    Hierarchical Graph Reduction
+    Hierarchical Graph Reduction (maybe keep for second PhD :P)
         Epsilon merging
         Multi-level graph partitioning
 

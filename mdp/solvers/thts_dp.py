@@ -123,8 +123,10 @@ def expand_leaf(node, scenario, heuristic, node_map):
             else:
                 new_node = THTSNode(state=new_state, scenario=scenario, action=action, predecessor=node)
 
-                # Provide initial heuristic evaluation of new leaf node
-                new_node.value = new_node.immediate_value + heuristic(new_node.state.copy(), scenario)
+                # Provide initial evaluation of new leaf node
+                new_node.value = new_node.immediate_value
+                if not scenario.end(new_node.state):
+                    new_node.value += heuristic(new_node.state, scenario)
 
                 # Add to node map, so we can find it later.
                 node_map[new_state] = new_node
@@ -141,14 +143,14 @@ def expectation_max(node):
     Sets a node's value to its immediate utility + the maximum expected utility of the
     available actions.
     """
-    node.value = node.immediate_value
+    #node.value = node.immediate_value
     if node.successors:
         action_values = {}
         for action in node.successors:
             action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
             action_values[action] /= sum(node.successors[action].values())
 
-        node.value += max(action_values.values())
+        node.value = node.immediate_value + max(action_values.values())
 
 
 def backup(node, scenario, backup_op):
@@ -252,10 +254,7 @@ class THTSNode:
         self.complete = scenario.end(state)  # A label to avoid sampling in complete subtrees.
 
         # Due to the dynamic programming approach, allow multiple "parents".
-        if predecessor:
-            self.predecessors = {predecessor}
-        else:
-            self.predecessors = set()
+        self.predecessors = {predecessor} if predecessor else set()
         self.successors = {}  # Action: childNode dictionary to keep links to successors
 
         self.visits = 1  # visits of the node so far; count initialization as a visit
@@ -266,7 +265,7 @@ class THTSNode:
         """
         Returns a string representation of the node.
         """
-        return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ">\n" + str(self.state)
+        return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ">"  #+ '\n' + str(self.state)
 
     def tree_to_string(self, horizon=1, indent=0):
         """
