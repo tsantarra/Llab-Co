@@ -1,16 +1,5 @@
 BY PRIORITY (ISH)
 
-    Something is off with modeling. Low util values, likely because low predicted action
-    prob. Except that all possible actions should be accounted for. And the heuristics
-    should be close to the actual value. What I see:
-        - only one child, and it has decent util (71.48)
-        - parent node has expected util of 0.72, indicating ~ 0.01 * 71.48
-        - possible place to look: is expand_leaf expanding ALL possible actions?
-            + No. It does not.
-            + Two possible solutions:
-                -> expand all possible actions
-                -> normalize action probs based on which HAVE been expanded
-
     Adjust planner to add horizon to state rep, not rely on scenario to have such.
         - extend state with '_horizon'
         - make sure to adjust tree map for non-planner uses (so they don't have to deal with states containing _horizon)

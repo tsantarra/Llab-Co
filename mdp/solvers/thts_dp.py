@@ -105,35 +105,39 @@ def rollout(state, scenario):
 
 def expand_leaf(node, scenario, heuristic, node_map):
     """
-    Expands a new node from current leaf node.
+    Expands one or more new nodes from current leaf node.
     """
 
-    # If conditions are met, add a leaf node.
+    # If conditions are met, add one or more leaf nodes.
     if node.untried_actions != [] and not scenario.end(node.state):
         # Randomly select move. Progress game state.
-        action = choice(node.untried_actions)
-        node.untried_actions.remove(action)
+        #action = choice(node.untried_actions)
+        #node.untried_actions.remove(action)
 
-        transitions = scenario.transition(node.state, action)
-        new_successors = Distribution()
-        for new_state, prob in transitions.items():
-            if new_state in node_map:
-                new_node = node_map[new_state]
-                new_node.predecessors.add(node)
-            else:
-                new_node = THTSNode(state=new_state, scenario=scenario, action=action, predecessor=node)
+        # Alternate: expand all actions
+        expand_actions = node.untried_actions
+        node.untried_actions = []
+        for action in expand_actions:
+            transitions = scenario.transition(node.state, action)
+            new_successors = Distribution()
+            for new_state, prob in transitions.items():
+                if new_state in node_map:
+                    new_node = node_map[new_state]
+                    new_node.predecessors.add(node)
+                else:
+                    new_node = THTSNode(state=new_state, scenario=scenario, action=action, predecessor=node)
 
-                # Provide initial evaluation of new leaf node
-                new_node.value = new_node.immediate_value
-                if not scenario.end(new_node.state):
-                    new_node.value += heuristic(new_node.state, scenario)
+                    # Provide initial evaluation of new leaf node
+                    new_node.value = new_node.immediate_value
+                    if not scenario.end(new_node.state):
+                        new_node.value += heuristic(new_node.state, scenario)
 
-                # Add to node map, so we can find it later.
-                node_map[new_state] = new_node
+                    # Add to node map, so we can find it later.
+                    node_map[new_state] = new_node
 
-            new_successors[new_node] = prob
+                new_successors[new_node] = prob
 
-        node.successors[action] = new_successors
+            node.successors[action] = new_successors
 
     return node
 
