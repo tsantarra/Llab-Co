@@ -56,7 +56,7 @@ def greedy_action(node):
     return max(tied_actions, key=lambda a: action_counts[a])
 
 
-def traverse_nodes(node, scenario):
+def _traverse_nodes(node, scenario):
     """
     UCT down to leaf node.
     """
@@ -89,7 +89,7 @@ def traverse_nodes(node, scenario):
     return node
 
 
-def rollout(state, scenario):
+def _rollout(state, scenario):
     """
     Provides an evaluation of the state at the node given, either through playouts or by an evaluation function.
     """
@@ -103,7 +103,7 @@ def rollout(state, scenario):
     return utility
 
 
-def expand_leaf(node, scenario, heuristic, node_map):
+def _expand_leaf(node, scenario, heuristic, node_map):
     """
     Expands one or more new nodes from current leaf node.
     """
@@ -142,22 +142,7 @@ def expand_leaf(node, scenario, heuristic, node_map):
     return node
 
 
-def expectation_max(node):
-    """
-    Sets a node's value to its immediate utility + the maximum expected utility of the
-    available actions.
-    """
-    #node.value = node.immediate_value
-    if node.successors:
-        action_values = {}
-        for action in node.successors:
-            action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
-            action_values[action] /= sum(node.successors[action].values())
-
-        node.value = node.immediate_value + max(action_values.values())
-
-
-def backup(node, scenario, backup_op):
+def _backup(node, scenario, backup_op):
     """
     Updates tree along simulated path.
     """
@@ -188,17 +173,7 @@ def backup(node, scenario, backup_op):
                 added.add(predecessor)
 
 
-def map_tree(node, node_map):
-    """
-    Builds a dict mapping of states to corresponding nodes in the graph.
-    """
-    node_map[node.state] = node
-    for successor in [successor_dist for dist in node.successors.values()
-                      for successor_dist in dist if successor_dist.state not in node_map]:
-        map_tree(successor, node_map)
-
-
-def prune(node, node_map, checked):
+def _prune(node, node_map, checked):
     """
     Prunes currently unreachable nodes from the graph, which cuts down on policy computation time for
     irrelevant areas of the state space.
@@ -207,24 +182,66 @@ def prune(node, node_map, checked):
     node.predecessors = set(pred for pred in node.predecessors if pred.state in node_map)
     for successor_dist in node.successors.values():
         for successor in [succ for succ in successor_dist if succ not in checked]:
-            prune(successor, node_map, checked)
+            _prune(successor, node_map, checked)
 
 
-def graph_search(state, scenario, iterations, backup_op=expectation_max, heuristic=rollout, root_node=None):
+def map_tree(node, node_map, retain_private_keys=False):
+    """
+    Builds a dict mapping of states to corresponding nodes in the graph.
+    """
+    if retain_private_keys:
+        node_map[node.state] = node
+    else:
+        state = node.state.remove([key for key in node.state if key.startswith('_')])
+        node_map[state] = node
+
+    for successor in [successor_dist for dist in node.successors.values()
+                      for successor_dist in dist if successor_dist.state not in node_map]:
+        map_tree(successor, node_map, retain_private_keys)
+
+
+def expectation_max(node):
+    """
+    Sets a node's value to its immediate utility + the maximum expected utility of the
+    available actions.
+    """
+    if node.successors:
+        action_values = {}
+        for action in node.successors:
+            action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
+            action_values[action] /= sum(node.successors[action].values())
+
+        node.value = node.immediate_value + max(action_values.values())
+
+
+def graph_search(state, scenario, iterations, backup_op=expectation_max, heuristic=_rollout, root_node=None):
     """
     Search game tree according to THTS.
     """
+    def planner_transition(old_transition_fn):
+        def new_transition_fn(state, action):
+            new_states = Distribution()
+            for new_state, prob in old_transition_fn(state, action).items():
+                new_state = new_state.update({'_horizon': new_state['_horizon'] + 1})
+                new_states[new_state] = prob
+
+            return new_states
+
+        return new_transition_fn
+
+    scenario = scenario._replace(transition=planner_transition(scenario.transition))
+    state = state.update({'_horizon': 0})
+
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
         root_node = THTSNode(state, scenario)
         node_map = {root_node.state: root_node}
     else:
         node_map = {}
-        map_tree(root_node, node_map)
-        prune(root_node, node_map, set())
+        map_tree(root_node, node_map, retain_private_keys=True)
+        _prune(root_node, node_map, set())
 
-    passes = iterations - root_node.visits + 1
-    for step in range(passes):
+    for step in range(iterations - root_node.visits + 1):
         # If entire tree has been searched, halt iteration.
         if root_node.complete:
             break
@@ -233,13 +250,13 @@ def graph_search(state, scenario, iterations, backup_op=expectation_max, heurist
         node = root_node
 
         # UCT through existing nodes.
-        node = traverse_nodes(node, scenario)
+        node = _traverse_nodes(node, scenario)
 
         # Expand a new node from leaf.
-        node = expand_leaf(node, scenario, heuristic, node_map)
+        node = _expand_leaf(node, scenario, heuristic, node_map)
 
         # Recalculate state values
-        backup(node, scenario, backup_op=backup_op)
+        _backup(node, scenario, backup_op=backup_op)
 
     return greedy_action(root_node), root_node
 

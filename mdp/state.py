@@ -20,7 +20,8 @@ class State(Mapping):
         """
         Returns a string representing the state.
         """
-        return '\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.items()))
+        return '\t' + '\n\t'.join(str(key) + ':\t' + str(val)
+                                  for key, val in sorted(self.items()) if not key.startswith('_'))
 
     def copy(self):
         """
@@ -39,6 +40,13 @@ class State(Mapping):
         Returns a copy with updated state vars, as given by args.
         """
         return State(self.copy(), **args)
+
+    def remove(self, keys):
+        """
+        Returns a copy with the specified keys removed.
+        """
+        keys = set(keys)
+        return State({key: self.__dict[key] for key in (self.__dict.keys() - keys)})
 
     def __hash__(self):
         """
@@ -59,11 +67,8 @@ class State(Mapping):
         return len(self.__dict)
 
     def __eq__(self, other):
-        # print('STATE COMP1:',self.values(), '\t', other.values())
-        # print(list((key, type(self[key])) for key in self))
-        # print('STATE COMP2:',all(self[key] == other[key] for key in self) and (len(self) == len(other)))
-
-        return (len(self) == len(other)) and all(self[key] == other[key] for key in self)
+        keys = self.keys() | other.keys()
+        return all(self[key] == other[key] for key in keys if not key.startswith('_'))
 
     def __lt__(self, other):
         return tuple(self.items()) < tuple(other.items())
