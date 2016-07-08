@@ -188,14 +188,51 @@ def backup(node, scenario, backup_op):
                 added.add(predecessor)
 
 
-def map_tree(node, node_map):
+def create_node_set(node, node_set):
+    """ Fills a given set of nodes with all unique nodes in the subtree. """
+    node_set.add(node)
+    for successor in [successor_dist for dist in node.successors.values()
+                      for successor_dist in dist if successor_dist.state not in node_set]:
+        create_node_set(successor, node_set)
+
+
+def detect_cycle(node):
+    """
+    Uses DFS to detect if there exist any cycles in the directed graph.
+    """
+    # Define recursive depth-first search function
+    def dfs(current, unv, inc, comp):
+        unv.remove(current)
+        inc.add(current)
+
+        for successor in [successor_dist for dist in current.successors.values()
+                          for successor_dist in dist]:
+            if successor in comp:
+                continue
+            elif successor in inc:
+                return True
+            elif dfs(successor, unv, inc, comp):
+                return True
+
+        inc.remove(current)
+        comp.add(current)
+        return False
+
+    # Create initial sets
+    unvisited, incomplete, complete = set(), set(), set()
+    create_node_set(node, unvisited)
+
+    # Return result (all nodes are reachable from the node, so only one call is necessary)
+    return dfs(node, unvisited, incomplete, complete)
+
+
+def map_tree(node):
     """
     Builds a dict mapping of states to corresponding nodes in the graph.
     """
-    node_map[node.state] = node
-    for successor in [successor_dist for dist in node.successors.values()
-                      for successor_dist in dist if successor_dist.state not in node_map]:
-        map_tree(successor, node_map)
+    node_set = set()
+    create_node_set(node, node_set)
+    return {n.state: n for n in node_set}
 
 
 def prune(node, node_map, checked):
@@ -217,10 +254,9 @@ def graph_search(state, scenario, iterations, backup_op=expectation_max, heurist
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
         root_node = THTSNode(state, scenario)
-        node_map = {root_node.state: root_node}
+        node_map = map_tree(root_node)
     else:
-        node_map = {}
-        map_tree(root_node, node_map)
+        node_map = map_tree(root_node)
         prune(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
@@ -280,17 +316,6 @@ class THTSNode:
             for child_node in [node for successors in self.successors.values() for node in successors]:
                 string += child_node.tree_to_string(horizon - 1, indent + 1)
         return string
-
-    def unique_nodes(self, seen=set()):
-        """
-        Traverses unique nodes in graph to calculate the size of the state space covered.
-        Note: this pattern is seen in the map and prune functions, which could be converted to an
-        iterable process.
-        """
-        seen.add(self)
-        for child_node in [node for successors in self.successors.values()
-                           for node in successors if node not in seen]:
-            child_node.unique_nodes(seen)
 
     def __lt__(self, other):
         """
