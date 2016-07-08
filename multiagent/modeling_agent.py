@@ -61,7 +61,6 @@ def policy_backup(node, agent):
         - the agent's expectations of teammates' policies
     """
     agent_turn = node.state['Turn']
-    #node.value = node.immediate_value
     if node.successors:
         # Calculate expected return for each action at the given node
         action_values = defaultdict(float)
