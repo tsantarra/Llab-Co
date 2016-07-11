@@ -8,7 +8,7 @@ from visualization.graph import show_graph
 def carpy_dpthts():
     from domains.cops_and_robbers.cops_and_robbers_scenario import show_state, initialize_maze, \
         heuristic, cops_and_robbers_scenario
-    import mdp.solvers.thts_dp as dpthts
+    import mdp.thts_dp as dpthts
     # Initialize map
     initialize_maze('./mazes/a.maze')
     scenario = cops_and_robbers_scenario

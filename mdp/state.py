@@ -26,11 +26,12 @@ class State(Mapping):
         """
         Returns a 'deep-ish' copy of the state instance.
         """
-        return self.__class__({key: copy(value) for key, value in self.items()})
+        return self.__class__({key: copy(value) for key, value in self.__dict.items()})
 
     def __copy__(self):
         """
-        Returns a copy of the state via the copy method.
+        Returns a copy of the state via the copy method. Used in the event someone uses copy(state) from the
+        copy module of the standard library.
         """
         return self.copy()
 

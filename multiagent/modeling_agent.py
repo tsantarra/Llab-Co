@@ -6,11 +6,10 @@ of the teammate via the model).
 """
 from collections import defaultdict
 from functools import partial
-import logging
 
 from mdp.distribution import Distribution
 from mdp.state import State
-from mdp.solvers.thts_dp import graph_search
+from mdp.thts_dp import graph_search
 
 
 class ModelingAgent:

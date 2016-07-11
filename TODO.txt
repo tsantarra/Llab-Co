@@ -1,6 +1,14 @@
 BY PRIORITY (ISH)
 
+    Comm architecture:
+        - pose as an mdp problem and give back to solvers (|S|^d space to cover)
+            + use some pruning techniques?
+        - copy policy graph?
+            + or keep some form of smaller data (deltas on graph?)
+
     Thoughts on comm strategies:
+        - Exact
+        - Greedy (consider each independently, as in last paper)
         - Limit communication content: limited states considered (what to communicate paper)
         - Limit computation: Heuristic: Util x Info x likelihood of state
         - Limit search space: Limiting to similar payoffs
