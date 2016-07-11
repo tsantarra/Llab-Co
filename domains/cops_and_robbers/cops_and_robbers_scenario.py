@@ -180,11 +180,11 @@ def end(state):
     return False
 
 
-def utility(state, action):
-    return (100 - state['Round']) if end(state) else 0
+def utility(old_state, action, new_state):
+    return (100 - new_state['Round']) if end(new_state) else 0
 
 
-def heuristic(state, action):
+def heuristic(state):
     agent = state['A']
     partner = state['P']
     robbers = [robloc for rob, robloc in state.items() if 'Robber' in rob]

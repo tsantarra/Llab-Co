@@ -49,11 +49,11 @@ def end(state):
     return state['Round'] == params.rounds or (state['x'] == params.x and state['y'] == params.y)
 
 
-def utility(state, action=None):
+def utility(old_state, action, new_state):
     """
     Returns utility associated with given state.
     """
-    return int(state['x'] == params.x and state['y'] == params.y)* 0.9**(state['Round'])
+    return int(new_state['x'] == params.x and new_state['y'] == params.y)* 0.9**(new_state['Round'])
 
 
 grid_scenario = Scenario(initial_state=initial_state, actions=actions,

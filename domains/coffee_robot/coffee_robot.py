@@ -14,7 +14,7 @@ def coffee_robot(scenario):
         (action, node) = graph_search(state, scenario, 1000, root_node=node)
         state = scenario.transition(state, action).sample()
 
-        show_graph(node, width=10, height=10)
+        #show_graph(node, width=10, height=10)
         node = [n for n in node.successors[action] if n.state == state][0]
 
         print(action)

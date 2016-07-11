@@ -48,8 +48,9 @@ def po_actions(actions):
 
 def po_utility(utility):
 
-    def func(belief_state, action):
-        return belief_state.expectation({state: utility(state) for state in belief_state})
+    def func(old_belief_state, action, new_belief_state):
+        return new_belief_state.expectation({state: utility(old_belief_state, action, new_belief_state)
+                                             for state in new_belief_state})
 
     return func
 

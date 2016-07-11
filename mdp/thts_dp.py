@@ -97,8 +97,9 @@ def rollout(state, scenario):
 
     while not scenario.end(state):
         action = choice(scenario.actions(state))
-        state = scenario.transition(state, action).sample()
-        utility += scenario.utility(state, action)
+        new_state = scenario.transition(state, action).sample()
+        utility += scenario.utility(state, action, new_state)
+        state = new_state
 
     return utility
 
@@ -130,7 +131,7 @@ def expand_leaf(node, scenario, heuristic, node_map):
                     # Provide initial evaluation of new leaf node
                     new_node.value = new_node.immediate_value
                     if not scenario.end(new_node.state):
-                        new_node.value += heuristic(new_node.state, scenario)
+                        new_node.value += heuristic(new_node.state)
 
                     # Add to node map, so we can find it later.
                     node_map[new_state] = new_node
@@ -147,7 +148,6 @@ def expectation_max(node):
     Sets a node's value to its immediate utility + the maximum expected utility of the
     available actions.
     """
-    #node.value = node.immediate_value
     if node.successors:
         action_values = {}
         for action in node.successors:
@@ -298,7 +298,7 @@ class THTSNode:
         self.successors = {}  # Action: childNode dictionary to keep links to successors
 
         self.visits = 1  # visits of the node so far; count initialization as a visit
-        self.immediate_value = scenario.utility(state, action)
+        self.immediate_value = scenario.utility(predecessor.state if predecessor else None, action, state)
         self.value = 0  # total immediate value + future value
 
     def __repr__(self):

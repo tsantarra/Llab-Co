@@ -1,5 +1,11 @@
 BY PRIORITY (ISH)
 
+    Comm scenario
+        State - current policy; history of queries (DAG by subset, not order. Not as bad.)
+        Actions - going to need history of prior queries; possibly prune as well
+        Util - diff in exp util? How can I do that? util -> SxAxS'
+        End? - out of queries, other end condition (limited comm length)
+
     Comm architecture:
         - pose as an mdp problem and give back to solvers (|S|^d space to cover)
             + use some pruning techniques?

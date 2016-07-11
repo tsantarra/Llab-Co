@@ -50,16 +50,16 @@ def observations(state, action):
         return Distribution({'Roar left': 0.15, 'Roar right': 0.85})
 
 
-def utility(state):
+def utility(old_state, action, new_state):
     """
     Returns the utility of the state.
     """
-    if state['Player'] == 'Middle':
+    if new_state['Player'] == 'Middle':
         return 0
-    elif state['Player'] == state['tiger']:
+    elif new_state['Player'] == new_state['tiger']:
         return -1
-    elif state['Player'] != state['tiger']:
-        return 1 * 0.9 ** state['Round']
+    elif new_state['Player'] != new_state['tiger']:
+        return 1 * 0.9 ** new_state['Round']
 
 
 def end(state):
