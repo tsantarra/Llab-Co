@@ -38,7 +38,7 @@ from random import choice
 from mdp.distribution import Distribution
 
 
-def greedy_action(node):
+def _greedy_action(node):
     """
     UCT to next node.
     """
@@ -56,7 +56,7 @@ def greedy_action(node):
     return max(tied_actions, key=lambda a: action_counts[a])
 
 
-def traverse_nodes(node, scenario):
+def _traverse_nodes(node, scenario):
     """
     UCT down to leaf node.
     """
@@ -89,7 +89,7 @@ def traverse_nodes(node, scenario):
     return node
 
 
-def rollout(state, scenario):
+def _rollout(state, scenario):
     """
     Provides an evaluation of the state at the node given, either through playouts or by an evaluation function.
     """
@@ -104,7 +104,7 @@ def rollout(state, scenario):
     return utility
 
 
-def expand_leaf(node, scenario, heuristic, node_map):
+def _expand_leaf(node, scenario, heuristic, node_map):
     """
     Expands one or more new nodes from current leaf node.
     """
@@ -126,7 +126,7 @@ def expand_leaf(node, scenario, heuristic, node_map):
                     new_node = node_map[new_state]
                     new_node.predecessors.add(node)
                 else:
-                    new_node = THTSNode(state=new_state, scenario=scenario, action=action, predecessor=node)
+                    new_node = GraphNode(state=new_state, scenario=scenario, action=action, predecessor=node)
 
                     # Provide initial evaluation of new leaf node
                     new_node.value = new_node.immediate_value
@@ -143,7 +143,7 @@ def expand_leaf(node, scenario, heuristic, node_map):
     return node
 
 
-def expectation_max(node):
+def _expectation_max(node):
     """
     Sets a node's value to its immediate utility + the maximum expected utility of the
     available actions.
@@ -157,7 +157,7 @@ def expectation_max(node):
         node.value = node.immediate_value + max(action_values.values())
 
 
-def backup(node, scenario, backup_op):
+def _backup(node, scenario, backup_op):
     """
     Updates tree along simulated path.
     """
@@ -235,7 +235,7 @@ def map_tree(node):
     return {n.state: n for n in node_set}
 
 
-def prune(node, node_map, checked):
+def _prune(node, node_map, checked):
     """
     Prunes currently unreachable nodes from the graph, which cuts down on policy computation time for
     irrelevant areas of the state space.
@@ -244,20 +244,20 @@ def prune(node, node_map, checked):
     node.predecessors = set(pred for pred in node.predecessors if pred.state in node_map)
     for successor_dist in node.successors.values():
         for successor in [succ for succ in successor_dist if succ not in checked]:
-            prune(successor, node_map, checked)
+            _prune(successor, node_map, checked)
 
 
-def graph_search(state, scenario, iterations, backup_op=expectation_max, heuristic=rollout, root_node=None):
+def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=_rollout, root_node=None):
     """
     Search game tree according to THTS.
     """
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
-        root_node = THTSNode(state, scenario)
+        root_node = GraphNode(state, scenario)
         node_map = map_tree(root_node)
     else:
         node_map = map_tree(root_node)
-        prune(root_node, node_map, set())
+        _prune(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
     for step in range(passes):
@@ -269,18 +269,18 @@ def graph_search(state, scenario, iterations, backup_op=expectation_max, heurist
         node = root_node
 
         # UCT through existing nodes.
-        node = traverse_nodes(node, scenario)
+        node = _traverse_nodes(node, scenario)
 
         # Expand a new node from leaf.
-        node = expand_leaf(node, scenario, heuristic, node_map)
+        node = _expand_leaf(node, scenario, heuristic, node_map)
 
         # Recalculate state values
-        backup(node, scenario, backup_op=backup_op)
+        _backup(node, scenario, backup_op=backup_op)
 
-    return greedy_action(root_node), root_node
+    return _greedy_action(root_node), root_node
 
 
-class THTSNode:
+class GraphNode:
     """
     A node in the game tree.
     """
@@ -307,14 +307,14 @@ class THTSNode:
         """
         return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ">"  #+ '\n' + str(self.state)
 
-    def tree_to_string(self, horizon=1, indent=0):
+    def finite_horizon_string(self, horizon=1, indent=0):
         """
         Builds a string representation of the tree via recursive tree traversal.
         """
         string = ''.join(['| ' for _ in range(indent)]) + str(self) + '\n'
         if horizon > 0:
             for child_node in [node for successors in self.successors.values() for node in successors]:
-                string += child_node.tree_to_string(horizon - 1, indent + 1)
+                string += child_node.finite_horizon_string(horizon - 1, indent + 1)
         return string
 
     def __lt__(self, other):
