@@ -1,5 +1,5 @@
 from domains.coffee_robot.coffee_robot_scenario import coffee_robot_scenario
-from mdp.thts_dp import graph_search
+from mdp.graph_planner import search
 from visualization.graph import show_graph
 
 
@@ -11,7 +11,7 @@ def coffee_robot(scenario):
     node = None
     while not scenario.end(state):
         # Plan
-        (action, node) = graph_search(state, scenario, 1000, root_node=node)
+        (action, node) = search(state, scenario, 1000, root_node=node)
         state = scenario.transition(state, action).sample()
 
         #show_graph(node, width=10, height=10)

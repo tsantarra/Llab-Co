@@ -8,7 +8,7 @@ from visualization.graph import show_graph
 def carpy_dpthts():
     from domains.cops_and_robbers.cops_and_robbers_scenario import show_state, initialize_maze, \
         heuristic, cops_and_robbers_scenario
-    import mdp.thts_dp as dpthts
+    import mdp.graph_planner as dpthts
     # Initialize map
     initialize_maze('./mazes/a.maze')
     scenario = cops_and_robbers_scenario
@@ -21,7 +21,7 @@ def carpy_dpthts():
     logging.debug('Beginning search.')
     while not scenario.end(state):
         # Plan
-        (action, node) = dpthts.graph_search(state, scenario, 1000, heuristic=heuristic, root_node=node)
+        (action, node) = dpthts.search(state, scenario, 1000, heuristic=heuristic, root_node=node)
         state = scenario.transition(state, action).sample()
         show_graph(node, width=10, height=10)
 
@@ -57,7 +57,7 @@ def multiagent_carpy():
         current_agent = agents[state['Turn']]
 
         action = current_agent.get_action(state)
-        if current_agent == agent: print(agent.policy_graph_root.tree_to_string(horizon=4))
+        if current_agent == agent: print(agent.policy_graph_root.finite_horizon_string(horizon=4))
         new_state = scenario.transition(state, action).sample()
 
         logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))

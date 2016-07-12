@@ -1,5 +1,5 @@
 from domains.grid.grid_scenario import grid_scenario
-from mdp.thts_dp import graph_search
+from mdp.graph_planner import search
 
 
 def grid_test(scenario):
@@ -9,7 +9,7 @@ def grid_test(scenario):
 
     while not scenario.end(state):
         # Plan
-        (action, node) = graph_search(state, scenario, 10000)
+        (action, node) = search(state, scenario, 10000)
         state = scenario.transition(state, action).sample()
 
         print(action)

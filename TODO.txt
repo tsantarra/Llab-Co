@@ -1,9 +1,11 @@
 BY PRIORITY (ISH)
 
     Comm scenario
-        State - current policy; history of queries (DAG by subset, not order. Not as bad.)
+        Maybe this should be a class. There are many global vars, and the module only supports
+        one modeled teammate that way.
+
+        State - current policy; queried states and answers
         Actions - going to need history of prior queries; possibly prune as well
-        Util - diff in exp util? How can I do that? util -> SxAxS'
         End? - out of queries, other end condition (limited comm length)
 
     Comm architecture:

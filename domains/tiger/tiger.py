@@ -1,7 +1,7 @@
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.scenario import Scenario
-from mdp.thts_dp import graph_search
+from mdp.graph_planner import search
 
 from deprecated.partial_observability import po_transition, po_utility, po_actions, po_end
 from domains.tiger.tiger_scenario import initial_state, actions, transition, observations, utility, end
@@ -37,7 +37,7 @@ def tiger_partial_obs_test():
 
     while not scenario.end(belief_state):
         # Plan
-        action, node = graph_search(belief_state, scenario, iterations=1000)
+        action, node = search(belief_state, scenario, iterations=1000)
         belief_state = scenario.transition(belief_state, action).sample()
 
         print('------------------------')

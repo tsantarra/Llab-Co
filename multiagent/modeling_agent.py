@@ -9,7 +9,7 @@ from functools import partial
 
 from mdp.distribution import Distribution
 from mdp.state import State
-from mdp.thts_dp import graph_search
+from mdp.graph_planner import search
 
 
 class ModelingAgent:
@@ -25,12 +25,12 @@ class ModelingAgent:
 
     def get_action(self, state):
         local_state = state.update({'Models': self.models})
-        (action, node) = graph_search(state=local_state,
-                                      scenario=self.scenario,
-                                      iterations=1000,
-                                      backup_op=self.policy_backup,
-                                      heuristic=self.heuristic,
-                                      root_node=self.policy_graph_root)
+        (action, node) = search(state=local_state,
+                                scenario=self.scenario,
+                                iterations=1000,
+                                backup_op=self.policy_backup,
+                                heuristic=self.heuristic,
+                                root_node=self.policy_graph_root)
         self.policy_graph_root = node
         return action
 
