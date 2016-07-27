@@ -60,7 +60,7 @@ def _traverse_nodes(node, scenario):
     """
     UCT down to leaf node.
     """
-    while node.untried_actions == [] and len(node.successors) != 0 and not scenario.end(node.state):
+    while node.untried_actions == [] and len(node.successors) != 0:  # and not scenario.end(node.state):
         # With node labeling (complete), we only want to consider incomplete successors.
         incomplete_successors = {act: {child: prob for child, prob in node.successors[act].items()
                                        if not child.complete}
@@ -110,12 +110,8 @@ def _expand_leaf(node, scenario, heuristic, node_map):
     """
 
     # If conditions are met, add one or more leaf nodes.
-    if node.untried_actions != [] and not scenario.end(node.state):
-        # Randomly select move. Progress game state.
-        #action = choice(node.untried_actions)
-        #node.untried_actions.remove(action)
-
-        # Alternate: expand all actions
+    if node.untried_actions != [] and not node.complete:  # scenario.end(node.state):
+        # Expand all actions (rather than selecting one randomly)
         expand_actions = node.untried_actions
         node.untried_actions = []
         for action in expand_actions:
@@ -130,7 +126,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
 
                     # Provide initial evaluation of new leaf node
                     new_node.value = new_node.immediate_value
-                    if not scenario.end(new_node.state):
+                    if not new_node.complete:  # not scenario.end(new_node.state):
                         new_node.value += heuristic(new_node.state)
 
                     # Add to node map, so we can find it later.
@@ -175,9 +171,10 @@ def _backup(node, scenario, backup_op):
         backup_op(node)
 
         # Labeling -> if all actions expanded and all child nodes complete, this node is complete
-        if not node.complete and scenario.end(node.state):
-            node.complete = True
-        elif node.untried_actions == [] and \
+        # Scenario end checked in constructor. This is redundant.
+        # if not node.complete and scenario.end(node.state):
+        #    node.complete = True
+        if not node.complete and node.untried_actions == [] and \
                 all(child.complete for child_set in node.successors.values() for child in child_set):
             node.complete = True
 
