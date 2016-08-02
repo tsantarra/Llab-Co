@@ -148,5 +148,5 @@ class AstarTeammate:
     def get_action(self, state):
         return a_star_predict(state, self.target, self.scenario.actions, self.cached_paths).sample()
 
-    def update(self, state, observation, agent, new_state):
+    def update(self, agent_name, old_state, observation, new_state):
         pass

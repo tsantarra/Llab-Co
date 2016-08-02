@@ -61,11 +61,3 @@ class ExpertsModel:
     def __hash__(self):
         return hash(self.experts)
 
-    """ #BAD DOES BAD THINGS.
-    def __eq__(self, other):
-        return all((key in other.experts) for key in self.experts) and \
-               all(self.experts[key] == other.experts[key] for key in self.experts)
-
-    def __hash__(self):
-        return hash(tuple(self.experts.items()))
-    """

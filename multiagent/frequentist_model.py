@@ -5,7 +5,7 @@ from mdp.distribution import Distribution
 
 class FrequentistModel:
 
-    def __init__(self, scenario, prior=None):
+    def __init__(self, scenario, prior=None, default_count=1.0):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
@@ -15,10 +15,10 @@ class FrequentistModel:
         self.scenario = scenario
 
         if not prior:
-            self.counts = defaultdict(float)
+            self.counts = defaultdict(lambda: default_count)
         else:
             assert isinstance(prior, dict)
-            self.counts = defaultdict(float, prior)
+            self.counts = defaultdict(lambda: default_count, prior)
 
     def predict(self, state):
         """
@@ -41,3 +41,16 @@ class FrequentistModel:
         Returns a new copy of this agent model.
         """
         return FrequentistModel(scenario=self.scenario, prior=dict(self.counts))
+
+    def __repr__(self):
+        return str(id(self))
+
+    def __eq__(self, other):
+        print('self ====================')
+        print('\n'.join(str(item) for item in self.counts.items()))
+        print('other ===================')
+        print('\n'.join(str(item) for item in other.counts.items()))
+        return all(self.counts[key] == other.counts[key] for key in (self.counts.keys() | other.counts.keys()))
+
+    def __hash__(self):
+        return hash(tuple(self.counts.items()))

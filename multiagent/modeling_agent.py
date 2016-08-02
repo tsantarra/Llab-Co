@@ -10,12 +10,19 @@ from functools import partial
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import search
+import types
+from copy import copy
 
 
 class ModelingAgent:
     def __init__(self, scenario, identity, models, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
-        self.scenario = scenario._replace(transition=modeler_transition(scenario.transition))
+        if isinstance(scenario, tuple): # is a namedtuple
+            self.scenario = scenario._replace(transition=modeler_transition(scenario.transition))
+        else:  # is a class
+            self.scenario = copy(scenario)
+            self.scenario.transition =  modeler_transition(self.scenario.transition)
+            #types.MethodType(modeler_transition(self.scenario.transition), self.scenario)
 
         self.identity = identity
         self.models = State(models)
@@ -34,13 +41,14 @@ class ModelingAgent:
         self.policy_graph_root = node
         return action
 
-    def update(self, agent, state, observation, new_state):
+    def update(self, agent_name, old_state, observation, new_state):
         # Update model
-        if agent in self.models:
-            new_model = self.models[agent].update(state, observation)
-            self.models = self.models.update({agent: new_model})
+        if agent_name in self.models:
+            new_model = self.models[agent_name].update(old_state, observation)
+            self.models = self.models.update({agent_name: new_model})
 
         new_state = new_state.update({'Models': self.models})
+
         # Update location in policy graph
         for node in self.policy_graph_root.successors[observation]:
             if node.state == new_state:
@@ -50,7 +58,7 @@ class ModelingAgent:
             raise ValueError(
                 "Observation not consistent with predicted transitions." +
                 "\nObs: {0}\nNew state: \n{1}\nSuccessors: \n{2}".format(
-                    str(observation), str(new_state), str(self.policy_graph_root.successors)))
+                    str(observation), str(new_state), '\n'.join(str(node.state) for node in self.policy_graph_root.successors[observation])))
 
 
 def policy_backup(node, agent):

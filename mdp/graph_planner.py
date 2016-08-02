@@ -188,8 +188,8 @@ def _backup(node, scenario, backup_op):
 def create_node_set(node, node_set):
     """ Fills a given set of nodes with all unique nodes in the subtree. """
     node_set.add(node)
-    for successor in [successor_dist for dist in node.successors.values()
-                      for successor_dist in dist if successor_dist.state not in node_set]:
+    for successor in [successor_node for dist in node.successors.values()
+                      for successor_node in dist if successor_node.state not in node_set]:
         create_node_set(successor, node_set)
 
 
@@ -244,10 +244,14 @@ def _prune(node, node_map, checked):
             _prune(successor, node_map, checked)
 
 
-def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=_rollout, root_node=None):
+def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, root_node=None):
     """
     Search game tree according to THTS.
     """
+    if heuristic is None:
+        from functools import partial
+        heuristic = partial(_rollout, scenario=scenario)
+
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
         root_node = GraphNode(state, scenario)

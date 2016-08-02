@@ -1,26 +1,62 @@
 BY PRIORITY (ISH)
 
+    TODO
+        - 'Models' still a member of state when passed to agent's model update (from transition)
+        - make sure models are updated from policy state, then used, not just taken from graph
+        - make sure nothing in the policy graph is changed (debug assert?)
+        - create small coordination domain (action matching? parameterized length)
+        - visualize as check
+        - profile to see runtime issues
+        - modeling agent uses _replace on scenario to wrap transition. This does not work on class scenarios.
+
+    EARLY TERMINATION - technically optional.
+        + remember, looking for total utility, not terminal utility. Harder. :/
+        + find max outcome outside of policy
+        + find min outcome within policy - antagonistic teammate, minimizing EV
+
+    Post-brainstorming
+        - comm state should be queries and responses. Keep hash of EV delta from original policy
+        - expanding a state
+            + see affected prediction states
+            + propagate changes up
+            + make sure to use new state EVs where applicable
+        - util isn't as simple as new state ev - old state ev
+            + it's new state ev - old state ev under new light of new info
+            + need to be able to calculate ev under fixed policy
+
+    Helper functions:
+        - calculate current policy: return a dict of state-> action mappings + ev
+        - reachability: return a list of states reachable given teammate model's prunings (via comms and whatnot)
+        - recursive, DP search of in-policy min path
+        - recursive, DP search of out-of-policy max path
+
+    Utility
+        Nodes store immediate util value only by first expansion, not considering other means of arriving
+        Can instead store a SxA -> R mapping every time a link to state S' is found
+        This problem is raised due to the change of having SxAxS' -> R
+
     Comm scenario
-        Maybe this should be a class. There are many global vars, and the module only supports
-        one modeled teammate that way.
-
-        State - current policy; queried states and answers
-        Actions - going to need history of prior queries; possibly prune as well
-        End? - out of queries, other end condition (limited comm length)
-
-    Comm architecture:
-        - pose as an mdp problem and give back to solvers (|S|^d space to cover)
-            + use some pruning techniques?
-        - copy policy graph?
-            + or keep some form of smaller data (deltas on graph?)
+        Need to distinguish between observed model updates and queried
+        Prune -> if query suggests action, all other action subtrees irrelevant
+              -> needs reachability method
 
     Thoughts on comm strategies:
         - Exact
+            + Timing is a consideration. Don't technically need to comm now if policy
+              only at risk of changing later. Can delay comms until then.
+                - As such, storing where policy changes gives the comm timing requirements
+                - Also consider not communicating max potential change, but max change in current NEED of policy change
+        - Given conditional relations between state-action pairs of teammate model
+            + select states with best inference power over all affected states
         - Greedy (consider each independently, as in last paper)
+        - Best pruning (as queried action makes other actions' subtrees irrelevant)
         - Limit communication content: limited states considered (what to communicate paper)
         - Limit computation: Heuristic: Util x Info x likelihood of state
         - Limit search space: Limiting to similar payoffs
         - Alternate strategy (like conditional value at risk): Maximizing expected util vs raise lower bound on util.
+        - Alternate strategy: don't max payoff; rather, max chance agent made correct call (between two alternative distributions, maximize
+        probability sampled outcome of one is greater than sampled outcome of other). In other words, maximize instances of regret, not ev of regret.
+
 
     Domains
         StarCraft
@@ -32,6 +68,10 @@ BY PRIORITY (ISH)
             Blocks world (tagged blocks which can only be moved by certain agent)
             Traditional pursuit?
             Generated MDP (Noa Agmon's work "Leading Ad Hoc Agents...")
+        Human supervised classification
+            -> setup: model selects action classifying item in state. Successive state is human classifying image (can skip?).
+            -> Reward: S A S' -> util when select correct classification
+            -> May need to adjust how immediate values are handled by nodes during planning
 
     Plan-space reasoning
         Comm evaluation

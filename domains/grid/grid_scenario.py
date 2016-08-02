@@ -13,19 +13,19 @@ def initial_state():
 
 
 def actions(state):
-        """Returns legal actions in the state."""
-        legal_actions = []
+    """Returns legal actions in the state."""
+    legal_actions = []
 
-        if state['x'] > 0:
-            legal_actions += ['left']
-        if state['x'] < params.w:
-            legal_actions += ['right']
-        if state['y'] > 0:
-            legal_actions += ['down']
-        if state['y'] < params.h:
-            legal_actions += ['up']
+    if state['x'] > 0:
+        legal_actions += ['left']
+    if state['x'] < params.w:
+        legal_actions += ['right']
+    if state['y'] > 0:
+        legal_actions += ['down']
+    if state['y'] < params.h:
+        legal_actions += ['up']
 
-        return legal_actions
+    return legal_actions
 
 
 def transition(state, action):
