@@ -8,24 +8,21 @@ class CoordinatedActionsScenario:
         self.action_set = action_set
         self.rounds = rounds
 
-    @staticmethod
-    def initial_state():
+    def initial_state(self):
         return State({'Seen': (), 'Round': 1, 'Turn': 'Agent'})
 
     def actions(self, state):
         return self.action_set
 
-    @staticmethod
-    def transition(state, action):
+    def transition(self, state, action):
         return Distribution({state.update({'Round': state['Round'] + 1,
                                            'Turn': 'Agent' if state['Turn'] == 'Teammate' else 'Teammate',
                                            'Seen': tuple(state['Seen'] + (action,))}): 1.0})
 
     def end(self, state):
-        return state['Round'] == self.rounds
+        return state['Round'] > self.rounds
 
-    @staticmethod
-    def utility(old_state, action, new_state):
+    def utility(self, old_state, action, new_state):
         return 1 if (new_state['Round'] > 1 and
                      new_state['Turn'] == 'Agent' and
                      action == new_state['Seen'][-2]) else 0

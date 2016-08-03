@@ -184,7 +184,8 @@ def utility(old_state, action, new_state):
     return (100 - new_state['Round']) if end(new_state) else 0
 
 
-def heuristic(state):
+def heuristic(modeler_state):
+    state = modeler_state['World State']
     agent = state['A']
     partner = state['P']
     robbers = [robloc for rob, robloc in state.items() if 'Robber' in rob]

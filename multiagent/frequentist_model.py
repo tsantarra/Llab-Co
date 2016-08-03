@@ -46,10 +46,6 @@ class FrequentistModel:
         return str(id(self))
 
     def __eq__(self, other):
-        print('self ====================')
-        print('\n'.join(str(item) for item in self.counts.items()))
-        print('other ===================')
-        print('\n'.join(str(item) for item in other.counts.items()))
         return all(self.counts[key] == other.counts[key] for key in (self.counts.keys() | other.counts.keys()))
 
     def __hash__(self):

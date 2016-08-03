@@ -1,13 +1,13 @@
 BY PRIORITY (ISH)
 
     TODO
-        - 'Models' still a member of state when passed to agent's model update (from transition)
+        - DONE 'Models' still a member of state when passed to agent's model update (from transition)
         - make sure models are updated from policy state, then used, not just taken from graph
         - make sure nothing in the policy graph is changed (debug assert?)
-        - create small coordination domain (action matching? parameterized length)
+        - DONE create small coordination domain (action matching? parameterized length)
         - visualize as check
         - profile to see runtime issues
-        - modeling agent uses _replace on scenario to wrap transition. This does not work on class scenarios.
+        - DONE modeling agent uses _replace on scenario to wrap transition. This does not work on class scenarios.
 
     EARLY TERMINATION - technically optional.
         + remember, looking for total utility, not terminal utility. Harder. :/

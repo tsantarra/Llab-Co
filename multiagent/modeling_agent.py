@@ -18,10 +18,17 @@ class ModelingAgent:
     def __init__(self, scenario, identity, models, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
         if isinstance(scenario, tuple): # is a namedtuple
-            self.scenario = scenario._replace(transition=modeler_transition(scenario.transition))
+            self.scenario = scenario._replace(transition=modeler_transition(scenario.transition),
+                                              actions=modeler_actions(scenario.actions),
+                                              end=modeler_end(scenario.end),
+                                              utility=modeler_utility(scenario.utility)
+                                              )
         else:  # is a class
             self.scenario = copy(scenario)
-            self.scenario.transition =  modeler_transition(self.scenario.transition)
+            self.scenario.transition = modeler_transition(self.scenario.transition)
+            self.scenario.actions = modeler_actions(self.scenario.actions)
+            self.scenario.end = modeler_end(self.scenario.end)
+            self.scenario.utility = modeler_utility(self.scenario.utility)
             #types.MethodType(modeler_transition(self.scenario.transition), self.scenario)
 
         self.identity = identity
@@ -31,7 +38,7 @@ class ModelingAgent:
         self.policy_backup = partial(policy_backup, agent=self.identity)
 
     def get_action(self, state):
-        local_state = state.update({'Models': self.models})
+        local_state = State({'World State': state, 'Models': self.models})
         (action, node) = search(state=local_state,
                                 scenario=self.scenario,
                                 iterations=1000,
@@ -47,18 +54,18 @@ class ModelingAgent:
             new_model = self.models[agent_name].update(old_state, observation)
             self.models = self.models.update({agent_name: new_model})
 
-        new_state = new_state.update({'Models': self.models})
+        new_modeler_state = State({'World State': new_state, 'Models': self.models})#new_state.update({'Models': self.models})
 
         # Update location in policy graph
         for node in self.policy_graph_root.successors[observation]:
-            if node.state == new_state:
+            if node.state == new_modeler_state:
                 self.policy_graph_root = node
                 break
         else:
             raise ValueError(
                 "Observation not consistent with predicted transitions." +
                 "\nObs: {0}\nNew state: \n{1}\nSuccessors: \n{2}".format(
-                    str(observation), str(new_state), '\n'.join(str(node.state) for node in self.policy_graph_root.successors[observation])))
+                    str(observation), str(new_modeler_state), '\n'.join(str(node.state) for node in self.policy_graph_root.successors[observation])))
 
 
 def policy_backup(node, agent):
@@ -67,7 +74,7 @@ def policy_backup(node, agent):
         - the agent's expectation maximization process
         - the agent's expectations of teammates' policies
     """
-    agent_turn = node.state['Turn']
+    agent_turn = node.state['World State']['Turn']
     if node.successors:
         # Calculate expected return for each action at the given node
         action_values = defaultdict(float)
@@ -78,7 +85,7 @@ def policy_backup(node, agent):
         if agent_turn == agent:  # Agent maximized expectation
             node.value = node.immediate_value + max(action_values.values())
         elif agent_turn in node.state['Models']:  # Agent predicts action distribution and resulting expected value
-            action_distribution = node.state['Models'][agent_turn].predict(node.state)
+            action_distribution = node.state['Models'][agent_turn].predict(node.state['World State'])
             node.value = node.immediate_value + action_distribution.expectation(action_values, require_exact_keys=False)
 
 
@@ -88,24 +95,53 @@ Wrappers for scenario from the position of the modeling agent.
 
 
 def modeler_transition(transition_fn):
-    def new_transition_fn(state, action):
+    def new_transition_fn(modeler_state, action):
+        # Pull out world state and model state to work with independently
+        old_world_state = modeler_state['World State']
+        old_model_state = modeler_state['Models']
+
         # Get basic information
-        agent_turn = state['Turn']
+        agent_turn = old_world_state['Turn']
 
-        # Base scenario updates state variables. Models are appended to state but are left unchanged.
-        resulting_states = transition_fn(state, action)
+        # Use scenario's transition function to generate new world states
+        resulting_states = transition_fn(old_world_state, action)
 
-        if agent_turn in state['Models']:
-            # Update models in resulting states.
-            new_resulting_states = Distribution()
-            for resulting_state, probability in resulting_states.items():
-                new_model = state['Models'][agent_turn].update(state, action)
-                new_model_state = resulting_state['Models'].update({agent_turn: new_model})
-                resulting_state = resulting_state.update({'Models': new_model_state})
-                new_resulting_states[resulting_state] = probability
+        resulting_combined_state_distribution = Distribution()
+        for new_world_state, probability in resulting_states.items():
+            if agent_turn in old_model_state:
+                # Update models in resulting states.
+                old_teammate_model = old_model_state[agent_turn]
+                new_teammate_model = old_teammate_model.update(old_world_state, action)
+                new_model_state = old_model_state.update({agent_turn: new_teammate_model})
+            else:
+                new_model_state = old_model_state.copy()
 
-            return new_resulting_states
-        else:
-            return resulting_states
+            resulting_combined_state = State({'World State': new_world_state, 'Models': new_model_state})
+            resulting_combined_state_distribution[resulting_combined_state] = probability
+
+        return resulting_combined_state_distribution
 
     return new_transition_fn
+
+
+def modeler_end(end_fn):
+    def new_end(modeler_state):
+        return end_fn(modeler_state['World State'])
+
+    return new_end
+
+
+def modeler_utility(utility_fn):
+    def new_utility(old_modeler_state, action, new_modeler_state):
+        return utility_fn(old_modeler_state['World State'] if old_modeler_state else None,
+                          action,
+                          new_modeler_state['World State'])
+
+    return new_utility
+
+
+def modeler_actions(actions_fn):
+    def new_actions(modeler_state):
+        return actions_fn(modeler_state['World State'])
+
+    return new_actions
