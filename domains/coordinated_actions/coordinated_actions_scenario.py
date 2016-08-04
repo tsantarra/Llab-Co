@@ -1,7 +1,6 @@
 from mdp.distribution import Distribution
 from mdp.state import State
 
-
 class CoordinatedActionsScenario:
 
     def __init__(self, action_set, rounds):
@@ -23,8 +22,8 @@ class CoordinatedActionsScenario:
         return state['Round'] > self.rounds
 
     def utility(self, old_state, action, new_state):
-        return 1 if (new_state['Round'] > 1 and
-                     new_state['Turn'] == 'Agent' and
+        return 1 if (new_state['Round'] % 2 == 1 and
+                     new_state['Round'] >= 3 and
                      action == new_state['Seen'][-2]) else 0
 
 

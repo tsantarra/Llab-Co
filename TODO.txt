@@ -1,18 +1,23 @@
 BY PRIORITY (ISH)
 
     TODO
-        - DONE 'Models' still a member of state when passed to agent's model update (from transition)
-        - make sure models are updated from policy state, then used, not just taken from graph
         - make sure nothing in the policy graph is changed (debug assert?)
-        - DONE create small coordination domain (action matching? parameterized length)
-        - visualize as check
         - profile to see runtime issues
+
+        - DONE make sure models are updated from policy state, then used, not just taken from graph
+        - DONE visualize as check
         - DONE modeling agent uses _replace on scenario to wrap transition. This does not work on class scenarios.
+        - DONE 'Models' still a member of state when passed to agent's model update (from transition)
+        - DONE create small coordination domain (action matching? parameterized length)
 
     EARLY TERMINATION - technically optional.
         + remember, looking for total utility, not terminal utility. Harder. :/
         + find max outcome outside of policy
         + find min outcome within policy - antagonistic teammate, minimizing EV
+
+    Pruning
+        - technically, we should be able to prune branches that are dominated by others
+        - the need, however, is domain-specific
 
     Post-brainstorming
         - comm state should be queries and responses. Keep hash of EV delta from original policy

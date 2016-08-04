@@ -54,18 +54,20 @@ class ModelingAgent:
             new_model = self.models[agent_name].update(old_state, observation)
             self.models = self.models.update({agent_name: new_model})
 
-        new_modeler_state = State({'World State': new_state, 'Models': self.models})#new_state.update({'Models': self.models})
+        if self.policy_graph_root: # Can't update if the agent has not planned yet
+            new_modeler_state = State(
+                {'World State': new_state, 'Models': self.models})  # new_state.update({'Models': self.models})
 
-        # Update location in policy graph
-        for node in self.policy_graph_root.successors[observation]:
-            if node.state == new_modeler_state:
-                self.policy_graph_root = node
-                break
-        else:
-            raise ValueError(
-                "Observation not consistent with predicted transitions." +
-                "\nObs: {0}\nNew state: \n{1}\nSuccessors: \n{2}".format(
-                    str(observation), str(new_modeler_state), '\n'.join(str(node.state) for node in self.policy_graph_root.successors[observation])))
+            # Update location in policy graph
+            for node in self.policy_graph_root.successors[observation]:
+                if node.state == new_modeler_state:
+                    self.policy_graph_root = node
+                    break
+            else:
+                raise ValueError(
+                    "Observation not consistent with predicted transitions." +
+                    "\nObs: {0}\nNew state: \n{1}\nSuccessors: \n{2}".format(
+                        str(observation), str(new_modeler_state), '\n'.join(str(node.state) for node in self.policy_graph_root.successors[observation])))
 
 
 def policy_backup(node, agent):
