@@ -1,16 +1,21 @@
 BY PRIORITY (ISH)
 
     TODO
-        - make sure nothing in the policy graph is changed (debug assert?)
+        - clean up comm process
+            + need to find way for search to terminate. Add action?
+        - implement communicated_policy_update in models
         - profile to see runtime issues
 
-        - DONE make sure models are updated from policy state, then used, not just taken from graph
-        - DONE visualize as check
-        - DONE modeling agent uses _replace on scenario to wrap transition. This does not work on class scenarios.
-        - DONE 'Models' still a member of state when passed to agent's model update (from transition)
-        - DONE create small coordination domain (action matching? parameterized length)
+    Considerations
+        - Querying a state that is unreachable could inform many reachable policy states. Hmmm.
+        - Subset queries aren't likely to be optimal (as query choice depends on answers), but can improve runtime and coverage
+        - True EV of a policy is not submodular (no guarantees on greedy alg).
+        - Matroids don't apply either, as responses matter.
+        - It's still not quite clear how to handle global policy model vs policy instance
+            + Narrowing a policy from a stochastic policy is probably easier than "learning", no? Just use info gain to discern.
+                - Doesn't take into consideration utility and indifference.
 
-    EARLY TERMINATION - technically optional.
+    EARLY TERMINATION - technically optional, but possibly huge in impact.
         + remember, looking for total utility, not terminal utility. Harder. :/
         + find max outcome outside of policy
         + find min outcome within policy - antagonistic teammate, minimizing EV
@@ -19,31 +24,13 @@ BY PRIORITY (ISH)
         - technically, we should be able to prune branches that are dominated by others
         - the need, however, is domain-specific
 
-    Post-brainstorming
-        - comm state should be queries and responses. Keep hash of EV delta from original policy
-        - expanding a state
-            + see affected prediction states
-            + propagate changes up
-            + make sure to use new state EVs where applicable
-        - util isn't as simple as new state ev - old state ev
-            + it's new state ev - old state ev under new light of new info
-            + need to be able to calculate ev under fixed policy
-
-    Helper functions:
-        - calculate current policy: return a dict of state-> action mappings + ev
-        - reachability: return a list of states reachable given teammate model's prunings (via comms and whatnot)
-        - recursive, DP search of in-policy min path
-        - recursive, DP search of out-of-policy max path
-
     Utility
         Nodes store immediate util value only by first expansion, not considering other means of arriving
         Can instead store a SxA -> R mapping every time a link to state S' is found
         This problem is raised due to the change of having SxAxS' -> R
 
     Comm scenario
-        Need to distinguish between observed model updates and queried
         Prune -> if query suggests action, all other action subtrees irrelevant
-              -> needs reachability method
 
     Thoughts on comm strategies:
         - Exact
@@ -61,9 +48,12 @@ BY PRIORITY (ISH)
         - Alternate strategy (like conditional value at risk): Maximizing expected util vs raise lower bound on util.
         - Alternate strategy: don't max payoff; rather, max chance agent made correct call (between two alternative distributions, maximize
         probability sampled outcome of one is greater than sampled outcome of other). In other words, maximize instances of regret, not ev of regret.
-
+        - Query by committee - pick states where set of models most disagree; can select N most likely models (N most likely paths?)
+        - Expected model change - pick queries that may most change policy (expectation over answers)
 
     Domains
+        Managing 2+ teammates simultaneously.
+            Helps with reviewer criticism
         StarCraft
             Note: will have to figure out queue in scenario; also, caps for research (cannot keep researching same thing over and over)
             Evaluation? Battle simulator? Heuristic? Match to one or more possible goals?
@@ -78,20 +68,13 @@ BY PRIORITY (ISH)
             -> Reward: S A S' -> util when select correct classification
             -> May need to adjust how immediate values are handled by nodes during planning
 
-    Plan-space reasoning
-        Comm evaluation
-        Comm planning
-
-    Visualization
-        Improving x coordinates never improves overall structure.
+    Models - for agents
+        Barrett model?
+        SC build orders or other learning?
 
     Cython
         MDP planner (thts_dp)? Profile first.
         Domain scenarios - state transitions are likely a major factor
-
-    Models - for agents
-        Barrett model?
-        SC build orders or other learning?
 
     Documentation
         Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
@@ -99,8 +82,6 @@ BY PRIORITY (ISH)
 
 
 Nice to have, but completely beyond the scope of the current project.
-    Tree/graph abstraction for all solvers (fits a generic visualization framework too!)
-
     Profiling and unit tests
 
     Debug
@@ -111,8 +92,6 @@ Nice to have, but completely beyond the scope of the current project.
         branches, where X = #processors, then have each process handle a subtree. That's interesting. Probably not a huge
         gain, however. Doesn't keep the philosophy of put more resources into Y process because it is more promising. As
         X -> inf, you just have breadth first search.
-
-    Authoring - POMDP file input
 
     Hierarchical Graph Reduction (maybe keep for second PhD :P)
         Epsilon merging

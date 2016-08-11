@@ -302,6 +302,22 @@ class GraphNode:
         self.immediate_value = scenario.utility(predecessor.state if predecessor else None, action, state)
         self.value = 0  # total immediate value + future value
 
+    def find_matching_successor(self, state, action=None):
+        """
+        Finds the successor node with matching state.
+        """
+        if not self.successors:
+            return None
+
+        if action:
+            matches = [successor for successor in self.successors[action] if successor.state == state]
+        else:
+            matches = [successor for successor_dist in self.successors.values()
+                       for successor in successor_dist if successor.state == state]
+
+        assert len(matches) == 1, 'Too many matching successor nodes!'
+        return matches[0]
+
     def __repr__(self):
         """
         Returns a string representation of the node.
@@ -323,3 +339,8 @@ class GraphNode:
         Required comparison operator for queueing, etc.
         """
         return True
+
+    def __eq__(self, other):
+        self_vars = vars(self)
+        other_vars = vars(other)
+        return (self_vars.keys() == other_vars.keys()) and all(self_vars[key] == other_vars[key] for key in self_vars)

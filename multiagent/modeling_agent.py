@@ -32,13 +32,13 @@ class ModelingAgent:
             #types.MethodType(modeler_transition(self.scenario.transition), self.scenario)
 
         self.identity = identity
-        self.models = State(models)
+        self.model_state = State(models)
         self.heuristic = heuristic
         self.policy_graph_root = None
         self.policy_backup = partial(policy_backup, agent=self.identity)
 
     def get_action(self, state):
-        local_state = State({'World State': state, 'Models': self.models})
+        local_state = State({'World State': state, 'Models': self.model_state})
         (action, node) = search(state=local_state,
                                 scenario=self.scenario,
                                 iterations=1000,
@@ -50,13 +50,13 @@ class ModelingAgent:
 
     def update(self, agent_name, old_state, observation, new_state):
         # Update model
-        if agent_name in self.models:
-            new_model = self.models[agent_name].update(old_state, observation)
-            self.models = self.models.update({agent_name: new_model})
+        if agent_name in self.model_state:
+            new_model = self.model_state[agent_name].update(old_state, observation)
+            self.model_state = self.model_state.update({agent_name: new_model})
 
         if self.policy_graph_root: # Can't update if the agent has not planned yet
             new_modeler_state = State(
-                {'World State': new_state, 'Models': self.models})  # new_state.update({'Models': self.models})
+                {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
 
             # Update location in policy graph
             for node in self.policy_graph_root.successors[observation]:

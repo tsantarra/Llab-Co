@@ -67,7 +67,7 @@ def multiagent_carpy():
             participating_agent.update(state['Turn'], state, action, new_state)
 
         print(show_state(new_state))
-        print(agent.models)
+        print(agent.model_state)
 
         state = new_state
 
