@@ -2,7 +2,7 @@ from domains.coordinated_actions.coordinated_actions_scenario import Coordinated
 from multiagent.modeling_agent import ModelingAgent
 from multiagent.frequentist_model import FrequentistModel
 from visualization.graph import show_graph
-from multiagent.communication.communication_scenario import CommScenario
+from multiagent.communication.communication_scenario import CommScenario, comm
 from mdp.graph_planner import search, _greedy_action
 from mdp.distribution import Distribution
 
@@ -21,7 +21,7 @@ while not scenario.end(state):
     current_agent = agent_dict[state['Turn']]
     action = current_agent.get_action(state)
 
-
+    action = comm(state, agent, agent_dict)
 
     new_state = scenario.transition(state, action).sample()
 
