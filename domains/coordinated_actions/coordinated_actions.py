@@ -21,7 +21,8 @@ while not scenario.end(state):
     current_agent = agent_dict[state['Turn']]
     action = current_agent.get_action(state)
 
-    action = comm(state, agent, agent_dict)
+    if state['Turn'] == 'Agent':
+        action = comm(state, agent, agent_dict)
 
     new_state = scenario.transition(state, action).sample()
 
