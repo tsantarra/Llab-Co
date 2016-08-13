@@ -11,22 +11,18 @@ class CommScenario:
         self._policy_root = policy_graph
         self._state_graph_map = map_tree(self._policy_root)
 
-        # Sanity check
-        from copy import deepcopy
-        self._backup_root = deepcopy(policy_graph)
-
         # Caches of commonly computed items
         self._policy_cache = {}
         self._policy_ev_cache = {}
         self._model_state_cache = {}
 
         # Helpful references
-        self._teammate_states = set(state for state in self._state_graph_map if state['Turn'] in initial_model_state)
+        self._teammate_states = set(state for state in self._state_graph_map if state['World State']['Turn'] in initial_model_state)
         self._teammates_models_state = initial_model_state  # current model of teammate behavior
         self.comm_cost = comm_cost  # Set cost per instance of communication
 
     def initial_state(self):
-        return State()
+        return State({'Queries': State(), 'End?': False})
 
     def actions(self, policy_state):
         # Compute or retrieve model state from communicated policy info
@@ -37,18 +33,24 @@ class CommScenario:
         compute_reachable_nodes(self._policy_root, reachable_nodes, model_state)
         reachable_states = set(node.state for node in reachable_nodes)
 
-        return (self._teammate_states & reachable_states) - policy_state.keys()
+        return ((self._teammate_states & reachable_states) - policy_state['Queries'].keys()).add('Halt')
 
-    def transition(self, policy_state, query_state):
+    def transition(self, policy_state, action):
+        # Termination action
+        if action == 'Halt':
+            return policy_state.update({'End?': True})
+
         # The transition probabilities are dependent on the model formed by all current queries.
+        query_state = action
         agent_name = query_state['Turn']
         model_state = self._get_model_state(policy_state)
         predicted_responses = model_state[agent_name].predict(query_state)
 
         resulting_states = Distribution()
-        for action, probability in predicted_responses.items():
+        for agent_action, probability in predicted_responses.items():
             # Add query to current queries (as a copy)
-            new_policy_state = policy_state.update({query_state: action})
+            new_query_state = policy_state['Queries'].update({query_state: agent_action})
+            new_policy_state = policy_state.update({'Queries': new_query_state})
 
             # Construct new policy state
             resulting_states[new_policy_state] = probability
@@ -67,6 +69,9 @@ class CommScenario:
                 - Consider all non-policy actions -> max path -> upper bound for changing policy
                 - If change max - fixed min < comm cost, no comm would be worthwhile
         """
+        if policy_state['End?']:
+            return True
+
         model_state = self._get_model_state(policy_state)
 
         nodes = set()
@@ -74,9 +79,13 @@ class CommScenario:
         reachable_states = set(node.state for node in nodes)
 
         # all teammate reachable states - all queried states
-        return len((self._teammate_states & reachable_states) - policy_state.keys()) > 0
+        return len((self._teammate_states & reachable_states) - policy_state['Queries'].keys()) > 0
 
-    def utility(self, old_policy_state, query_state, new_policy_state):
+    def utility(self, old_policy_state, action, new_policy_state):
+        # If the action is to stop communicating, there is no further utility gain.
+        if action == 'Halt':
+            return 0
+
         # Calculate old policies
         old_policy = self._get_policy(old_policy_state)
         new_policy = self._get_policy(new_policy_state)
@@ -93,7 +102,8 @@ class CommScenario:
         else:
             new_models = {}
             for name, model in self._teammates_models_state.items():
-                policy_pairs = [(state, action) for state, action in policy_state.items() if state['Turn'] == name]
+                policy_pairs = [(state, action) for state, action in policy_state['Queries'].items()
+                                if state['Turn'] == name]
                 new_models[name] = model.communicated_policy_update(policy_pairs)
 
             model_state = State(new_models)
@@ -127,7 +137,7 @@ class CommScenario:
                                      policy=policy, policy_fn=use_precomputed_policy)
 
 
-def comm(state, agent, agent_dict):
+def communicate(state, agent, agent_dict):
     # Initialize scenario
     comm_scenario = CommScenario(policy_graph=agent.policy_graph_root,
                                  initial_model_state=agent.policy_graph_root.state['Models'],
@@ -141,37 +151,29 @@ def comm(state, agent, agent_dict):
 
     # Initial communication options
     current_policy_state = comm_graph_node.state
-    possible_results = comm_scenario.transition(current_policy_state, query_state)
-    utils = Distribution({result_state: comm_scenario.utility(current_policy_state, query_state, result_state)
-                          for result_state in possible_results})
 
-    while utils.expectation(possible_results) > 0:  # TODO WRONG. Myopic lookahead. Need to figure out a way to halt search.
+    while not current_policy_state['End?']:  # TODO WRONG. Myopic lookahead. Need to figure out a way to halt search.
         # response
         query_target = agent_dict[query_state['Turn']]
         response = query_target.get_action(query_state)
 
         # update position in policy state graph
-        comm_graph_node = comm_graph_node.find_matching_successor(
-            current_policy_state.update({query_target: response}),
-            action=query_state)
+        new_query_state = current_policy_state['Queries'].update({query_target: response})
+        new_policy_state = current_policy_state.update({'Queries': new_query_state})
+        comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=query_state)
 
         # calculate next step
         query_state = _greedy_action(comm_graph_node)
         current_policy_state = comm_graph_node.state
-        possible_results = comm_scenario.transition(current_policy_state, query_state)
-        utils = Distribution({result_state: comm_scenario.utility(current_policy_state, query_state, result_state)
-                              for result_state in possible_results})
 
     # update model
-    queries = comm_graph_node.state.items()
+    queries = comm_graph_node.state['Queries'].items()
     for agent_name in [name for name in agent_dict if name != 'Agent']:
         agent_queries = [(query, response) for query, response in queries if query['Turn'] == agent_name]
         new_model = agent.model_state[agent_name].communicated_policy_update(agent_queries)
         agent.model_state = agent.model_state.update({agent_name: new_model})
 
     action = agent.get_action(state)
-
-    assert comm_scenario._policy_root == comm_scenario._backup_root, 'Something in the graph may have changed.'
 
     return action
 

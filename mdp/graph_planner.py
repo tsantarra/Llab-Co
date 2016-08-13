@@ -49,11 +49,14 @@ def _greedy_action(node):
         action_values[action] /= sum(node.successors[action].values())
         action_counts[action] = sum(child.visits for child in node.successors[action])
 
-    best_action, best_value = max(action_values.items(), key=lambda av: av[1])
+    best_action, best_value = max(action_values.items(), key=lambda av: av[1], default=(None,0))
 
-    tied_actions = [a for a, v in action_values.items() if v == best_value]
+    if not best_action:  # At leaf node.
+        return None, 0
+    else:
+        tied_actions = [a for a, v in action_values.items() if v == best_value]
 
-    return max(tied_actions, key=lambda a: action_counts[a])
+        return max(tied_actions, key=lambda a: action_counts[a])
 
 
 def _traverse_nodes(node, scenario):
@@ -339,6 +342,9 @@ class GraphNode:
         Required comparison operator for queueing, etc.
         """
         return True
+
+    def __hash__(self):
+        return hash(tuple(self.state.items()))
 
     def __eq__(self, other):
         self_vars = vars(self)

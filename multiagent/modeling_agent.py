@@ -10,7 +10,6 @@ from functools import partial
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import search
-import types
 from copy import copy
 
 
@@ -54,20 +53,19 @@ class ModelingAgent:
             new_model = self.model_state[agent_name].update(old_state, observation)
             self.model_state = self.model_state.update({agent_name: new_model})
 
-        if self.policy_graph_root: # Can't update if the agent has not planned yet
-            new_modeler_state = State(
-                {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
+        if __name__ == '__main__':
+            if self.policy_graph_root: # Can't update if the agent has not planned yet
+                new_modeler_state = State(
+                    {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
 
-            # Update location in policy graph
-            for node in self.policy_graph_root.successors[observation]:
-                if node.state == new_modeler_state:
-                    self.policy_graph_root = node
-                    break
-            else:
-                raise ValueError(
-                    "Observation not consistent with predicted transitions." +
-                    "\nObs: {0}\nNew state: \n{1}\nSuccessors: \n{2}".format(
-                        str(observation), str(new_modeler_state), '\n'.join(str(node.state) for node in self.policy_graph_root.successors[observation])))
+                # Update location in policy graph
+                for node in self.policy_graph_root.successors[observation]:
+                    if node.state == new_modeler_state:
+                        self.policy_graph_root = node
+                        break
+                else:
+                    # Could have new model after communicating. Therefore, start planning anew.
+                    self.policy_graph_root = None
 
 
 def policy_backup(node, agent):

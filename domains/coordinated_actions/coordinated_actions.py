@@ -2,9 +2,8 @@ from domains.coordinated_actions.coordinated_actions_scenario import Coordinated
 from multiagent.modeling_agent import ModelingAgent
 from multiagent.frequentist_model import FrequentistModel
 from visualization.graph import show_graph
-from multiagent.communication.communication_scenario import CommScenario, comm
-from mdp.graph_planner import search, _greedy_action
-from mdp.distribution import Distribution
+from multiagent.communication.communication_scenario import communicate
+from multiagent.communicating_teammate import CommunicatingTeammate
 
 # Scenario
 scenario = CoordinatedActionsScenario(action_set='AB', rounds=6)
@@ -12,7 +11,7 @@ state = scenario.initial_state()
 
 # Agents
 teammate = SampledPolicyTeammate(actions=scenario.action_set, rounds=scenario.rounds)
-agent = ModelingAgent(scenario, 'Agent', {'Teammate': FrequentistModel(scenario)})
+agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammate(teammate_model=FrequentistModel(scenario))})
 agent_dict = {'Agent': agent, 'Teammate': teammate}
 
 # Execution loop
@@ -22,7 +21,7 @@ while not scenario.end(state):
     action = current_agent.get_action(state)
 
     if state['Turn'] == 'Agent':
-        action = comm(state, agent, agent_dict)
+        action = communicate(state, agent, agent_dict)
 
     new_state = scenario.transition(state, action).sample()
 

@@ -1,9 +1,11 @@
 BY PRIORITY (ISH)
 
     TODO
-        - clean up comm process
-            + need to find way for search to terminate. Add action?
         - implement communicated_policy_update in models
+        - fix utility
+            Nodes store immediate util value only by first expansion, not considering other means of arriving
+            Can instead store a SxA -> R mapping every time a link to state S' is found
+            This problem is raised due to the change of having SxAxS' -> R
         - profile to see runtime issues
 
     Considerations
@@ -19,18 +21,6 @@ BY PRIORITY (ISH)
         + remember, looking for total utility, not terminal utility. Harder. :/
         + find max outcome outside of policy
         + find min outcome within policy - antagonistic teammate, minimizing EV
-
-    Pruning
-        - technically, we should be able to prune branches that are dominated by others
-        - the need, however, is domain-specific
-
-    Utility
-        Nodes store immediate util value only by first expansion, not considering other means of arriving
-        Can instead store a SxA -> R mapping every time a link to state S' is found
-        This problem is raised due to the change of having SxAxS' -> R
-
-    Comm scenario
-        Prune -> if query suggests action, all other action subtrees irrelevant
 
     Thoughts on comm strategies:
         - Exact
@@ -72,10 +62,6 @@ BY PRIORITY (ISH)
         Barrett model?
         SC build orders or other learning?
 
-    Cython
-        MDP planner (thts_dp)? Profile first.
-        Domain scenarios - state transitions are likely a major factor
-
     Documentation
         Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
             Can be set by PyCharm in settings, tools, python integrated tools, docstring format
@@ -83,6 +69,10 @@ BY PRIORITY (ISH)
 
 Nice to have, but completely beyond the scope of the current project.
     Profiling and unit tests
+
+    Cython
+        MDP planner?
+        Domain scenarios - state transitions are likely a major factor
 
     Debug
         - use logging module http://inventwithpython.com/blog/2012/04/06/stop-using-print-for-debugging-a-5-minute-quickstart-guide-to-pythons-logging-module/
