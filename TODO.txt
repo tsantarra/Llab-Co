@@ -1,6 +1,10 @@
 BY PRIORITY (ISH)
 
     TODO
+        - PROBLEM FOUND: ACTIONS ARE GIVEN AS COMPLETE STATES (WORLD X MODEL). BAD.
+            - tree should be mapped according to world state
+            - each world state CAN point to multiple graph nodes (world x model)
+            - actions should be specified in world states
         - implement communicated_policy_update in models
         - fix utility
             Nodes store immediate util value only by first expansion, not considering other means of arriving

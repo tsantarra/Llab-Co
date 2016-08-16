@@ -74,7 +74,7 @@ def _traverse_nodes(node, scenario):
         action_values = {}
         action_counts = {}
         for action in incomplete_successors:
-            if len(incomplete_successors[action]) == 0:
+            if len(incomplete_successors[action]) == 0 or sum(incomplete_successors[action].values()) == 0:
                 continue
             action_values[action] = sum(child.value * prob for child, prob in incomplete_successors[action].items())
             action_values[action] /= sum(incomplete_successors[action].values())
@@ -119,6 +119,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
         node.untried_actions = []
         for action in expand_actions:
             transitions = scenario.transition(node.state, action)
+
             new_successors = Distribution()
             for new_state, prob in transitions.items():
                 if new_state in node_map:
@@ -211,8 +212,8 @@ def detect_cycle(node):
                 continue
             elif successor in inc:
                 return True
-            elif dfs(successor, unv, inc, comp):
-                return True
+            else:
+                return dfs(successor, unv, inc, comp)
 
         inc.remove(current)
         comp.add(current)
@@ -247,7 +248,7 @@ def _prune(node, node_map, checked):
             _prune(successor, node_map, checked)
 
 
-def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, root_node=None):
+def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, root_node=None, view=False):
     """
     Search game tree according to THTS.
     """
@@ -267,6 +268,7 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
     for step in range(passes):
         # If entire tree has been searched, halt iteration.
         if root_node.complete:
+            print('Steps planned:', step)
             break
 
         # Start at root
@@ -294,18 +296,23 @@ class GraphNode:
         Initializes tree node with relevant information.
         """
         self.state = state  # Current game state (clone of state instance).
-        self.untried_actions = scenario.actions(state)  # Yet unexplored actions
         self.complete = scenario.end(state)  # A label to avoid sampling in complete subtrees.
+        self.untried_actions = scenario.actions(state) if not self.complete else [] # Yet unexplored actions
 
         # Due to the dynamic programming approach, allow multiple "parents".
         self.predecessors = {predecessor} if predecessor else set()
         self.successors = {}  # Action: childNode dictionary to keep links to successors
 
         self.visits = 1  # visits of the node so far; count initialization as a visit
-        self.immediate_value = scenario.utility(predecessor.state if predecessor else None, action, state)
+
+        if predecessor:
+            self.immediate_value = scenario.utility(predecessor.state, action, state)
+        else:
+            self.immediate_value = 0
+
         self.value = 0  # total immediate value + future value
 
-    def find_matching_successor(self, state, action=None):
+    def find_matching_successor(self, state, action=None, depth=1):
         """
         Finds the successor node with matching state.
         """
@@ -318,6 +325,9 @@ class GraphNode:
             matches = [successor for successor_dist in self.successors.values()
                        for successor in successor_dist if successor.state == state]
 
+        if len(matches) == 0: print('NO MATCHES')
+        if len(matches) > 1:
+            print('MATCHING SUCCESSORS', '\n'.join(str(match) for match in matches))
         assert len(matches) == 1, 'Too many matching successor nodes!'
         return matches[0]
 
@@ -325,7 +335,7 @@ class GraphNode:
         """
         Returns a string representation of the node.
         """
-        return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ">"  # + '\n' + str(self.state)
+        return "<" + "Val:" + "%.2f" % self.value + " Vis:" + str(self.visits) + ' ' + str(len(self.state['Queries'].keys())) + ' ' + str(self.state['End?']) +">"  # + '\n' + str(self.state)
 
     def finite_horizon_string(self, horizon=1, indent=0):
         """

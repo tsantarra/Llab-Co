@@ -20,7 +20,7 @@ class State(Mapping):
         """
         Returns a string representing the state.
         """
-        return '\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.items()))
+        return '{\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.items())) + '}'
 
     def copy(self):
         """
@@ -39,7 +39,10 @@ class State(Mapping):
         """
         Returns a copy with updated state vars, as given by args.
         """
-        return State(self.copy(), **args)
+        new_copy = self.copy()
+        new_copy.__dict.update(args)
+        return new_copy
+        #return State(self.copy(), **args) # unpack doesn't work if args={...} doesn't have string keys.
 
     def remove(self, keys):
         """
@@ -66,7 +69,7 @@ class State(Mapping):
         return len(self.__dict)
 
     def __eq__(self, other):
-        return all(self[key] == other[key] for key in (self.keys() | other.keys()))
+        return all((key in self and key in other) and (self[key] == other[key]) for key in (self.keys() | other.keys()))
 
     def __lt__(self, other):
         return tuple(self.items()) < tuple(other.items())

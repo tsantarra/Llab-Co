@@ -6,7 +6,7 @@ from multiagent.communication.communication_scenario import communicate
 from multiagent.communicating_teammate import CommunicatingTeammate
 
 # Scenario
-scenario = CoordinatedActionsScenario(action_set='AB', rounds=6)
+scenario = CoordinatedActionsScenario(action_set='AB', rounds=3)
 state = scenario.initial_state()
 
 # Agents
@@ -20,18 +20,26 @@ while not scenario.end(state):
     current_agent = agent_dict[state['Turn']]
     action = current_agent.get_action(state)
 
+    print('Turn:', state['Turn'])
+    print('Action:', action)
+
+    #if state['Turn'] == 'Agent':
+    #    show_graph(agent.policy_graph_root)
+
     if state['Turn'] == 'Agent':
-        action = communicate(state, agent, agent_dict)
+        action = communicate(state, agent, agent_dict, 750)
+
+    if state['Turn'] == 'Agent':
+        show_graph(agent.policy_graph_root)
 
     new_state = scenario.transition(state, action).sample()
 
     # Output
-    print(state['Turn'], action)
+    print('Action:', action)
+    print('New State')
     print(new_state)
     print('-----------------')
 
-    if state['Turn'] == 'Agent':
-        show_graph(agent.policy_graph_root)
 
     # Update agent info
     for participating_agent in agent_dict.values():

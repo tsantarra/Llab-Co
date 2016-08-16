@@ -17,7 +17,7 @@ class CommScenario:
         self._model_state_cache = {}
 
         # Helpful references
-        self._teammate_states = set(state for state in self._state_graph_map if state['World State']['Turn'] in initial_model_state)
+        self._teammate_states = set(state['World State'] for state in self._state_graph_map if state['World State']['Turn'] in initial_model_state)
         self._teammates_models_state = initial_model_state  # current model of teammate behavior
         self.comm_cost = comm_cost  # Set cost per instance of communication
 
@@ -25,37 +25,47 @@ class CommScenario:
         return State({'Queries': State(), 'End?': False})
 
     def actions(self, policy_state):
+        # No actions for halted case.
+        if policy_state['End?']:
+            return []
+
         # Compute or retrieve model state from communicated policy info
         model_state = self._get_model_state(policy_state)
 
         # Calculate reachable states
         reachable_nodes = set()
         compute_reachable_nodes(self._policy_root, reachable_nodes, model_state)
-        reachable_states = set(node.state for node in reachable_nodes)
+        reachable_states = set(node.state['World State'] for node in reachable_nodes)
 
-        return ((self._teammate_states & reachable_states) - policy_state['Queries'].keys()).add('Halt')
+        action_set = (self._teammate_states & reachable_states) - policy_state['Queries'].keys()
+        assert all(state not in policy_state['Queries'] for state in action_set), 'Giving action for already queried state.'
+        action_set.add('Halt')
+        return action_set
 
     def transition(self, policy_state, action):
         # Termination action
-        if action == 'Halt':
-            return policy_state.update({'End?': True})
+        if type(action) != State and action == 'Halt':  # Check for state type first so to avoid State.__eq__(str)
+            return Distribution({policy_state.update({'End?': True}): 1.0})
 
         # The transition probabilities are dependent on the model formed by all current queries.
-        query_state = action
-        agent_name = query_state['Turn']
+        query_world_state = action
+        #assert query_world_state not in policy_state['Queries'], 'Query state already queried. ' + str(query_world_state)
+        agent_name = query_world_state['Turn']
         model_state = self._get_model_state(policy_state)
-        predicted_responses = model_state[agent_name].predict(query_state)
+        predicted_responses = model_state[agent_name].predict(query_world_state)
 
         resulting_states = Distribution()
         for agent_action, probability in predicted_responses.items():
             # Add query to current queries (as a copy)
-            new_query_state = policy_state['Queries'].update({query_state: agent_action})
+            new_query_state = policy_state['Queries'].update({query_world_state: agent_action})
             new_policy_state = policy_state.update({'Queries': new_query_state})
 
             # Construct new policy state
             resulting_states[new_policy_state] = probability
 
-        assert abs(sum(resulting_states.values) - 1.0) < 10e-6, 'Predicted query action distribution does not sum to 1.'
+        #assert policy_state not in resulting_states, 'Accidental self parent. ' + str(policy_state)
+
+        assert abs(sum(resulting_states.values()) - 1.0) < 10e-6, 'Predicted query action distribution does not sum to 1.'
         return resulting_states
 
     def end(self, policy_state):
@@ -76,14 +86,14 @@ class CommScenario:
 
         nodes = set()
         compute_reachable_nodes(node=self._policy_root, visited_set=nodes, model_state=model_state)
-        reachable_states = set(node.state for node in nodes)
+        reachable_states = set(node.state['World State'] for node in nodes)
 
         # all teammate reachable states - all queried states
-        return len((self._teammate_states & reachable_states) - policy_state['Queries'].keys()) > 0
+        return len((self._teammate_states & reachable_states) - policy_state['Queries'].keys()) == 0
 
     def utility(self, old_policy_state, action, new_policy_state):
         # If the action is to stop communicating, there is no further utility gain.
-        if action == 'Halt':
+        if type(action) != State and action == 'Halt':
             return 0
 
         # Calculate old policies
@@ -137,33 +147,43 @@ class CommScenario:
                                      policy=policy, policy_fn=use_precomputed_policy)
 
 
-def communicate(state, agent, agent_dict):
+def communicate(state, agent, agent_dict, passes):
     # Initialize scenario
     comm_scenario = CommScenario(policy_graph=agent.policy_graph_root,
                                  initial_model_state=agent.policy_graph_root.state['Models'],
                                  comm_cost=0)
 
+    print('BEGIN COMMUNICATION')
     # Complete graph search
-    (query_state, comm_graph_node) = search(state=comm_scenario.initial_state(),
+    (query_action, comm_graph_node) = search(state=comm_scenario.initial_state(),
                                             scenario=comm_scenario,
-                                            iterations=1000,
-                                            heuristic=lambda comm_state, scenario: 0)
+                                            iterations=passes,
+                                            heuristic=lambda comm_state: 0,
+                                            view=True)
 
     # Initial communication options
     current_policy_state = comm_graph_node.state
 
-    while not current_policy_state['End?']:  # TODO WRONG. Myopic lookahead. Need to figure out a way to halt search.
+    while not current_policy_state['End?']:
+        # Check for termination
+        if type(query_action) != State:  # 'Halt' action is type str, exit loop
+            print('Halt')
+            break
+
         # response
-        query_target = agent_dict[query_state['Turn']]
-        response = query_target.get_action(query_state)
+        query_target = agent_dict[query_action['Turn']]
+        response = query_target.get_action(query_action)
+
+        print('Query:', query_action)
+        print('Response:', response)
 
         # update position in policy state graph
-        new_query_state = current_policy_state['Queries'].update({query_target: response})
+        new_query_state = current_policy_state['Queries'].update({query_action: response})
         new_policy_state = current_policy_state.update({'Queries': new_query_state})
-        comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=query_state)
+        comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=query_action)
 
         # calculate next step
-        query_state = _greedy_action(comm_graph_node)
+        query_action = _greedy_action(comm_graph_node)
         current_policy_state = comm_graph_node.state
 
     # update model
@@ -173,7 +193,9 @@ def communicate(state, agent, agent_dict):
         new_model = agent.model_state[agent_name].communicated_policy_update(agent_queries)
         agent.model_state = agent.model_state.update({agent_name: new_model})
 
+    agent.recalculate_policy()
     action = agent.get_action(state)
+    print('END COMMUNICATION/// NEW ACTION:', action)
 
     return action
 
@@ -190,7 +212,7 @@ def traverse_policy_graph(node, node_values, model_state, policy, policy_fn):
         return node.value
 
     # Calculate expected return for each action at the given node
-    active_agent = node.state['Turn']
+    active_agent = node.state['World State']['Turn']
     action_values = defaultdict(float)
     for action, result_distribution in node.successors.items():
         assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
@@ -224,7 +246,7 @@ def compute_reachable_nodes(node, visited_set, model_state):
     if not node.successors:
         return
 
-    acting_agent = node.state['Turn']
+    acting_agent = node.state['World State']['Turn']
     if acting_agent not in model_state:
         # This is the modeling agent's turn. All successor nodes are viable.
         for successor_node in (successor for dist in node.successors.values()

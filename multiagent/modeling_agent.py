@@ -38,6 +38,8 @@ class ModelingAgent:
 
     def get_action(self, state):
         local_state = State({'World State': state, 'Models': self.model_state})
+
+        self.policy_graph_root = None
         (action, node) = search(state=local_state,
                                 scenario=self.scenario,
                                 iterations=1000,
@@ -46,6 +48,58 @@ class ModelingAgent:
                                 root_node=self.policy_graph_root)
         self.policy_graph_root = node
         return action
+
+    def recalculate_policy(self):
+        def compute_policy(node, action_values, new_policy):
+            action, action_value = max(action_values.items(), key=lambda pair: pair[1])
+            new_policy[node.state] = action
+            return action_value
+
+        def traverse_policy_graph(node, node_values, model_state, policy, policy_fn):
+            """ Computes a policy maximizing expected utility given a probabilistic agent model for other agents. """
+            # Already visited this node. Return its computed value.
+            if node in node_values:
+                return node_values[node]
+
+            # Leaf node. Value already calculated as immediate + heuristic.
+            if not node.successors:
+                node_values[node] = node.value
+                return node.value
+
+            # Calculate expected return for each action at the given node
+            active_agent = node.state['World State']['Turn']
+            action_values = defaultdict(float)
+            for action, result_distribution in node.successors.items():
+                assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
+                for resulting_state_node, result_probability in result_distribution.items():
+                    if active_agent in model_state:
+                        new_model = model_state[active_agent].update(node.state, action)
+                        new_model_state = model_state.update({active_agent: new_model})
+                    else:
+                        new_model_state = model_state
+
+                    action_values[action] += result_probability * traverse_policy_graph(resulting_state_node,
+                                                                                        node_values,
+                                                                                        new_model_state, policy,
+                                                                                        policy_fn)
+
+            # Compute the node value
+            if active_agent not in model_state:
+                # Given a pre-computed policy, use the associated action
+                node.value = node.immediate_value + policy_fn(node, action_values, policy)
+                node_values[node] = node.value
+            else:
+                # Agent predicts action distribution and resulting expected value
+                action_distribution = model_state[active_agent].predict(node.state['World State'])
+
+                node.value = node.immediate_value + action_distribution.expectation(action_values,
+                                                                                           require_exact_keys=False)
+                node_values[node] = node.value
+
+            return node_values[node]
+
+        policy = {}
+        traverse_policy_graph(self.policy_graph_root, {}, self.model_state, policy, compute_policy)
 
     def update(self, agent_name, old_state, observation, new_state):
         # Update model

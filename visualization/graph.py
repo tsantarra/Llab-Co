@@ -259,7 +259,8 @@ def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=Fals
     # Steps to position DAG
     # Traverse graph add nodes by horizon level (rank)
     _add_edges(root, graph, graph_map)
-    _edge_labels(root, edge_labels)
+    if with_edge_labels:
+        _edge_labels(root, edge_labels)
 
     graph_map = {rank: {node: index for index, node in enumerate(graph_map[rank])} for rank in graph_map}
 

@@ -14,17 +14,19 @@ class CoordinatedActionsScenario:
         return self.action_set
 
     def transition(self, state, action):
-        return Distribution({state.update({'Round': state['Round'] + 1,
+        return Distribution({state.update({'Round': state['Round'] + 1 if state['Turn'] == 'Teammate' else state['Round'],
                                            'Turn': 'Agent' if state['Turn'] == 'Teammate' else 'Teammate',
                                            'Seen': tuple(state['Seen'] + (action,))}): 1.0})
 
     def end(self, state):
-        return state['Round'] > self.rounds
+        return state['Round'] > self.rounds or (state['Round'] >= 2
+                                                and state['Turn'] == 'Agent'
+                                                and state['Seen'][-1] != state['Seen'][-2])
 
     def utility(self, old_state, action, new_state):
-        return 1 if (new_state['Round'] % 2 == 1 and
-                     new_state['Round'] >= 3 and
-                     action == new_state['Seen'][-2]) else 0
+        return 1 if (new_state['Round'] >= 1 and
+                     new_state['Turn'] == 'Agent' and
+                     new_state['Seen'][-2] == action) else 0
 
 
 class SampledPolicyTeammate:
@@ -32,6 +34,7 @@ class SampledPolicyTeammate:
     def __init__(self, actions, rounds):
         from random import choice
         self.policy = {round: choice(actions) for round in range(1, rounds+1)}
+        print('POLICY:', self.policy)
 
     def get_action(self, state):
         return self.policy[state['Round']]

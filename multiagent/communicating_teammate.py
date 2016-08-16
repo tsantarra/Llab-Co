@@ -1,5 +1,6 @@
 from mdp.distribution import Distribution
 
+
 class CommunicatingTeammate:
 
     def __init__(self, teammate_model, previous_comms=None):
@@ -17,13 +18,15 @@ class CommunicatingTeammate:
         return self.model.predict(state)
 
     def update(self, state, action):
-        self.model.update(state, action)
+        return CommunicatingTeammate(self.model.update(state, action), self.previous_communications.copy())
 
     def communicated_policy_update(self, state_action_pairs):
-        self.previous_communications.update(state_action_pairs)
+        new_comms = self.previous_communications.copy()
+        new_comms.update(state_action_pairs)
+        return CommunicatingTeammate(self.model.copy(), new_comms)
 
     def copy(self):
-        return CommunicatingTeammate(self.model.copy(), self.previous_communications)
+        return CommunicatingTeammate(self.model.copy(), self.previous_communications.copy())
 
     def __repr__(self):
         return str(id(self))
