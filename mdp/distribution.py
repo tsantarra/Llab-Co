@@ -75,12 +75,9 @@ class Distribution(dict):
         return '\nDistribution {\n' + '\n'.join(str(key) + '\nP=' + str(val) + '\n'
                                                 for key, val in sorted(self.items())) + '} /Distribution\n'
 
-    def __missing__(self, key):
-        self[key] = 0.0
-        return 0.0
-
     def __eq__(self, other):
-        return all(self[key] == other[key] for key in self) and (len(self) == len(other))
+        keys = self.keys() | other.keys()
+        return all(key in self and key in other for key in keys) and all(self[key] == other[key] for key in keys)
 
     def __key(self):
         return tuple(self.items())

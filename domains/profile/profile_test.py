@@ -3,9 +3,6 @@ import io
 import logging
 import pstats
 
-from domains.cops_and_robbers.cops_and_robbers import carpy_dpthts
-from domains.cops_and_robbers.cops_and_robbers_scenario import cops_and_robbers_scenario
-
 
 def profile(func):
     """
@@ -36,10 +33,13 @@ if __name__ == "__main__":
     profiler = cProfile.Profile()
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
+    # import test
+    from domains.coordinated_actions.coordinated_actions import run_coordinated_actions
+
     # Run code
     profiler.enable()
 
-    carpy_dpthts(cops_and_robbers_scenario)
+    run_coordinated_actions()
 
     profiler.disable()
 
@@ -52,5 +52,9 @@ if __name__ == "__main__":
     results = results.split('\n')
 
     # Print top time intensive calls
-    for i in range(15 + 5):  # 5 header lines
+    for i in range(4):  # Header lines
         print(results[i])
+
+    for i in range(4, 20):  # Table
+        print('\t\t\t'.join(results[i].split()))
+

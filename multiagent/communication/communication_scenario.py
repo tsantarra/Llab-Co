@@ -13,7 +13,6 @@ class CommScenario:
 
         # Caches of commonly computed items
         self._policy_cache = {}
-        self._policy_ev_cache = {}
         self._model_state_cache = {}
 
         # Helpful references
@@ -49,7 +48,6 @@ class CommScenario:
 
         # The transition probabilities are dependent on the model formed by all current queries.
         query_world_state = action
-        #assert query_world_state not in policy_state['Queries'], 'Query state already queried. ' + str(query_world_state)
         agent_name = query_world_state['Turn']
         model_state = self._get_model_state(policy_state)
         predicted_responses = model_state[agent_name].predict(query_world_state)
@@ -104,6 +102,7 @@ class CommScenario:
         exp_util_old_policy = self._get_policy_ev(policy_state=new_policy_state, policy=old_policy)
         exp_util_new_policy = self._get_policy_ev(policy_state=new_policy_state, policy=new_policy)
 
+        print(exp_util_new_policy - exp_util_old_policy - self.comm_cost)
         return exp_util_new_policy - exp_util_old_policy - self.comm_cost
 
     def _get_model_state(self, policy_state):
@@ -134,7 +133,6 @@ class CommScenario:
             expected_util = traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
                                                   policy=policy, policy_fn=compute_policy)
             self._policy_cache[policy_state] = policy
-            self._policy_ev_cache[policy_state] = expected_util
             return policy
 
     def _get_policy_ev(self, policy_state, policy):
@@ -160,6 +158,14 @@ def communicate(state, agent, agent_dict, passes):
                                             iterations=passes,
                                             heuristic=lambda comm_state: 0,
                                             view=True)
+
+    from visualization.graph import show_graph
+    from mdp.graph_planner import detect_cycle
+    if not detect_cycle(comm_graph_node):
+        print('no cycle detected')
+    else:
+        assert False
+    show_graph(comm_graph_node, skip_cross_optimization=True)
 
     # Initial communication options
     current_policy_state = comm_graph_node.state
@@ -208,8 +214,8 @@ def traverse_policy_graph(node, node_values, model_state, policy, policy_fn):
 
     # Leaf node. Value already calculated as immediate + heuristic.
     if not node.successors:
-        node_values[node] = node.value
-        return node.value
+        node_values[node] = node.future_value
+        return node.future_value
 
     # Calculate expected return for each action at the given node
     active_agent = node.state['World State']['Turn']
@@ -223,18 +229,18 @@ def traverse_policy_graph(node, node_values, model_state, policy, policy_fn):
             else:
                 new_model_state = model_state
 
-            action_values[action] += result_probability * traverse_policy_graph(resulting_state_node, node_values,
-                                                                                new_model_state, policy, policy_fn)
+            resulting_node_value = traverse_policy_graph(resulting_state_node, node_values, new_model_state, policy, policy_fn)
+            action_values[action] += result_probability * \
+                                     (node.successor_transition_values[(resulting_state_node.state, action)] + resulting_node_value)
 
     # Compute the node value
     if active_agent not in model_state:
         # Given a pre-computed policy, use the associated action
-        node_values[node] = node.immediate_value + policy_fn(node, action_values, policy)
+        node_values[node] = policy_fn(node, action_values, policy)
     else:
         # Agent predicts action distribution and resulting expected value
-        action_distribution = model_state[active_agent].predict(node.state)
-        node_values[node] = node.immediate_value + action_distribution.expectation(action_values,
-                                                                                   require_exact_keys=False)
+        action_distribution = model_state[active_agent].predict(node.state['World State'])
+        node_values[node] = action_distribution.expectation(action_values)
 
     return node_values[node]
 
@@ -287,6 +293,7 @@ def min_in_policy(node, node_values, policy, policy_state):
         for resulting_state_node, result_probability in result_distribution.items():
             action_values[action] += result_probability * min_in_policy(resulting_state_node, node_values,
                                                                         policy, policy_state)
+            assert False, 'Dated implementation, as node utility is now handled differently. '
 
     # Compute the node value
     if active_agent not in node.state['Models']:

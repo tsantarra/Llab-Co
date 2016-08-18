@@ -39,7 +39,6 @@ class ModelingAgent:
     def get_action(self, state):
         local_state = State({'World State': state, 'Models': self.model_state})
 
-        self.policy_graph_root = None
         (action, node) = search(state=local_state,
                                 scenario=self.scenario,
                                 iterations=1000,
@@ -63,8 +62,8 @@ class ModelingAgent:
 
             # Leaf node. Value already calculated as immediate + heuristic.
             if not node.successors:
-                node_values[node] = node.value
-                return node.value
+                node_values[node] = node.future_value
+                return node.future_value
 
             # Calculate expected return for each action at the given node
             active_agent = node.state['World State']['Turn']
@@ -78,23 +77,20 @@ class ModelingAgent:
                     else:
                         new_model_state = model_state
 
-                    action_values[action] += result_probability * traverse_policy_graph(resulting_state_node,
-                                                                                        node_values,
-                                                                                        new_model_state, policy,
-                                                                                        policy_fn)
+                    resulting_node_value = traverse_policy_graph(resulting_state_node, node_values, new_model_state,
+                                                                 policy, policy_fn)
+                    action_values[action] += result_probability * \
+                                             (node.successor_transition_values[
+                                                  (resulting_state_node.state, action)] + resulting_node_value)
 
             # Compute the node value
             if active_agent not in model_state:
                 # Given a pre-computed policy, use the associated action
-                node.value = node.immediate_value + policy_fn(node, action_values, policy)
-                node_values[node] = node.value
+                node_values[node] = policy_fn(node, action_values, policy)
             else:
                 # Agent predicts action distribution and resulting expected value
                 action_distribution = model_state[active_agent].predict(node.state['World State'])
-
-                node.value = node.immediate_value + action_distribution.expectation(action_values,
-                                                                                           require_exact_keys=False)
-                node_values[node] = node.value
+                node_values[node] = action_distribution.expectation(action_values)
 
             return node_values[node]
 
@@ -107,19 +103,19 @@ class ModelingAgent:
             new_model = self.model_state[agent_name].update(old_state, observation)
             self.model_state = self.model_state.update({agent_name: new_model})
 
-        if __name__ == '__main__':
-            if self.policy_graph_root: # Can't update if the agent has not planned yet
-                new_modeler_state = State(
-                    {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
+        if self.policy_graph_root:  # Can't update if the agent has not planned yet
+            new_modeler_state = State(
+                {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
 
-                # Update location in policy graph
-                for node in self.policy_graph_root.successors[observation]:
-                    if node.state == new_modeler_state:
-                        self.policy_graph_root = node
-                        break
-                else:
-                    # Could have new model after communicating. Therefore, start planning anew.
-                    self.policy_graph_root = None
+            # Update location in policy graph
+            for node in self.policy_graph_root.successors[observation]:
+                if node.state == new_modeler_state:
+                    self.policy_graph_root = node
+                    break
+            else:
+                # Could have new model after communicating. Therefore, start planning anew.
+                print('No matching successor found in agent update:\n', new_state, '\n', self.model_state)
+                self.policy_graph_root = None
 
 
 def policy_backup(node, agent):
@@ -128,19 +124,16 @@ def policy_backup(node, agent):
         - the agent's expectation maximization process
         - the agent's expectations of teammates' policies
     """
-    agent_turn = node.state['World State']['Turn']
     if node.successors:
         # Calculate expected return for each action at the given node
-        action_values = defaultdict(float)
-        for action in node.successors:
-            action_values[action] = sum(child.value * prob for child, prob in node.successors[action].items())
-            action_values[action] /= sum(node.successors[action].values())
+        action_values = node.calculate_action_values()
 
+        agent_turn = node.state['World State']['Turn']
         if agent_turn == agent:  # Agent maximized expectation
-            node.value = node.immediate_value + max(action_values.values())
+            node.value = max(action_values.values())
         elif agent_turn in node.state['Models']:  # Agent predicts action distribution and resulting expected value
             action_distribution = node.state['Models'][agent_turn].predict(node.state['World State'])
-            node.value = node.immediate_value + action_distribution.expectation(action_values, require_exact_keys=False)
+            node.value = action_distribution.expectation(action_values)
 
 
 """

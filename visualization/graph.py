@@ -105,6 +105,8 @@ def _crosses(graph_map):
     """
     Counts the total number of edge crosses in the current graph.
     """
+
+    # HORRIBLY INEFFICIENT FOR HIGH BRANCH FACTORS
     total_crosses = 0
     for horizon in graph_map:
         ordered_nodes = sorted(graph_map[horizon], key=lambda n: graph_map[horizon][n])
@@ -251,7 +253,7 @@ def _xlength(xcoords):
     return total
 
 
-def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=False):
+def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=False, skip_cross_optimization=False):
     graph = nx.MultiGraph()  # DAG -> MultiDiGraph
     graph_map = defaultdict(list)
     edge_labels = defaultdict(str)
@@ -273,6 +275,10 @@ def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=Fals
 
         # Greedy transpose
         _transpose(graph_map)
+
+        if skip_cross_optimization:  # Skip cross counting, which is computationally expensive.
+            best_map = graph_map
+            break
 
         # Save best
         if _crosses(graph_map) < _crosses(best_map):
@@ -299,7 +305,6 @@ def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=Fals
         _min_node(x_coords, up)
         _normalize(x_coords)
         if _xlength(x_coords) < _xlength(best):
-            print('improved coords')
             best = x_coords.copy()
     x_coords = best
 
@@ -308,7 +313,7 @@ def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=Fals
         for node, x in x_coords[horizon].items():
             positions[node] = (x, height - (horizon/max_horizon) * height)
 
-    node_values = [node.value for node in graph.nodes()]
+    node_values = [node.future_value for node in graph.nodes()]
     max_value = max(node_values)
     if max_value:
         node_values = [val/max_value for val in node_values]

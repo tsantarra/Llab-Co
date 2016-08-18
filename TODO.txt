@@ -1,16 +1,10 @@
 BY PRIORITY (ISH)
 
     TODO
-        - PROBLEM FOUND: ACTIONS ARE GIVEN AS COMPLETE STATES (WORLD X MODEL). BAD.
-            - tree should be mapped according to world state
-            - each world state CAN point to multiple graph nodes (world x model)
-            - actions should be specified in world states
-        - implement communicated_policy_update in models
-        - fix utility
-            Nodes store immediate util value only by first expansion, not considering other means of arriving
-            Can instead store a SxA -> R mapping every time a link to state S' is found
-            This problem is raised due to the change of having SxAxS' -> R
-        - profile to see runtime issues
+        - have modeling_agent.update update all node states with new model_state
+        - determine why so many comm util gains are 0.0
+            + suspicion: node_values calculated with Distribution.expectation(..., require_exact_keys=False)
+            + problem: model.predict(node.state) # not world state, but modeler's state
 
     Considerations
         - Querying a state that is unreachable could inform many reachable policy states. Hmmm.

@@ -127,10 +127,7 @@ def a_star_predict(state, target, actions, map_cache):
 # Used for constructing the models of the teammate from the ad hoc coordinator's perspective.
 def build_experts_model(scenario, maze, initial_state):
     map_cache = init_map_cache(maze)
-    predictors = Distribution({partial(a_star_predict,
-                                       target=key,
-                                       actions=scenario.actions,
-                                       map_cache=map_cache): 1
+    predictors = Distribution({AstarTeammate(scenario, key, maze, map_cache): 1
                                for key in initial_state if 'Robber' in key})
     predictors.normalize()
 
@@ -140,13 +137,23 @@ def build_experts_model(scenario, maze, initial_state):
 # The actual teammate
 class AstarTeammate:
 
-    def __init__(self, scenario, target, maze):
+    def __init__(self, scenario, target, maze, precomputed_map_cache=None):
         self.scenario = scenario
         self.target = target
-        self.cached_paths = init_map_cache(maze)
+        self.cached_paths = precomputed_map_cache if precomputed_map_cache else init_map_cache(maze)
 
     def get_action(self, state):
         return a_star_predict(state, self.target, self.scenario.actions, self.cached_paths).sample()
 
+    def predict(self, state):
+        return a_star_predict(state, self.target, self.scenario.actions, self.cached_paths)
+
+
     def update(self, agent_name, old_state, observation, new_state):
         pass
+
+    def __eq__(self, other):
+        return self.target == other.target
+
+    def __hash__(self):
+        return hash((self.scenario, self.target))

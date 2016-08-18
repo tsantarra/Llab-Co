@@ -21,8 +21,8 @@ class ExpertsModel:
         Predicts based on number of prior observations of actions.
         """
         action_distribution = {action: 0.0 for action in self.scenario.actions(state)}
-        for expert_predict, expert_prob in self.experts.items():
-            for action, action_prob in expert_predict(state).items():
+        for expert, expert_prob in self.experts.items():
+            for action, action_prob in expert.predict(state).items():
                 action_distribution[action] += expert_prob * action_prob
 
         return Distribution(action_distribution)
@@ -36,10 +36,10 @@ class ExpertsModel:
         logging.debug('Model update:')
         logging.debug('State:' + str(state))
         new_model = self.copy()
-        for expert_predict in new_model.experts:
-            predictions = expert_predict(state)
+        for expert in new_model.experts:
+            predictions = expert.predict(state)
             logging.debug('Predictions:'+str(predictions))
-            new_model.experts[expert_predict] *= predictions[action]
+            new_model.experts[expert] *= predictions[action]
 
         logging.debug('New vals:' + str(new_model))
         new_model.experts.normalize()
@@ -56,7 +56,8 @@ class ExpertsModel:
         return '\t'.join(str(prob) for expert, prob in self.experts.items())
 
     def __eq__(self, other):
-        return self.experts == other.experts
+        return all(key in other.experts for key in self.experts) \
+                and all(self.experts[key] == other.experts[key] for key in self.experts)
 
     def __hash__(self):
         return hash(self.experts)

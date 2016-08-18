@@ -39,6 +39,7 @@ def multiagent_carpy():
     from domains.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
     from multiagent.modeling_agent import ModelingAgent
     from random import choice
+    from visualization.graph import show_graph
 
     # Initialize scenario and beginning state.
     maze = initialize_maze('./mazes/a.maze')
@@ -55,9 +56,14 @@ def multiagent_carpy():
     logging.debug('Beginning simulation.')
     while not scenario.end(state):
         current_agent = agents[state['Turn']]
-
+        print('Turn:', state['Turn'])
         action = current_agent.get_action(state)
-        if current_agent == agent: print(agent.policy_graph_root.finite_horizon_string(horizon=4))
+        print('Action:', action)
+
+        if state['Turn'] == 'A':
+            print(agent.policy_graph_root.finite_horizon_string(horizon=2))
+            #print('show graph')
+            #show_graph(agent.policy_graph_root)
         new_state = scenario.transition(state, action).sample()
 
         logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))

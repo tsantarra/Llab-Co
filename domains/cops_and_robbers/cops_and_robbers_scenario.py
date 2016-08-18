@@ -140,10 +140,10 @@ def move_robbers(state):
 
 
 def transition(state, action):
-    new_state_dict = dict(state.copy())
+    new_state_diff = {}
     actor, direction = action.split('-')
 
-    row, col = new_state_dict[actor]
+    row, col = state[actor]
     if direction == 'D':
         row += 1
     elif direction == 'U':
@@ -153,20 +153,20 @@ def transition(state, action):
     elif direction == 'L':
         col -= 1
 
-    new_state_dict[actor] = (row, col)
-    new_state_dict['Round'] += 1
+    new_state_diff[actor] = (row, col)
+    new_state_diff['Round'] = state['Round'] + 1
 
     if actor == 'P':
-        new_state_dict['Turn'] = 'A'
-        new_state = State(new_state_dict)
+        new_state_diff['Turn'] = 'A'
+        new_state = state.update(new_state_diff)
         if not end(new_state):
             # Check if end first, otherwise impossible (robbers always escape).
             return move_robbers(new_state)
         else:
             return Distribution({new_state: 1.0})
     else:
-        new_state_dict['Turn'] = 'P'
-        new_state = State(new_state_dict)
+        new_state_diff['Turn'] = 'P'
+        new_state = state.update(new_state_diff)
         return Distribution({new_state: 1.0})
 
 
