@@ -4,7 +4,6 @@ implementation will use 'Trial-based Heuristic Tree Search for Finite Horizon MD
 a future version may accept any solver with a custom backup function (required for predicting the actions
 of the teammate via the model).
 """
-from collections import defaultdict
 from functools import partial
 
 from mdp.distribution import Distribution
@@ -16,7 +15,7 @@ from copy import copy
 class ModelingAgent:
     def __init__(self, scenario, identity, models, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
-        if isinstance(scenario, tuple): # is a namedtuple
+        if isinstance(scenario, tuple):  # is a namedtuple
             self.scenario = scenario._replace(transition=modeler_transition(scenario.transition),
                                               actions=modeler_actions(scenario.actions),
                                               end=modeler_end(scenario.end),
@@ -28,7 +27,6 @@ class ModelingAgent:
             self.scenario.actions = modeler_actions(self.scenario.actions)
             self.scenario.end = modeler_end(self.scenario.end)
             self.scenario.utility = modeler_utility(self.scenario.utility)
-            #types.MethodType(modeler_transition(self.scenario.transition), self.scenario)
 
         self.identity = identity
         self.model_state = State(models)
@@ -48,54 +46,49 @@ class ModelingAgent:
         self.policy_graph_root = node
         return action
 
-    def recalculate_policy(self):
-        def compute_policy(node, action_values, new_policy):
-            action, action_value = max(action_values.items(), key=lambda pair: pair[1])
-            new_policy[node.state] = action
-            return action_value
+    def update_policy_graph(self, node, new_state):
+        """
+        Items to update:
+            - node states
+            - transition utils
+            - node values
+        """
+        # First, update the node's state.
+        node.state = new_state
 
-        def traverse_policy_graph(node, node_values, model_state, policy, policy_fn):
-            """ Computes a policy maximizing expected utility given a probabilistic agent model for other agents. """
-            # Already visited this node. Return its computed value.
-            if node in node_values:
-                return node_values[node]
+        # End condition. Note: policy and node value won't change for leaf nodes.
+        if not node.successors:
+            return
 
-            # Leaf node. Value already calculated as immediate + heuristic.
-            if not node.successors:
-                node_values[node] = node.future_value
-                return node.future_value
-
-            # Calculate expected return for each action at the given node
-            active_agent = node.state['World State']['Turn']
-            action_values = defaultdict(float)
-            for action, result_distribution in node.successors.items():
-                assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
-                for resulting_state_node, result_probability in result_distribution.items():
-                    if active_agent in model_state:
-                        new_model = model_state[active_agent].update(node.state, action)
-                        new_model_state = model_state.update({active_agent: new_model})
-                    else:
-                        new_model_state = model_state
-
-                    resulting_node_value = traverse_policy_graph(resulting_state_node, node_values, new_model_state,
-                                                                 policy, policy_fn)
-                    action_values[action] += result_probability * \
-                                             (node.successor_transition_values[
-                                                  (resulting_state_node.state, action)] + resulting_node_value)
-
-            # Compute the node value
-            if active_agent not in model_state:
-                # Given a pre-computed policy, use the associated action
-                node_values[node] = policy_fn(node, action_values, policy)
+        # Update successors
+        agent_turn = node.state['World State']['Turn']
+        model_state = new_state['Models']
+        for successor_node, action in [(succ_node, action) for action, succ_dist in node.successors.items()
+                                       for succ_node in succ_dist]:
+            # update models
+            if agent_turn in model_state:
+                new_model = model_state[agent_turn].update(node.state['World State'], action)
+                new_model_state = model_state.update({agent_turn: new_model})
             else:
-                # Agent predicts action distribution and resulting expected value
-                action_distribution = model_state[active_agent].predict(node.state['World State'])
-                node_values[node] = action_distribution.expectation(action_values)
+                new_model_state = new_state['Models']
 
-            return node_values[node]
+            # Calculate new successor state
+            old_succ_state = successor_node.state
+            new_succ_state = old_succ_state.update({'Models': new_model_state})
+            node.successor_transition_values[(new_succ_state, action)] = node.successor_transition_values.pop(
+                (old_succ_state, action))
 
-        policy = {}
-        traverse_policy_graph(self.policy_graph_root, {}, self.model_state, policy, compute_policy)
+            self.update_policy_graph(successor_node, new_succ_state)
+
+        # Update node value
+        action_values = node.calculate_action_values()
+        agent_turn = node.state['World State']['Turn']
+        if agent_turn not in node.state['Models']:
+            action, value = max(action_values.items(), key=lambda pair: pair[1])
+            node.future_value = value
+        else:  # Agent predicts action distribution and resulting expected value
+            action_distribution = node.state['Models'][agent_turn].predict(node.state['World State'])
+            node.future_value = action_distribution.expectation(action_values)
 
     def update(self, agent_name, old_state, observation, new_state):
         # Update model
@@ -113,9 +106,13 @@ class ModelingAgent:
                     self.policy_graph_root = node
                     break
             else:
-                # Could have new model after communicating. Therefore, start planning anew.
-                print('No matching successor found in agent update:\n', new_state, '\n', self.model_state)
-                self.policy_graph_root = None
+                # Every successor should be included in the graph.
+                raise ValueError('Successor state not found in modeling agent update of policy graph.')
+
+
+"""
+Helper functions for planning.
+"""
 
 
 def policy_backup(node, agent):
@@ -130,10 +127,10 @@ def policy_backup(node, agent):
 
         agent_turn = node.state['World State']['Turn']
         if agent_turn == agent:  # Agent maximized expectation
-            node.value = max(action_values.values())
+            node.future_value = max(action_values.values())
         elif agent_turn in node.state['Models']:  # Agent predicts action distribution and resulting expected value
             action_distribution = node.state['Models'][agent_turn].predict(node.state['World State'])
-            node.value = action_distribution.expectation(action_values)
+            node.future_value = action_distribution.expectation(action_values)
 
 
 """

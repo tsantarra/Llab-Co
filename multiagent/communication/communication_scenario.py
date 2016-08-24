@@ -16,7 +16,11 @@ class CommScenario:
         self._model_state_cache = {}
 
         # Helpful references
-        self._teammate_states = set(state['World State'] for state in self._state_graph_map if state['World State']['Turn'] in initial_model_state)
+        self.previous_query_states = set(comm_state
+                                         for model in initial_model_state.values()
+                                         for comm_state in model.previous_communications)
+        self._teammate_states = set(state['World State'] for state in self._state_graph_map
+                                    if state['World State']['Turn'] in initial_model_state)
         self._teammates_models_state = initial_model_state  # current model of teammate behavior
         self.comm_cost = comm_cost  # Set cost per instance of communication
 
@@ -36,8 +40,10 @@ class CommScenario:
         compute_reachable_nodes(self._policy_root, reachable_nodes, model_state)
         reachable_states = set(node.state['World State'] for node in reachable_nodes)
 
-        action_set = (self._teammate_states & reachable_states) - policy_state['Queries'].keys()
-        assert all(state not in policy_state['Queries'] for state in action_set), 'Giving action for already queried state.'
+        action_set = (self._teammate_states & reachable_states) - policy_state['Queries'].keys() \
+                     - self.previous_query_states
+        assert all(state not in policy_state['Queries'] for state in action_set), \
+            'Giving action for already queried state.'
         action_set.add('Halt')
         return action_set
 
@@ -61,9 +67,10 @@ class CommScenario:
             # Construct new policy state
             resulting_states[new_policy_state] = probability
 
-        #assert policy_state not in resulting_states, 'Accidental self parent. ' + str(policy_state)
+        # assert policy_state not in resulting_states, 'Accidental self parent. ' + str(policy_state)
 
-        assert abs(sum(resulting_states.values()) - 1.0) < 10e-6, 'Predicted query action distribution does not sum to 1.'
+        assert abs(
+            sum(resulting_states.values()) - 1.0) < 10e-6, 'Predicted query action distribution does not sum to 1.'
         return resulting_states
 
     def end(self, policy_state):
@@ -87,7 +94,8 @@ class CommScenario:
         reachable_states = set(node.state['World State'] for node in nodes)
 
         # all teammate reachable states - all queried states
-        return len((self._teammate_states & reachable_states) - policy_state['Queries'].keys()) == 0
+        return len((self._teammate_states & reachable_states) - policy_state[
+            'Queries'].keys() - self.previous_query_states) == 0
 
     def utility(self, old_policy_state, action, new_policy_state):
         # If the action is to stop communicating, there is no further utility gain.
@@ -102,7 +110,6 @@ class CommScenario:
         exp_util_old_policy = self._get_policy_ev(policy_state=new_policy_state, policy=old_policy)
         exp_util_new_policy = self._get_policy_ev(policy_state=new_policy_state, policy=new_policy)
 
-        print(exp_util_new_policy - exp_util_old_policy - self.comm_cost)
         return exp_util_new_policy - exp_util_old_policy - self.comm_cost
 
     def _get_model_state(self, policy_state):
@@ -154,17 +161,12 @@ def communicate(state, agent, agent_dict, passes):
     print('BEGIN COMMUNICATION')
     # Complete graph search
     (query_action, comm_graph_node) = search(state=comm_scenario.initial_state(),
-                                            scenario=comm_scenario,
-                                            iterations=passes,
-                                            heuristic=lambda comm_state: 0,
-                                            view=True)
+                                             scenario=comm_scenario,
+                                             iterations=passes,
+                                             heuristic=lambda comm_state: 0,
+                                             view=True)
 
     from visualization.graph import show_graph
-    from mdp.graph_planner import detect_cycle
-    if not detect_cycle(comm_graph_node):
-        print('no cycle detected')
-    else:
-        assert False
     show_graph(comm_graph_node, skip_cross_optimization=True)
 
     # Initial communication options
@@ -180,13 +182,21 @@ def communicate(state, agent, agent_dict, passes):
         query_target = agent_dict[query_action['Turn']]
         response = query_target.get_action(query_action)
 
-        print('Query:', query_action)
-        print('Response:', response)
-
         # update position in policy state graph
         new_query_state = current_policy_state['Queries'].update({query_action: response})
         new_policy_state = current_policy_state.update({'Queries': new_query_state})
+
+        print('Query:', query_action)
+        print('Response:', response)
+        for stac, val in comm_graph_node.successor_transition_values.items():
+            print('policy state\n',stac[0])
+            print('query state\n', stac[1])
+            print('val:', val)
+        print('Util:', comm_graph_node.successor_transition_values[(new_policy_state, query_action)])
+
         comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=query_action)
+
+
 
         # calculate next step
         query_action = _greedy_action(comm_graph_node)
@@ -199,7 +209,8 @@ def communicate(state, agent, agent_dict, passes):
         new_model = agent.model_state[agent_name].communicated_policy_update(agent_queries)
         agent.model_state = agent.model_state.update({agent_name: new_model})
 
-    agent.recalculate_policy()
+    new_root_state = agent.policy_graph_root.state.update({'Models': agent.model_state})
+    agent.update_policy_graph(agent.policy_graph_root, new_root_state)
     action = agent.get_action(state)
     print('END COMMUNICATION/// NEW ACTION:', action)
 
@@ -229,9 +240,11 @@ def traverse_policy_graph(node, node_values, model_state, policy, policy_fn):
             else:
                 new_model_state = model_state
 
-            resulting_node_value = traverse_policy_graph(resulting_state_node, node_values, new_model_state, policy, policy_fn)
+            resulting_node_value = traverse_policy_graph(resulting_state_node, node_values, new_model_state, policy,
+                                                         policy_fn)
             action_values[action] += result_probability * \
-                                     (node.successor_transition_values[(resulting_state_node.state, action)] + resulting_node_value)
+                                     (node.successor_transition_values[
+                                          (resulting_state_node.state, action)] + resulting_node_value)
 
     # Compute the node value
     if active_agent not in model_state:

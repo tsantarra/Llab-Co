@@ -150,6 +150,7 @@ def _median(values):
     """
     values = sorted(values)
     num = len(values)
+    assert num >= 1, 'No values given to _median.'
     median = int(num/2)
     return values[median] if (num % 2 == 1) else (values[median-1] + values[median])/2
 
@@ -172,7 +173,7 @@ def _median_pos(xcoords, up):
                 targets = [succ for succ_dist in node.successors.values() for succ in succ_dist]
                 target_horizon = horizon+1
 
-            if targets:
+            if targets and target_horizon >= 0:
                 xcoords[horizon][node] = _median(xcoords[target_horizon][target] for target in targets)
 
 
@@ -190,12 +191,12 @@ def _min_node(xcoords, up):
     while queue:
         node, horizon = queue.pop()
 
-        top_neighbors = [(neighbor, horizon-1) for neighbor in node.predecessors]
+        top_neighbors = [(neighbor, horizon-1) for neighbor in node.predecessors] if horizon > 0 else []
         bottom_neighbors = [(neighbor, horizon+1) for succ_dist in node.successors.values() for neighbor in succ_dist]
         all_neighbors = top_neighbors + bottom_neighbors
         neighbor_coords = [xcoords[h][neighbor] for neighbor, h in all_neighbors]
 
-        new_median = _median(neighbor_coords)
+        new_median = _median(neighbor_coords) if neighbor_coords else 0  # was causing bug when no neighbors (single node?)
         if xcoords[horizon][node] != new_median:
             xcoords[horizon][node] = new_median
 

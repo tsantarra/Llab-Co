@@ -69,14 +69,25 @@ def _traverse_nodes(node, scenario):
 
         action_values = {}
         action_counts = {}
-        for action in incomplete_successors:
-            if len(incomplete_successors[action]) == 0 or sum(incomplete_successors[action].values()) == 0:
+        for action, successor_distribution in incomplete_successors.items():
+            if len(successor_distribution) == 0 :  # All successors from action are complete. Do not add action.
+                continue
+            if sum(successor_distribution.values()) == 0.0:
+                print('SUCCESSOR DISTRIBUTION')
+                print('node state')
+                print(node.state)
+                print('action')
+                print(action)
+                for succ, prob in successor_distribution.items():
+                    print(succ.state)
+                    print(prob)
+                print('////////////////////////')
                 continue
 
             action_values[action] = sum(prob * (node.successor_transition_values[(child.state, action)] + child.future_value)
-                                        for child, prob in incomplete_successors[action].items())
-            action_values[action] /= sum(incomplete_successors[action].values())
-            action_counts[action] = sum(child.visits for child in incomplete_successors[action])
+                                        for child, prob in successor_distribution.items())
+            action_values[action] /= sum(successor_distribution.values())
+            action_counts[action] = sum(child.visits for child in successor_distribution)
 
         # UCT criteria with exploration factor = node value (from THTS paper)
         best_action, best_value = max(action_values.items(),
@@ -299,8 +310,7 @@ class GraphNode:
         """
         self.state = state  # Current game state (clone of state instance).
         self.complete = scenario.end(state)  # A label to avoid sampling in complete subtrees.
-        self.untried_actions = scenario.actions(state) if not self.complete else [] # Yet unexplored actions
-        self.scenario = scenario
+        self.untried_actions = scenario.actions(state) if not self.complete else []  # Yet unexplored actions
 
         # Due to the dynamic programming approach, allow multiple "parents".
         self.predecessors = {predecessor} if predecessor else set()

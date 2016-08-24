@@ -13,7 +13,7 @@ def run_coordinated_actions():
 
     # Agents
     teammate = SampledPolicyTeammate(actions=scenario.action_set, rounds=scenario.rounds)
-    agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammate(teammate_model=FrequentistModel(scenario))})
+    agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammate(teammate_model=FrequentistModel(scenario), scenario=scenario)})
     agent_dict = {'Agent': agent, 'Teammate': teammate}
 
     # Execution loop
@@ -25,19 +25,13 @@ def run_coordinated_actions():
         print('Turn:', state['Turn'])
         print('Action:', action)
 
-        #if state['Turn'] == 'Agent':
-        #    show_graph(agent.policy_graph_root)
-
         if state['Turn'] == 'Agent':
-            action = communicate(state, agent, agent_dict, 20)
-
-        if state['Turn'] == 'Agent':
+            action = communicate(state, agent, agent_dict, 200)
             show_graph(agent.policy_graph_root)
 
         new_state = scenario.transition(state, action).sample()
 
         # Output
-        print('Action:', action)
         print('New State')
         print(new_state)
         print('-----------------')

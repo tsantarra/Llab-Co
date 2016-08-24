@@ -1,6 +1,7 @@
 from mdp.distribution import Distribution
 from mdp.state import State
 
+
 class CoordinatedActionsScenario:
 
     def __init__(self, action_set, rounds):

@@ -1,10 +1,38 @@
 BY PRIORITY (ISH)
 
     TODO
-        - have modeling_agent.update update all node states with new model_state
+        - Okay, often second round of comms shows graph where all nodes are 0 value
+            - may occur because all states that can be queried have been pruned (yet are actions for some reason)
+        - also, the graph thing fails a bunch
+        - write paper
+        - recalculate node values (and policy) in update_policy_graph_models
+        - don't "get action" on root; just get the greedy action; or have update_policy_graph_models return the aciton
+        - post comm, selects incorrect answer
+        - equality issue when updating position in policy graph
         - determine why so many comm util gains are 0.0
             + suspicion: node_values calculated with Distribution.expectation(..., require_exact_keys=False)
             + problem: model.predict(node.state) # not world state, but modeler's state
+        - have agent model itself with simple policy (streamlines code)
+
+    Paper notes:
+        - Noa Agmon leading paper -> task is to find the best possible REACHABLE joint actions/plans
+        - Definition of problem
+            - decentralized MDP variant
+            - the modeler's view (planning in world state x modeling space) / POMDP
+                - focus on planning while learning, otherwise only vaguely justified
+            - active vs passive learning
+            - active learning in ad hoc teams -> sharing policy information
+            - planning for active learning -> planning over policy knowledge
+            - optimize not for prediction accuracy, but for utility maximization
+            - applications within teams of multiple unknown agents
+        - Theoretical aspects
+            - conditions where policy sharing is necessary
+            - combinatorial space
+            - MDP structure
+            - DAG
+            - early termination
+            - cost effect? - free comm -> perfect info -> perfect policy
+            - not submodular; matroids don't help
 
     Considerations
         - Querying a state that is unreachable could inform many reachable policy states. Hmmm.
@@ -55,14 +83,6 @@ BY PRIORITY (ISH)
             -> setup: model selects action classifying item in state. Successive state is human classifying image (can skip?).
             -> Reward: S A S' -> util when select correct classification
             -> May need to adjust how immediate values are handled by nodes during planning
-
-    Models - for agents
-        Barrett model?
-        SC build orders or other learning?
-
-    Documentation
-        Use docstring convention from Google ( https://google.github.io/styleguide/pyguide.html# Comments )
-            Can be set by PyCharm in settings, tools, python integrated tools, docstring format
 
 
 Nice to have, but completely beyond the scope of the current project.
