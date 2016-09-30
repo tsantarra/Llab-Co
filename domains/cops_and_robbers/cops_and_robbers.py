@@ -40,6 +40,8 @@ def multiagent_carpy():
     from multiagent.modeling_agent import ModelingAgent
     from random import choice
     from visualization.graph import show_graph
+    from multiagent.communication.communication_scenario import communicate
+    from multiagent.communicating_teammate import CommunicatingTeammate
 
     # Initialize scenario and beginning state.
     maze = initialize_maze('./mazes/a.maze')
@@ -49,31 +51,33 @@ def multiagent_carpy():
 
     # Agents
     teammate = AstarTeammate(scenario, target=choice([key for key in state if 'Robber' in key]), maze=maze)
-    agent = ModelingAgent(scenario, 'A', {'P': build_experts_model(scenario, maze, state)}, heuristic=heuristic)
+    teammate_model = CommunicatingTeammate(teammate_model=build_experts_model(scenario, maze, state), scenario=scenario)
+    agent = ModelingAgent(scenario, 'A', {'P': teammate_model}, heuristic=heuristic)
     agents = {'A': agent, 'P': teammate}
 
     # Main loop
     logging.debug('Beginning simulation.')
     while not scenario.end(state):
         current_agent = agents[state['Turn']]
-        print('Turn:', state['Turn'])
         action = current_agent.get_action(state)
+
+        print('Turn:', state['Turn'])
         print('Action:', action)
 
         if state['Turn'] == 'A':
-            print(agent.policy_graph_root.finite_horizon_string(horizon=2))
-            #print('show graph')
-            #show_graph(agent.policy_graph_root)
+            action = communicate(state, agent, agents, 200)
+            show_graph(agent.policy_graph_root)
+
         new_state = scenario.transition(state, action).sample()
 
+        # Output
         logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))
         logging.debug('New state: ' + show_state(new_state) + '\n')
+        print(show_state(new_state))
+        print(agent.model_state)
 
         for participating_agent in agents.values():
             participating_agent.update(state['Turn'], state, action, new_state)
-
-        print(show_state(new_state))
-        print(agent.model_state)
 
         state = new_state
 

@@ -148,7 +148,6 @@ class AstarTeammate:
     def predict(self, state):
         return a_star_predict(state, self.target, self.scenario.actions, self.cached_paths)
 
-
     def update(self, agent_name, old_state, observation, new_state):
         pass
 

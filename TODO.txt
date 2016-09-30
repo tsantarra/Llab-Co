@@ -3,16 +3,13 @@ BY PRIORITY (ISH)
     TODO
         - Okay, often second round of comms shows graph where all nodes are 0 value
             - may occur because all states that can be queried have been pruned (yet are actions for some reason)
-        - also, the graph thing fails a bunch
+        - also, the graph viz thing fails a bunch
         - write paper
         - recalculate node values (and policy) in update_policy_graph_models
         - don't "get action" on root; just get the greedy action; or have update_policy_graph_models return the aciton
         - post comm, selects incorrect answer
         - equality issue when updating position in policy graph
-        - determine why so many comm util gains are 0.0
-            + suspicion: node_values calculated with Distribution.expectation(..., require_exact_keys=False)
-            + problem: model.predict(node.state) # not world state, but modeler's state
-        - have agent model itself with simple policy (streamlines code)
+        - have agent model itself with simple policy (streamlines code, but does complicated policy backup function)
 
     Paper notes:
         - Noa Agmon leading paper -> task is to find the best possible REACHABLE joint actions/plans

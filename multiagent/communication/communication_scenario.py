@@ -69,8 +69,9 @@ class CommScenario:
 
         # assert policy_state not in resulting_states, 'Accidental self parent. ' + str(policy_state)
 
-        assert abs(
-            sum(resulting_states.values()) - 1.0) < 10e-6, 'Predicted query action distribution does not sum to 1.'
+        assert abs(sum(resulting_states.values()) - 1.0) < 10e-6, \
+            'Predicted query action distribution does not sum to 1.'
+
         return resulting_states
 
     def end(self, policy_state):
@@ -167,7 +168,8 @@ def communicate(state, agent, agent_dict, passes):
                                              view=True)
 
     from visualization.graph import show_graph
-    show_graph(comm_graph_node, skip_cross_optimization=True)
+    if comm_graph_node.successors:
+        show_graph(comm_graph_node, skip_cross_optimization=True)
 
     # Initial communication options
     current_policy_state = comm_graph_node.state
@@ -189,14 +191,12 @@ def communicate(state, agent, agent_dict, passes):
         print('Query:', query_action)
         print('Response:', response)
         for stac, val in comm_graph_node.successor_transition_values.items():
-            print('policy state\n',stac[0])
+            print('policy state\n', stac[0])
             print('query state\n', stac[1])
             print('val:', val)
         print('Util:', comm_graph_node.successor_transition_values[(new_policy_state, query_action)])
 
         comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=query_action)
-
-
 
         # calculate next step
         query_action = _greedy_action(comm_graph_node)
@@ -235,7 +235,7 @@ def traverse_policy_graph(node, node_values, model_state, policy, policy_fn):
         assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
         for resulting_state_node, result_probability in result_distribution.items():
             if active_agent in model_state:
-                new_model = model_state[active_agent].update(node.state, action)
+                new_model = model_state[active_agent].update(node.state['World State'], action)
                 new_model_state = model_state.update({active_agent: new_model})
             else:
                 new_model_state = model_state
@@ -274,12 +274,12 @@ def compute_reachable_nodes(node, visited_set, model_state):
     else:
         # Modeled agent's turn. Prune out actions with 0 probability.
         model = model_state[acting_agent]
-        possible_actions = [action for action, prob in model.predict(node.state).items() if prob > 0.0]
+        possible_actions = [action for action, prob in model.predict(node.state['World State']).items() if prob > 0.0]
 
         for action in possible_actions:
             for successor_node in (successor for successor in node.successors[action] if successor not in visited_set):
                 # Update model state
-                new_model = model.update(node.state, action)
+                new_model = model.update(node.state['World State'], action)
                 new_model_state = model_state.update({acting_agent: new_model})
                 compute_reachable_nodes(successor_node, visited_set, new_model_state)
 

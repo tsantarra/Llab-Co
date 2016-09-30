@@ -196,7 +196,7 @@ def _min_node(xcoords, up):
         all_neighbors = top_neighbors + bottom_neighbors
         neighbor_coords = [xcoords[h][neighbor] for neighbor, h in all_neighbors]
 
-        new_median = _median(neighbor_coords) if neighbor_coords else 0  # was causing bug when no neighbors (single node?)
+        new_median = _median(neighbor_coords) if neighbor_coords else 1  # was causing bug when no neighbors (single node?)
         if xcoords[horizon][node] != new_median:
             xcoords[horizon][node] = new_median
 
@@ -236,6 +236,7 @@ def _normalize(xcoords, min_dist=1, max_width=7):
 
     # Scale back to target width.
     divisor = max(coord for level in xcoords.values() for coord in level.values())
+    divisor = divisor if divisor != 0 else 1
     for level in xcoords.values():
         for node, coord in level.items():
             level[node] = coord/divisor * max_width
@@ -292,7 +293,7 @@ def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=Fals
     x_coords = graph_map.copy()
     positions = {}
 
-    max_horizon = max(x_coords.keys())
+    max_horizon = max(x_coords.keys())  # so as to not divide by 0 later
     for horizon in range(max_horizon+1):
         nodes = x_coords[horizon]
         num_nodes = len(nodes)
@@ -312,10 +313,10 @@ def show_graph(root, width=7, height=7, with_labels=False, with_edge_labels=Fals
     #############################################
     for horizon in x_coords:
         for node, x in x_coords[horizon].items():
-            positions[node] = (x, height - (horizon/max_horizon) * height)
+            positions[node] = (x, height - (horizon/(max_horizon + 1)) * height)
 
     node_values = [node.future_value for node in graph.nodes()]
-    max_value = max(node_values)
+    max_value = max(node_values, default=0)
     if max_value:
         node_values = [val/max_value for val in node_values]
 
