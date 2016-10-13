@@ -70,18 +70,7 @@ def _traverse_nodes(node, scenario):
         action_values = {}
         action_counts = {}
         for action, successor_distribution in incomplete_successors.items():
-            if len(successor_distribution) == 0 :  # All successors from action are complete. Do not add action.
-                continue
-            if sum(successor_distribution.values()) == 0.0:
-                print('SUCCESSOR DISTRIBUTION')
-                print('node state')
-                print(node.state)
-                print('action')
-                print(action)
-                for succ, prob in successor_distribution.items():
-                    print(succ.state)
-                    print(prob)
-                print('////////////////////////')
+            if len(successor_distribution) == 0:  # All successors from action are complete. Do not add action.
                 continue
 
             action_values[action] = sum(prob * (node.successor_transition_values[(child.state, action)] + child.future_value)

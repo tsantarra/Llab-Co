@@ -1,15 +1,40 @@
 BY PRIORITY (ISH)
 
     TODO
+        - finish domain
+        - create a method of sampling policies
+        - create a teammate class for sampled policies
+        - create the framework for the process
+            + sample teammates
+            + create expert set
+            + plan online, updating teammate weights
+            + communicate
+                - EARLY TERMINATION CONDITION
+                - exhaustive (small domain only?)
+                - most disagreed on
+                - most variance?
+                - product of the two?
+                - myopic
+        - logging results
+            + score
+            + successful passes
+            + unused resources
+            + number of comms
+        - how hard would it be to switch to simultaneous actions?
+            + no more 'turn' component
+            + can throw in some asserts to check for appropriate single/joint actions
+            + would need to modify actions component to address joint vs single agent actions
+            + backpropagation and action values would change
+
+    Old bugs?
         - Okay, often second round of comms shows graph where all nodes are 0 value
             - may occur because all states that can be queried have been pruned (yet are actions for some reason)
         - also, the graph viz thing fails a bunch
         - write paper
         - recalculate node values (and policy) in update_policy_graph_models
-        - don't "get action" on root; just get the greedy action; or have update_policy_graph_models return the aciton
+        - don't "get action" on root; just get the greedy action; or have update_policy_graph_models return the action
         - post comm, selects incorrect answer
         - equality issue when updating position in policy graph
-        - have agent model itself with simple policy (streamlines code, but does complicated policy backup function)
 
     Paper notes:
         - Noa Agmon leading paper -> task is to find the best possible REACHABLE joint actions/plans
@@ -58,7 +83,7 @@ BY PRIORITY (ISH)
         - Limit communication content: limited states considered (what to communicate paper)
         - Limit computation: Heuristic: Util x Info x likelihood of state
         - Limit search space: Limiting to similar payoffs
-        - Alternate strategy (like conditional value at risk): Maximizing expected util vs raise lower bound on util.
+        - Alternate strategy (like conditional value at risk): Maximizing expected util vs raise lower bound on util (safety value).
         - Alternate strategy: don't max payoff; rather, max chance agent made correct call (between two alternative distributions, maximize
         probability sampled outcome of one is greater than sampled outcome of other). In other words, maximize instances of regret, not ev of regret.
         - Query by committee - pick states where set of models most disagree; can select N most likely models (N most likely paths?)
