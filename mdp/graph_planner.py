@@ -36,6 +36,7 @@ from math import sqrt, log
 from random import choice
 
 from mdp.distribution import Distribution
+from mdp.action import Action
 
 
 def _greedy_action(node):
@@ -299,7 +300,12 @@ class GraphNode:
         """
         self.state = state  # Current game state (clone of state instance).
         self.complete = scenario.end(state)  # A label to avoid sampling in complete subtrees.
-        self.untried_actions = scenario.actions(state) if not self.complete else []  # Yet unexplored actions
+        if self.complete:
+            self.untried_joint_actions = []
+            self.individual_agent_actions = {}
+        else:
+            self.untried_joint_actions = scenario.actions(state)  # Yet unexplored actions
+            self.individual_agent_actions = Action.all_individual_actions(self.untried_joint_actions)
 
         # Due to the dynamic programming approach, allow multiple "parents".
         self.predecessors = {predecessor} if predecessor else set()

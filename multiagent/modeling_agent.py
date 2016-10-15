@@ -9,6 +9,10 @@ from functools import partial
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import search
+from mdp.action import Action
+
+from functools import reduce
+from operator import mul
 from copy import copy
 
 
@@ -53,6 +57,10 @@ class ModelingAgent:
             - transition utils
             - node values
         """
+        # Already updated or no need to update (nothing changed).
+        if node.state == new_state:
+            return
+
         # First, update the node's state.
         node.state = new_state
 
@@ -60,35 +68,31 @@ class ModelingAgent:
         if not node.successors:
             return
 
-        # Update successors
-        agent_turn = node.state['World State']['Turn']
+        # Update all individual agent models
+        individual_agent_actions = node.individual_agent_actions
         model_state = new_state['Models']
-        for successor_node, action in [(succ_node, action) for action, succ_dist in node.successors.items()
-                                       for succ_node in succ_dist]:
-            # update models
-            if agent_turn in model_state:
-                new_model = model_state[agent_turn].update(node.state['World State'], action)
-                new_model_state = model_state.update({agent_turn: new_model})
-            else:
-                new_model_state = new_state['Models']
+        world_state = new_state['World State']
+        resulting_models = {agent_name:
+                                {action: model_state[agent_name].update(world_state, action) for action in
+                                 agent_actions}
+                            for agent_name, agent_actions in individual_agent_actions.items()}
+
+        for successor_node, joint_action in [(succ_node, action) for action, succ_dist in node.successors.items()
+                                             for succ_node in succ_dist]:
+            # Construct new model state from individual agent models
+            new_model_state = State({agent_name: resulting_models[agent_name][joint_action[agent_name]]
+                               for agent_name in model_state})
 
             # Calculate new successor state
             old_succ_state = successor_node.state
             new_succ_state = old_succ_state.update({'Models': new_model_state})
-            node.successor_transition_values[(new_succ_state, action)] = node.successor_transition_values.pop(
-                (old_succ_state, action))
+            node.successor_transition_values[(new_succ_state, joint_action)] = node.successor_transition_values.pop(
+                (old_succ_state, joint_action))
 
             self.update_policy_graph(successor_node, new_succ_state)
 
-        # Update node value
-        action_values = node.calculate_action_values()
-        agent_turn = node.state['World State']['Turn']
-        if agent_turn not in node.state['Models']:
-            action, value = max(action_values.items(), key=lambda pair: pair[1])
-            node.future_value = value
-        else:  # Agent predicts action distribution and resulting expected value
-            action_distribution = node.state['Models'][agent_turn].predict(node.state['World State'])
-            node.future_value = action_distribution.expectation(action_values)
+        # After sub-tree/graph is complete, update node values.
+        policy_backup(node, self.identity)
 
     def update(self, agent_name, old_state, observation, new_state):
         # Update model
@@ -123,14 +127,27 @@ def policy_backup(node, agent):
     """
     if node.successors:
         # Calculate expected return for each action at the given node
-        action_values = node.calculate_action_values()
+        joint_action_values = node.calculate_action_values()
 
-        agent_turn = node.state['World State']['Turn']
-        if agent_turn == agent:  # Agent maximized expectation
-            node.future_value = max(action_values.values())
-        elif agent_turn in node.state['Models']:  # Agent predicts action distribution and resulting expected value
-            action_distribution = node.state['Models'][agent_turn].predict(node.state['World State'])
-            node.future_value = action_distribution.expectation(action_values)
+        all_joint_actions = list(joint_action_values.keys())
+
+        agent_individual_actions = node.individual_agent_actions
+
+        other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
+                                   for other_agent, other_agent_model in node.state['Models'].items()}
+
+        agent_action_values = {action: 0 for action in agent_individual_actions[agent]}
+        for agent_action in agent_individual_actions[agent]:
+            all_joint_actions_with_fixed_action = [action for action in all_joint_actions
+                                                   if action[agent] == agent_action]
+
+            for joint_action in all_joint_actions_with_fixed_action:
+                probability_of_action = reduce(mul, [other_agent_action_dist[joint_action[other_agent]]
+                                                     for other_agent, other_agent_action_dist in
+                                                     other_agent_predictions.items()])
+                agent_action_values[agent_action] += probability_of_action * joint_action_values[joint_action]
+
+        node.future_value = max(agent_action_values.values())
 
 
 """
@@ -139,26 +156,21 @@ Wrappers for scenario from the position of the modeling agent.
 
 
 def modeler_transition(transition_fn):
-    def new_transition_fn(modeler_state, action):
+    def new_transition_fn(modeler_state, joint_action):
         # Pull out world state and model state to work with independently
         old_world_state = modeler_state['World State']
         old_model_state = modeler_state['Models']
 
-        # Get basic information
-        agent_turn = old_world_state['Turn']
-
         # Use scenario's transition function to generate new world states
-        resulting_states = transition_fn(old_world_state, action)
+        resulting_states = transition_fn(old_world_state, joint_action)
 
         resulting_combined_state_distribution = Distribution()
         for new_world_state, probability in resulting_states.items():
-            if agent_turn in old_model_state:
-                # Update models in resulting states.
-                old_teammate_model = old_model_state[agent_turn]
-                new_teammate_model = old_teammate_model.update(old_world_state, action)
-                new_model_state = old_model_state.update({agent_turn: new_teammate_model})
-            else:
-                new_model_state = old_model_state.copy()
+            # Update all models with individual actions from joint_action
+            new_model_state = old_model_state.update({agent_name:
+                                                          old_model_state[agent_name].update(old_world_state,
+                                                                                             joint_action[agent_name])
+                                                      for agent_name in old_model_state})
 
             resulting_combined_state = State({'World State': new_world_state, 'Models': new_model_state})
             resulting_combined_state_distribution[resulting_combined_state] = probability

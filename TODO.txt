@@ -1,6 +1,17 @@
 BY PRIORITY (ISH)
 
     TODO
+        - Simultaneous action
+            + no more 'turn' component
+                - modeling_agent
+                - communication_scenario
+                    - need to refactor how actions/queries are structured
+                - all existing domains
+            + can throw in some asserts to check for appropriate single/joint actions
+        - test single agent scenario
+        - test multi-agent centralized scenario
+        - test multi-agent distributed scenario
+
         - finish domain
         - create a method of sampling policies
         - create a teammate class for sampled policies
@@ -20,11 +31,6 @@ BY PRIORITY (ISH)
             + successful passes
             + unused resources
             + number of comms
-        - how hard would it be to switch to simultaneous actions?
-            + no more 'turn' component
-            + can throw in some asserts to check for appropriate single/joint actions
-            + would need to modify actions component to address joint vs single agent actions
-            + backpropagation and action values would change
 
     Old bugs?
         - Okay, often second round of comms shows graph where all nodes are 0 value

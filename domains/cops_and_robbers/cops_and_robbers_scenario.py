@@ -7,7 +7,6 @@ State variables:
     Agent position
     Partner position
     Prey positions
-    Turn
     Round
 
 The state can also be extended with a partner model, taking the role of the 'belief state' in POMDPs. 
