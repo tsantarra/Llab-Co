@@ -1,4 +1,3 @@
-
 """
 What are the requirements of a joint action?
     - should refer to agents by name; Map?
@@ -11,7 +10,6 @@ from itertools import product
 
 
 class Action(Mapping):
-
     def __init__(self, agent_action_dict):
         self.__dict = agent_action_dict.copy()
 
@@ -29,6 +27,10 @@ class Action(Mapping):
 
         return {name: set(action[name] for action in list_of_joint_actions) for name in agent_names}
 
+    def join(self, other_action):
+        assert not self.keys() & other_action.keys(), 'Overlapping joint action keys. ' + str(self) + str(other_action)
+        return Action({**self, **other_action})
+
     def __getitem__(self, key):
         return self.__dict[key]
 
@@ -41,6 +43,41 @@ class Action(Mapping):
     def __repr__(self):
         return 'Action: ' + str(self.__dict)
 
+    def __hash__(self):
+        return hash(tuple(self.items()))
 
 
+class JointActionSpace:
+    def __init__(self, individual_agent_actions):
+        self.agent_actions = individual_agent_actions
+        self.joint_actions = self.all_joint_actions()
 
+    def all_joint_actions(self):
+        agent_names = self.agent_actions.keys()
+        ordered_action_lists = [self.agent_actions[name] for name in agent_names]
+
+        return [Action(dict(zip(agent_names, combination)))
+                for combination in product(*ordered_action_lists)]
+
+    def individual_actions(self, agent_name=None):
+        if agent_name:
+            return self.agent_actions[agent_name]
+        else:
+            return self.agent_actions
+
+    def fix_actions(self, fixed_actions):
+        assert all(key in self.agent_actions for key in fixed_actions), 'Missing agent while fixing actions:' + \
+                str(fixed_actions) + ' ' + str(self.agent_actions)
+        return JointActionSpace({**self.agent_actions, **fixed_actions})
+
+    def __iter__(self):
+        return iter(self.joint_actions)
+
+    def __len__(self):
+        return len(self.joint_actions)
+
+    def __getitem__(self, item):
+        return self.joint_actions[item]
+
+    def __str__(self):
+        return str(self.agent_actions)

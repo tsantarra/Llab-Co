@@ -1,13 +1,13 @@
-import logging
 import sys
 import traceback
 
-from domains.assembly.assembly_scenario import *
 from domains.assembly.assembly_teammates import *
+
+from domains.multi_agent.assembly.assembly_scenario import *
+from multiagent.communication.communicating_teammate import CommunicatingTeammate
+from multiagent.communication.communication_scenario import communicate
 from multiagent.modeling_agent import ModelingAgent
 from visualization.graph import show_graph
-from multiagent.communication.communication_scenario import communicate
-from multiagent.communicating_teammate import CommunicatingTeammate
 
 
 def multiagent_assembly():

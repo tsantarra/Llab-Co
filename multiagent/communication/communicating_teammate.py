@@ -20,8 +20,8 @@ class CommunicatingTeammate:
 
         return self.model.predict(state)
 
-    def update(self, state, action):
-        return CommunicatingTeammate(self.model.update(state, action), self.scenario, self.previous_communications.copy())
+    def update(self, old_state, action):
+        return CommunicatingTeammate(self.model.update(old_state, action), self.scenario, self.previous_communications.copy())
 
     def communicated_policy_update(self, state_action_pairs):
         new_comms = self.previous_communications.copy()

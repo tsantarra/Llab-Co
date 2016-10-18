@@ -1,9 +1,10 @@
-from domains.coordinated_actions.coordinated_actions_scenario import CoordinatedActionsScenario, SampledPolicyTeammate
-from multiagent.modeling_agent import ModelingAgent
-from multiagent.frequentist_model import FrequentistModel
-from visualization.graph import show_graph
+from domains.multi_agent.coordinated_actions.coordinated_actions_scenario import CoordinatedActionsScenario, SampledPolicyTeammate
+from multiagent.communication.communicating_teammate import CommunicatingTeammate
 from multiagent.communication.communication_scenario import communicate
-from multiagent.communicating_teammate import CommunicatingTeammate
+from multiagent.modeling_agent import ModelingAgent
+from multiagent.models.frequentist_model import FrequentistModel
+from visualization.graph import show_graph
+from mdp.action import Action
 
 
 def run_coordinated_actions():
@@ -13,21 +14,19 @@ def run_coordinated_actions():
 
     # Agents
     teammate = SampledPolicyTeammate(actions=scenario.action_set, rounds=scenario.rounds)
-    agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammate(teammate_model=FrequentistModel(scenario), scenario=scenario)})
+    agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammate(teammate_model=FrequentistModel(scenario, 'Teammate'), scenario=scenario)})
     agent_dict = {'Agent': agent, 'Teammate': teammate}
 
     # Execution loop
     while not scenario.end(state):
         # Have agent act
-        current_agent = agent_dict[state['Turn']]
-        action = current_agent.get_action(state)
+        action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
 
-        print('Turn:', state['Turn'])
         print('Action:', action)
 
-        if state['Turn'] == 'Agent':
-            action = communicate(state, agent, agent_dict, 200)
-            show_graph(agent.policy_graph_root)
+        #if state['Turn'] == 'Agent':
+        #    action = communicate(state, agent, agent_dict, 200)
+        #    show_graph(agent.policy_graph_root)
 
         new_state = scenario.transition(state, action).sample()
 
@@ -39,7 +38,7 @@ def run_coordinated_actions():
 
         # Update agent info
         for participating_agent in agent_dict.values():
-            participating_agent.update(state['Turn'], state, action, new_state)
+            participating_agent.update(state, action, new_state)
 
         state = new_state
 

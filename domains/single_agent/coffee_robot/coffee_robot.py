@@ -1,6 +1,5 @@
-from domains.coffee_robot.coffee_robot_scenario import coffee_robot_scenario
-from mdp.graph_planner import search
-from visualization.graph import show_graph
+from domains.single_agent.coffee_robot.coffee_robot_scenario import coffee_robot_scenario
+from mdp.graph_planner import search, greedy_action
 
 
 def coffee_robot(scenario):
@@ -11,7 +10,8 @@ def coffee_robot(scenario):
     node = None
     while not scenario.end(state):
         # Plan
-        (action, node) = search(state, scenario, 1000, root_node=node)
+        node = search(state, scenario, 1000, root_node=node)
+        action = greedy_action(node)
         state = scenario.transition(state, action).sample()
 
         #show_graph(node, width=10, height=10)

@@ -1,6 +1,6 @@
 from mdp.distribution import Distribution
 from mdp.state import State
-from mdp.graph_planner import map_tree, search, _greedy_action
+from mdp.graph_planner import map_tree, search, greedy_action
 from mdp.action import Action
 
 from functools import reduce
@@ -212,7 +212,7 @@ def communicate(state, agent, agent_dict, passes):
         comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=query_action)
 
         # calculate next step
-        query_action = _greedy_action(comm_graph_node)
+        query_action = greedy_action(comm_graph_node)[agent.identity]
         current_policy_state = comm_graph_node.state
 
     # update model
@@ -327,112 +327,28 @@ def compute_reachable_nodes(node, visited_set, model_state):
 
 ################################################# In progress #####################################################
 
-
-def min_in_policy(node, node_values, policy, policy_state):
+def min_exp_util(node, node_values, policy):
     """ Searching for minimum expected utility within the given policy. """
-    # Already visited this node. Return its computed value.
+    # Already covered this node and subgraph
     if node in node_values:
-        return node_values[node]
+        return
 
-    # Leaf node. Value already calculated as immediate + heuristic.
+    # Leaf node. Simply the node's future value.
     if not node.successors:
-        node_values[node] = node.value
-        return node.value
+        node_values[node] = node.future_value
 
-    # Calculate expected return for each action at the given node
-    active_agent = node.state['Turn']
-    action_values = defaultdict(float)
-    for action, result_distribution in node.successors.items():
-        assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
-        for resulting_state_node, result_probability in result_distribution.items():
-            action_values[action] += result_probability * min_in_policy(resulting_state_node, node_values,
-                                                                        policy, policy_state)
-            assert False, 'Dated implementation, as node utility is now handled differently. '
+    # Recurse through subgraph.
+    for successor in node.successor_set():
+        min_exp_util(successor, node_values, policy)
 
-    # Compute the node value
-    if active_agent not in node.state['Models']:
-        # Given a pre-computed policy, use the associated action
-        policy_action = policy[node.state]
-        node_values[node] = node.immediate_value + action_values[policy_action]
-    else:
-        # Other agent
-        if node.state['World State'] in policy_state:
-            # Already committed to policy action
-            node_values[node] = node.immediate_value + action_values[policy_state[node.state['World State']]]
-        else:
-            # Minimize value (antagonist assumption)
-            action, action_value = min(action_values.items(), key=lambda pair: pair[1])
-            node_values[node] = node.immediate_value + action_value
-
-    return node_values[node]
+    # Calculate new minimum over new node values.
 
 
-def max_out_of_policy(node, node_values_in_pol, node_values_out_of_pol, policy, policy_state):
+
+
+def max_exp_util(node, node_values, policy):
     """ Search for maximum expected utility given one or more policy changes. """
-    # Already visited this node. Return its computed value.
-    if node in node_values_in_pol:
-        return
 
-    # Leaf node. Value already calculated as immediate + heuristic.
-    if not node.successors:
-        node_values_in_pol[node] = node.value
-        return
-
-    # Calculate expected return for each action at the given node
-    for action, result_distribution in node.successors.items():
-        assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
-        for resulting_state_node, result_probability in result_distribution.items():
-            max_out_of_policy(resulting_state_node, node_values_in_pol, node_values_out_of_pol, policy, policy_state)
-
-    active_agent = node.state['Turn']
-    # Compute the node value
-    if active_agent not in node.state['Models']:
-        # Given a pre-computed policy, use the associated action
-        policy_action = policy[node.state]
-        node_values_in_pol[node] = node.immediate_value + sum(node_values_in_pol[result_node] * prob
-                                                              for result_node, prob in
-                                                              node.successors[policy_action].items())
-
-        # check max action over max sub-graphs
-        max_action_values = defaultdict(float)
-        max_action_check = {}
-        for action, result_distribution in node.successors.items():
-            max_results_in_pol = True
-            for result_node, probability in result_distribution.items():
-                if node_values_in_pol[result_node] > node_values_out_of_pol[result_node]:
-                    max_action_values[action] += node_values_in_pol[result_node] * probability
-
-                else:
-                    max_results_in_pol = False
-                    max_action_values[action] += node_values_out_of_pol[result_node] * probability
-
-            max_action_check[action] = max_results_in_pol
-
-        max_action, max_action_value = max(max_action_values.items, key=lambda pair: pair[1])
-
-        if max_action == policy[node.state] and max_action_check[max_action]:
-            # Best result is in policy. Need to calculate nearest alternative.
-            alternative_values = defaultdict(float)
-            for action, result_distribution in node.successors.items():
-                if not max_action_check[action]:  # out of policy result
-                    alternative_values[action] = max_action_values[action]
-                else:
-                    # Still best with policy. Change a subgraph, minimizing difference.
-                    deltas = {result_node:
-                                  prob * (node_values_in_pol[result_node] - node_values_out_of_pol[result_node])
-                              for result_node, prob in result_distribution.items()}
-                    alternative_values[action] = max_action_values[action] - min(deltas.values())
-
-            node_values_out_of_pol[node] = max(alternative_values.values())
-
-        else:
-            # Best result is out of policy. All clear.
-            node_values_out_of_pol[node] = max_action_value
-
-        return  # End consideration for agent's action.
-
-    # Other agent acting; maximize value (optimist assumption) TODO
-    # Still need to pass up policy val and non-policy val?
-    # Complicated.
-
-    return
+    # Note: due to the online nature of comm planning, we need only find the max of outcome distributions over changes
+    # in the root's policy, not all possible policy changes.
+    pass

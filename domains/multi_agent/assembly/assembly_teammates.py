@@ -2,7 +2,7 @@ import logging
 
 
 def calculate_optimal_policy():
-    from domains.assembly.assembly_scenario import *
+    from domains.multi_agent.assembly.assembly_scenario import *
     import mdp.graph_planner as dpthts
     # Initialize map
     scenario = assembly_scenario

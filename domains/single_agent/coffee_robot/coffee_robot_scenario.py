@@ -11,8 +11,8 @@ Coffee robot domain:
 
 from mdp.distribution import Distribution
 from mdp.scenario import Scenario
-
 from mdp.state import State
+from mdp.action import JointActionSpace
 
 
 def initial_state():
@@ -25,7 +25,8 @@ def initial_state():
 def transition(state, action):
     new_state_dict = dict(state.copy())
 
-    if action is 'Go':
+    act_str = action['Agent']
+    if act_str is 'Go':
         # Move to other location.
         new_state_dict['O'] = not new_state_dict['O']
 
@@ -33,18 +34,18 @@ def transition(state, action):
         if new_state_dict['R'] and not new_state_dict['U']:
             new_state_dict['W'] = True
 
-    elif action is 'BuyCoffee':
+    elif act_str is 'BuyCoffee':
         # If in in coffee shop, buy coffee.
         if not new_state_dict['O']:
             new_state_dict['C'] = True
 
-    elif action is 'DeliverCoffee':
+    elif act_str is 'DeliverCoffee':
         # If in office and have coffee, deliver coffee.
         if new_state_dict['O'] and new_state_dict['C']:
             new_state_dict['H'] = True
             new_state_dict['C'] = False
 
-    elif action is 'GetUmbrella':
+    elif act_str is 'GetUmbrella':
         # If in office, pick up umbrella.
         if new_state_dict['O']:
             new_state_dict['U'] = True
@@ -56,7 +57,7 @@ def transition(state, action):
 
 def actions(state):
     """Returns legal actions in the state."""
-    return ['Go', 'BuyCoffee', 'DeliverCoffee', 'GetUmbrella']
+    return JointActionSpace({'Agent': ['Go', 'BuyCoffee', 'DeliverCoffee', 'GetUmbrella']})
 
 
 def utility(old_state, action, new_state):

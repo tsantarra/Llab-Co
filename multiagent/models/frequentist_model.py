@@ -5,7 +5,7 @@ from mdp.distribution import Distribution
 
 class FrequentistModel:
 
-    def __init__(self, scenario, prior=None, default_count=1.0):
+    def __init__(self, scenario, agent_name, prior=None, default_count=1.0):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
@@ -13,6 +13,7 @@ class FrequentistModel:
             default - the default factory for the default dict
         """
         self.scenario = scenario
+        self.identity = agent_name
 
         if not prior:
             self.counts = defaultdict(lambda: default_count)
@@ -24,7 +25,8 @@ class FrequentistModel:
         """
         Predicts based on number of prior observations of actions.
         """
-        actions = self.scenario.actions(state)
+        joint_action_space = self.scenario.actions(state)
+        actions = joint_action_space.individual_actions(self.identity)
         total_observations = sum(self.counts[(state, action)] for action in actions)
         return Distribution({action: self.counts[(state, action)]/total_observations for action in actions})
 
@@ -40,7 +42,7 @@ class FrequentistModel:
         """
         Returns a new copy of this agent model.
         """
-        return FrequentistModel(scenario=self.scenario, prior=dict(self.counts))
+        return FrequentistModel(scenario=self.scenario, agent_name=self.identity, prior=dict(self.counts))
 
     def __repr__(self):
         return str(id(self))

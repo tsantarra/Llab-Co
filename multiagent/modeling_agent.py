@@ -41,14 +41,14 @@ class ModelingAgent:
     def get_action(self, state):
         local_state = State({'World State': state, 'Models': self.model_state})
 
-        (action, node) = search(state=local_state,
+        node = search(state=local_state,
                                 scenario=self.scenario,
                                 iterations=1000,
                                 backup_op=self.policy_backup,
                                 heuristic=self.heuristic,
                                 root_node=self.policy_graph_root)
         self.policy_graph_root = node
-        return action
+        return get_max_action(node, self.identity)
 
     def update_policy_graph(self, node, new_state):
         """
@@ -94,29 +94,41 @@ class ModelingAgent:
         # After sub-tree/graph is complete, update node values.
         policy_backup(node, self.identity)
 
-    def update(self, agent_name, old_state, observation, new_state):
+    def update(self, old_state, observation, new_state):
         # Update model
-        if agent_name in self.model_state:
-            new_model = self.model_state[agent_name].update(old_state, observation)
-            self.model_state = self.model_state.update({agent_name: new_model})
+        self.model_state = State({agent_name: model.update(old_state, observation[agent_name])
+                                  for agent_name, model in self.model_state.items()})
 
         if self.policy_graph_root:  # Can't update if the agent has not planned yet
             new_modeler_state = State(
                 {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
 
-            # Update location in policy graph
-            for node in self.policy_graph_root.successors[observation]:
-                if node.state == new_modeler_state:
-                    self.policy_graph_root = node
-                    break
-            else:
-                # Every successor should be included in the graph.
-                raise ValueError('Successor state not found in modeling agent update of policy graph.')
+            self.policy_graph_root = self.policy_graph_root.find_matching_successor(new_modeler_state, observation)
 
 
 """
-Helper functions for planning.
+Helper functions for calculating the individual agent policy.
 """
+
+
+def individual_agent_action_values(agent_name, state, joint_action_space, joint_action_values):
+    """
+    Given an association of values with all joint actions available, return the expectation over each individual agent
+    action.
+    """
+
+    other_agent_predictions = {other_agent: other_agent_model.predict(state['World State'])
+                               for other_agent, other_agent_model in state['Models'].items()}
+
+    agent_actions = joint_action_space.individual_actions(agent_name)
+    agent_action_values = {action: 0 for action in agent_actions}
+    for agent_action in agent_actions:
+        for joint_action in joint_action_space.fix_actions({agent_name: agent_action}):
+            agent_action_values[agent_action] += joint_action_values[joint_action] * \
+                reduce(mul, [other_agent_predictions[other_agent][joint_action[other_agent]]
+                             for other_agent in other_agent_predictions])
+
+    return agent_action_values
 
 
 def policy_backup(node, agent):
@@ -126,29 +138,15 @@ def policy_backup(node, agent):
         - the agent's expectations of teammates' policies
     """
     if node.successors:
-        # Calculate expected return for each action at the given node
-        joint_action_values = node.calculate_action_values()
-
-        all_joint_actions = list(joint_action_values.keys())
-
-        agent_individual_actions = node.individual_agent_actions
-
-        other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
-                                   for other_agent, other_agent_model in node.state['Models'].items()}
-
-        agent_action_values = {action: 0 for action in agent_individual_actions[agent]}
-        for agent_action in agent_individual_actions[agent]:
-            all_joint_actions_with_fixed_action = [action for action in all_joint_actions
-                                                   if action[agent] == agent_action]
-
-            for joint_action in all_joint_actions_with_fixed_action:
-                probability_of_action = reduce(mul, [other_agent_action_dist[joint_action[other_agent]]
-                                                     for other_agent, other_agent_action_dist in
-                                                     other_agent_predictions.items()])
-                agent_action_values[agent_action] += probability_of_action * joint_action_values[joint_action]
-
+        agent_action_values = individual_agent_action_values(agent, node.state, node.action_space, node.calculate_action_values())
         node.future_value = max(agent_action_values.values())
 
+
+def get_max_action(node, agent):
+    """ Gets the action maximizing the expected payoff for a given node. """
+    agent_action_values = individual_agent_action_values(agent, node.state, node.action_space,
+                                                         node.calculate_action_values())
+    return max(agent_action_values, key=lambda action: agent_action_values[action])
 
 """
 Wrappers for scenario from the position of the modeling agent.

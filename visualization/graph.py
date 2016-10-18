@@ -23,7 +23,7 @@ def _add_edges(node, graph, graph_map, node_set=None, horizon=0):
         node_set = set()
     node_set.add(node)
     graph_map[horizon].append(node)
-    for successor in [succ for successor_dist in node.successors.values() for succ in successor_dist]:
+    for successor in node.successor_set():
         graph.add_edge(node, successor)
         if successor not in node_set:
             _add_edges(successor, graph, graph_map, node_set, horizon+1)
@@ -58,7 +58,7 @@ def _median_value(v, graph, horizon, go_up):
         # going up the graph/tree; want to calculate based on reordered children
         if (horizon+1) not in graph:
             return graph[horizon][v]
-        adj_node_ranks = sorted(graph[horizon+1][succ] for succ_dist in v.successors.values() for succ in succ_dist)
+        adj_node_ranks = sorted(graph[horizon+1][succ] for succ in v.successor_set())
     else:
         # going down the graph/tree; want to calculate based on reordered parents
         if (horizon-1) not in graph:
@@ -115,8 +115,8 @@ def _crosses(graph_map):
             for j in range(i+1, len(ordered_nodes)):
                 w = ordered_nodes[j]
                 if (horizon + 1) in graph_map:
-                    for v_succ in [succ for succ_dist in v.successors.values() for succ in succ_dist]:
-                        for w_succ in [succ for succ_dist in w.successors.values() for succ in succ_dist]:
+                    for v_succ in v.successor_set():
+                        for w_succ in w.successor_set():
                             total_crosses += int(graph_map[horizon + 1][w_succ] < graph_map[horizon + 1][v_succ])
     return total_crosses
 
@@ -135,8 +135,8 @@ def _should_swap(v, w, graph_map, horizon):
                 right_crosses += int(graph_map[horizon-1][v_pred] < graph_map[horizon-1][w_pred])
 
     if (horizon+1) in graph_map:
-        for v_succ in [succ for succ_dist in v.successors.values() for succ in succ_dist]:
-            for w_succ in [succ for succ_dist in w.successors.values() for succ in succ_dist]:
+        for v_succ in v.successor_set():
+            for w_succ in w.successor_set():
                 left_crosses += int(graph_map[horizon+1][w_succ] < graph_map[horizon+1][v_succ])
                 right_crosses += int(graph_map[horizon+1][v_succ] < graph_map[horizon+1][w_succ])
 
@@ -170,7 +170,7 @@ def _median_pos(xcoords, up):
                 targets = node.predecessors
                 target_horizon = horizon-1
             else:
-                targets = [succ for succ_dist in node.successors.values() for succ in succ_dist]
+                targets = node.successors_set()
                 target_horizon = horizon+1
 
             if targets and target_horizon >= 0:
@@ -192,7 +192,7 @@ def _min_node(xcoords, up):
         node, horizon = queue.pop()
 
         top_neighbors = [(neighbor, horizon-1) for neighbor in node.predecessors] if horizon > 0 else []
-        bottom_neighbors = [(neighbor, horizon+1) for succ_dist in node.successors.values() for neighbor in succ_dist]
+        bottom_neighbors = [(neighbor, horizon+1) for neighbor in node.successor_set()]
         all_neighbors = top_neighbors + bottom_neighbors
         neighbor_coords = [xcoords[h][neighbor] for neighbor, h in all_neighbors]
 
@@ -250,7 +250,7 @@ def _xlength(xcoords):
     total = 0
     for horizon in xcoords:
         for node, x in xcoords[horizon].items():
-            total += sum(abs(x - xcoords[horizon+1][succ]) for succ_dist in node.successors.values() for succ in succ_dist)
+            total += sum(abs(x - xcoords[horizon+1][succ]) for succ in node.successor_set())
 
     return total
 

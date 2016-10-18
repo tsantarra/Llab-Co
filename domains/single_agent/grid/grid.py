@@ -1,5 +1,5 @@
-from domains.grid.grid_scenario import grid_scenario
-from mdp.graph_planner import search
+from domains.single_agent.grid.grid_scenario import grid_scenario
+from mdp.graph_planner import search, greedy_action
 
 
 def grid_test(scenario):
@@ -9,7 +9,8 @@ def grid_test(scenario):
 
     while not scenario.end(state):
         # Plan
-        (action, node) = search(state, scenario, 10000)
+        node = search(state, scenario, 10000)
+        action = greedy_action(node)
         state = scenario.transition(state, action).sample()
 
         print(action)

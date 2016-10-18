@@ -3,9 +3,11 @@ from collections import namedtuple
 from mdp.distribution import Distribution
 from mdp.scenario import Scenario
 from mdp.state import State
+from mdp.action import Action, JointActionSpace
 
 GridParams = namedtuple('GridParams', ['x', 'y', 'w', 'h', 'rounds'])
 params = GridParams(5, 5, 10, 10, 11)
+agent_name = 'Howie'
 
 
 def initial_state():
@@ -25,19 +27,20 @@ def actions(state):
     if state['y'] < params.h:
         legal_actions += ['up']
 
-    return legal_actions
+    return JointActionSpace({agent_name: legal_actions})
 
 
 def transition(state, action):
     new_state_dict = dict(state.copy())
 
-    if action is 'right':
+    act_str = action[agent_name]
+    if act_str is 'right':
         new_state_dict['x'] += 1
-    elif action is 'left':
+    elif act_str is 'left':
         new_state_dict['x'] += -1
-    elif action is 'up':
+    elif act_str is 'up':
         new_state_dict['y'] += 1
-    elif action is 'down':
+    elif act_str is 'down':
         new_state_dict['y'] += -1
 
     new_state_dict['Round'] += 1

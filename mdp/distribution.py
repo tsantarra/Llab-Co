@@ -71,9 +71,12 @@ class Distribution(dict):
         # Small rounding errors may cause probability to not reach target for last state.
         return item
 
+    def copy(self):
+        return Distribution({**self})
+
     def __repr__(self):
         return '\nDistribution {\n' + '\n'.join(str(key) + '\nP=' + str(val) + '\n'
-                                                for key, val in sorted(self.items())) + '} /Distribution\n'
+                                                for key, val in self.items()) + '} /Distribution\n'
 
     def __eq__(self, other):
         keys = self.keys() | other.keys()

@@ -1,9 +1,8 @@
 from collections import defaultdict
-from functools import partial
 from heapq import heappop, heappush
 
 from mdp.distribution import Distribution
-from multiagent.experts_model import ExpertsModel
+from multiagent.models.experts_model import ExpertsModel
 
 (WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
     ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')

@@ -36,24 +36,17 @@ from math import sqrt, log
 from random import choice
 
 from mdp.distribution import Distribution
-from mdp.action import Action
 
 
-def _greedy_action(node):
+def greedy_action(node):
     """
-    UCT to next node.
+    Returns the action with the largest expected payoff, breaking ties randomly.
     """
     action_values = node.calculate_action_values()
-    action_counts = {action: sum(child.visits for child in node.successors[action]) for action in node.successors}
+    max_action, max_val = max(action_values.items(), key=lambda pair: pair[1])
 
-    best_action, best_value = max(action_values.items(), key=lambda av: av[1], default=(None,0))
-
-    if not best_action:  # At leaf node.
-        return None, 0
-    else:
-        tied_actions = [a for a, v in action_values.items() if v == best_value]
-
-        return max(tied_actions, key=lambda a: action_counts[a])
+    ties = [action for action in action_values if action_values[action] == max_val]
+    return choice(ties)
 
 
 def _traverse_nodes(node, scenario):
@@ -96,7 +89,6 @@ def _rollout(state, scenario):
     Provides an evaluation of the state at the node given, either through playouts or by an evaluation function.
     """
     utility = 0
-
     while not scenario.end(state):
         action = choice(scenario.actions(state))
         new_state = scenario.transition(state, action).sample()
@@ -112,14 +104,15 @@ def _expand_leaf(node, scenario, heuristic, node_map):
     """
 
     # If conditions are met, add one or more leaf nodes.
-    if node.untried_actions != [] and not node.complete:  # scenario.end(node.state):
+    if node.untried_actions != [] and not node.complete:
         # Expand all actions (rather than selecting one randomly)
         expand_actions = node.untried_actions
         node.untried_actions = []
+
         for action in expand_actions:
             transitions = scenario.transition(node.state, action)
-
             new_successors = Distribution()
+
             for new_state, prob in transitions.items():
                 # Update transition utils
                 node.successor_transition_values[(new_state, action)] = scenario.utility(node.state, action, new_state)
@@ -172,11 +165,8 @@ def _backup(node, scenario, backup_op):
         backup_op(node)
 
         # Labeling -> if all actions expanded and all child nodes complete, this node is complete
-        # Scenario end checked in constructor. This is redundant.
-        # if not node.complete and scenario.end(node.state):
-        #    node.complete = True
         if not node.complete and node.untried_actions == [] and \
-                all(child.complete for child_set in node.successors.values() for child in child_set):
+                all(child.complete for child in node.successor_set()):
             node.complete = True
 
         # Queue predecessors
@@ -189,8 +179,8 @@ def _backup(node, scenario, backup_op):
 def create_node_set(node, node_set):
     """ Fills a given set of nodes with all unique nodes in the subtree. """
     node_set.add(node)
-    for successor in [successor_node for dist in node.successors.values()
-                      for successor_node in dist if successor_node not in node_set]:
+    for successor in [successor_node for successor_node in node.successor_set()
+                      if successor_node not in node_set]:
         create_node_set(successor, node_set)
 
 
@@ -203,8 +193,7 @@ def detect_cycle(node):
         unvisited.remove(current)
         incomplete.add(current)
 
-        for successor in [successor_dist for dist in current.successors.values()
-                          for successor_dist in dist]:
+        for successor in current.successor_set():
             if successor in complete:
                 continue
             elif successor in incomplete:
@@ -245,9 +234,8 @@ def _prune(node, node_map, checked):
     for pruned_node in prune_set:
         pruned_node.successors = None
 
-    for successor_dist in node.successors.values():
-        for successor in [succ for succ in successor_dist if succ not in checked]:
-            _prune(successor, node_map, checked)
+    for successor in [succ for succ in node.successor_set() if succ not in checked]:
+        _prune(successor, node_map, checked)
 
 
 def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, root_node=None, view=False):
@@ -267,11 +255,9 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
         _prune(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
-    print('Search iterations:', passes)
     for step in range(passes):
         # If entire tree has been searched, halt iteration.
         if root_node.complete:
-            print('Steps planned:', step)
             break
 
         # Start at root
@@ -286,7 +272,33 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
         # Recalculate state values
         _backup(node, scenario, backup_op=backup_op)
 
-    return _greedy_action(root_node), root_node
+    return root_node
+
+
+def graph_traversal(root, top_down=False):
+    """ Provide an iterable over all nodes in the graph, in order of depth (greatest to least)."""
+    final_queue = [(0, root)]
+    process_list = [(0, root)]
+    added = {root}
+
+    # Queue all nodes in tree accordingto depth
+    while process_list:
+        level, node = process_list.pop()
+
+        for successor in [succ for succ in node.successor_set()]:
+            if successor not in added:
+                # Add to process list and added set
+                process_list.append((level + 1, successor))
+                added.add(successor)
+
+                # Adjust priority level depending on direction of traversal
+                priority = level + 1 if top_down else -1 * (level + 1)
+                heappush(final_queue, (priority, successor))
+
+    # Return nodes
+    while final_queue:
+        priority, node = heappop(final_queue)
+        yield node
 
 
 class GraphNode:
@@ -298,25 +310,25 @@ class GraphNode:
         """
         Initializes tree node with relevant information.
         """
+        # State and action
         self.state = state  # Current game state (clone of state instance).
-        self.complete = scenario.end(state)  # A label to avoid sampling in complete subtrees.
-        if self.complete:
-            self.untried_joint_actions = []
-            self.individual_agent_actions = {}
-        else:
-            self.untried_joint_actions = scenario.actions(state)  # Yet unexplored actions
-            self.individual_agent_actions = Action.all_individual_actions(self.untried_joint_actions)
+        self.complete = scenario.end(state)  # A label to avoid sampling in complete subgraphs.
+        self.action_space = scenario.actions(state)
+        self.untried_actions = list(self.action_space)  # Yet unexplored actions
 
-        # Due to the dynamic programming approach, allow multiple "parents".
+        # Due to the dynamic programming approach, allow multiple predecessors.
         self.predecessors = {predecessor} if predecessor else set()
         self.successors = {}  # Action: child node dictionary to keep links to successors
         self.successor_transition_values = {}
 
-        self.visits = 1  # visits of the node so far; count initialization as a visit
-
+        # visits of the node so far; count initialization as a visit
+        self.visits = 1
         self.future_value = 0
 
     def calculate_action_values(self):
+        """
+        For every action, return the expectation over stochastic transitions to successors states.
+        """
         action_values = {}
         for action, successor_distribution in self.successors.items():
             action_values[action] = 0
@@ -326,7 +338,7 @@ class GraphNode:
 
         return action_values
 
-    def find_matching_successor(self, state, action=None, depth=1):
+    def find_matching_successor(self, state, action=None):
         """
         Finds the successor node with matching state.
         """
@@ -336,15 +348,20 @@ class GraphNode:
         if action:
             matches = [successor for successor in self.successors[action] if successor.state == state]
         else:
-            matches = [successor for successor_dist in self.successors.values()
-                       for successor in successor_dist if successor.state == state]
+            matches = [successor for successor in self.successor_set() if successor.state == state]
 
         if len(matches) == 0:
             print('NO MATCHES')
         elif len(matches) > 1:
             print('MATCHING SUCCESSORS', '\n'.join(str(match) for match in matches))
-        assert len(matches) == 1, 'Too many matching successor nodes!'
+        assert len(matches) == 1, '\n'.join(str(succ.state) for succ in self.successor_set()) + '\nLOOKING FOR\n' + str(state)
         return matches[0]
+
+    def successor_set(self, action=None):
+        if action:
+            return self.successors[action]
+        else:
+            return set(successor for successor_dist in self.successors.values() for successor in successor_dist)
 
     def __repr__(self):
         """
@@ -358,7 +375,7 @@ class GraphNode:
         """
         string = ''.join(['| ' for _ in range(indent)]) + str(self) + '\n'
         if horizon > 0:
-            for child_node in [node for successors in self.successors.values() for node in successors]:
+            for child_node in [node for node in self.successor_set()]:
                 string += child_node.finite_horizon_string(horizon - 1, indent + 1)
         return string
 

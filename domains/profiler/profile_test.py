@@ -6,10 +6,10 @@ import pstats
 
 def profile(func):
     """
-    Decorator for profiling individual functions. Creates a .profile file that can be viewed with
+    Decorator for profiling individual functions. Creates a .profiler file that can be viewed with
     the pstats module.
 
-    python -m pstats function_name.profile
+    python -m pstats function_name.profiler
 
     Commands:
         - strip
@@ -19,7 +19,7 @@ def profile(func):
     http://stefaanlippens.net/python_profiling_with_pstats_interactive_mode
     """
     def wrapper(*args, **kwargs):
-        datafn = func.__name__ + ".profile"  # Name the data file sensibly
+        datafn = func.__name__ + ".profiler"  # Name the data file sensibly
         prof = cProfile.Profile()
         retval = prof.runcall(func, *args, **kwargs)
         prof.dump_stats(datafn)
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     # import test
-    from domains.coordinated_actions.coordinated_actions import run_coordinated_actions
+    from domains.multi_agent.coordinated_actions.coordinated_actions import run_coordinated_actions
 
     # Run code
     profiler.enable()

@@ -6,7 +6,7 @@ from visualization.graph import show_graph
 
 
 def carpy_dpthts():
-    from domains.cops_and_robbers.cops_and_robbers_scenario import show_state, initialize_maze, \
+    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import show_state, initialize_maze, \
         heuristic, cops_and_robbers_scenario
     import mdp.graph_planner as dpthts
     # Initialize map
@@ -35,13 +35,13 @@ def carpy_dpthts():
 
 
 def multiagent_carpy():
-    from domains.cops_and_robbers.cops_and_robbers_scenario import heuristic, initialize_maze, cops_and_robbers_scenario, show_state
-    from domains.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
+    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import heuristic, initialize_maze, cops_and_robbers_scenario, show_state
+    from domains.multi_agent.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
     from multiagent.modeling_agent import ModelingAgent
     from random import choice
     from visualization.graph import show_graph
     from multiagent.communication.communication_scenario import communicate
-    from multiagent.communicating_teammate import CommunicatingTeammate
+    from multiagent.communication.communicating_teammate import CommunicatingTeammate
 
     # Initialize scenario and beginning state.
     maze = initialize_maze('./mazes/a.maze')
