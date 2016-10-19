@@ -20,7 +20,7 @@ class State(Mapping):
         """
         Returns a string representing the state.
         """
-        return '{\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.items())) + '}'
+        return 'State({\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.items())) + '})'
 
     def copy(self):
         """

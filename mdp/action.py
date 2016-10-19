@@ -41,7 +41,7 @@ class Action(Mapping):
         return len(self.__dict)
 
     def __repr__(self):
-        return 'Action: ' + str(self.__dict)
+        return 'Action(' + str(self.__dict) + ')'
 
     def __hash__(self):
         return hash(tuple(self.items()))

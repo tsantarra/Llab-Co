@@ -2,82 +2,84 @@ import logging
 import sys
 import traceback
 
-from visualization.graph import show_graph
+from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import CopsAndRobbersScenario
+from mdp.action import Action
 
 
-def carpy_dpthts():
-    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import show_state, initialize_maze, \
-        heuristic, cops_and_robbers_scenario
-    import mdp.graph_planner as dpthts
+def centralized_carpy():
+    from mdp.graph_planner import search, greedy_action
+    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import base_heuristic
+
     # Initialize map
-    initialize_maze('./mazes/a.maze')
-    scenario = cops_and_robbers_scenario
-
-    # Retrieve initial state.
+    scenario = CopsAndRobbersScenario('./mazes/a.maze')
     state = scenario.initial_state()
     print('Initial state:\n', state)
 
+    # Main loop
     node = None
-    logging.debug('Beginning search.')
     while not scenario.end(state):
         # Plan
-        (action, node) = dpthts.search(state, scenario, 1000, heuristic=heuristic, root_node=node)
+        node = search(state, scenario, 1000, heuristic=base_heuristic, root_node=node)
+        action = greedy_action(node)
+
+        # Transition
         state = scenario.transition(state, action).sample()
-        show_graph(node, width=10, height=10)
+        node = node.find_matching_successor(state, action)
 
-        logging.debug('Action: ' + str(action))
-        logging.debug('New state: ' + str(state) + '\n' + show_state(state))
-
-        node = [node for node in node.successors[action] if node.state == state][0]
-
+        # Output
         print(action)
-        print(show_state(state))
+        print(scenario.show_state(state))
 
 
-def multiagent_carpy():
-    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import heuristic, initialize_maze, cops_and_robbers_scenario, show_state
+def ad_hoc_carpy():
     from domains.multi_agent.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
     from multiagent.modeling_agent import ModelingAgent
-    from random import choice
-    from visualization.graph import show_graph
     from multiagent.communication.communication_scenario import communicate
     from multiagent.communication.communicating_teammate import CommunicatingTeammate
+    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import modeling_heuristic
 
-    # Initialize scenario and beginning state.
-    maze = initialize_maze('./mazes/a.maze')
-    scenario = cops_and_robbers_scenario
+    from random import choice
+
+    # Initialize map
+    scenario = CopsAndRobbersScenario('./mazes/a.maze')
     state = scenario.initial_state()
     logging.debug('Initial state:\n' + str(state))
 
     # Agents
-    teammate = AstarTeammate(scenario, target=choice([key for key in state if 'Robber' in key]), maze=maze)
-    teammate_model = CommunicatingTeammate(teammate_model=build_experts_model(scenario, maze, state), scenario=scenario)
-    agent = ModelingAgent(scenario, 'A', {'P': teammate_model}, heuristic=heuristic)
+    teammate = AstarTeammate(scenario=scenario,
+                             target=choice([key for key in state if 'Robber' in key]),
+                             maze=scenario.maze)
+    teammate_model = CommunicatingTeammate(teammate_model=build_experts_model(scenario, scenario.maze, state),
+                                           scenario=scenario)
+
+    agent = ModelingAgent(scenario=scenario,
+                          identity='A',
+                          models={'P': teammate_model},
+                          heuristic=modeling_heuristic)
     agents = {'A': agent, 'P': teammate}
 
     # Main loop
     logging.debug('Beginning simulation.')
     while not scenario.end(state):
-        current_agent = agents[state['Turn']]
-        action = current_agent.get_action(state)
+        # Plan
+        action = Action({agent_name: agent.get_action(state) for agent_name, agent in agents.items()})
+        #  if state['Turn'] == 'A':
+        #      action = communicate(state, agent, agents, 200)
+        #      show_graph(agent.policy_graph_root)
 
-        print('Turn:', state['Turn'])
-        print('Action:', action)
-
-        if state['Turn'] == 'A':
-            action = communicate(state, agent, agents, 200)
-            show_graph(agent.policy_graph_root)
-
+        # Transition
         new_state = scenario.transition(state, action).sample()
 
         # Output
         logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))
-        logging.debug('New state: ' + show_state(new_state) + '\n')
-        print(show_state(new_state))
+        logging.debug('New state: ' + scenario.show_state(new_state) + '\n')
+        print('Action:', action)
+        print(scenario.show_state(new_state))
         print(agent.model_state)
 
+        # Update
         for participating_agent in agents.values():
-            participating_agent.update(state['Turn'], state, action, new_state)
+            participating_agent.update(state, action, new_state)
 
         state = new_state
 
@@ -86,9 +88,12 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     try:
-        multiagent_carpy()
+        centralized_carpy()
+        #ad_hoc_carpy()
+
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')
+
     except Exception:
         traceback.print_exc(file=sys.stdout)
         logging.exception("Error.")
