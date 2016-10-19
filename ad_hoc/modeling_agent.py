@@ -19,18 +19,7 @@ from copy import copy
 class ModelingAgent:
     def __init__(self, scenario, identity, models, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
-        if isinstance(scenario, tuple):  # is a namedtuple
-            self.scenario = scenario._replace(transition=modeler_transition(scenario.transition),
-                                              actions=modeler_actions(scenario.actions),
-                                              end=modeler_end(scenario.end),
-                                              utility=modeler_utility(scenario.utility)
-                                              )
-        else:  # is a class
-            self.scenario = copy(scenario)
-            self.scenario.transition = modeler_transition(self.scenario.transition)
-            self.scenario.actions = modeler_actions(self.scenario.actions)
-            self.scenario.end = modeler_end(self.scenario.end)
-            self.scenario.utility = modeler_utility(self.scenario.utility)
+        self._set_scenario(scenario)
 
         self.identity = identity
         self.model_state = State(models)
@@ -39,6 +28,7 @@ class ModelingAgent:
         self.policy_backup = partial(policy_backup, agent=self.identity)
 
     def get_action(self, state):
+        self._update_graph(state)
         local_state = State({'World State': state, 'Models': self.model_state})
 
         node = search(state=local_state,
@@ -50,7 +40,7 @@ class ModelingAgent:
         self.policy_graph_root = node
         return get_max_action(node, self.identity)
 
-    def update_policy_graph(self, node, new_state):
+    def update_policy_graph(self, node, new_information_state):
         """
         Items to update:
             - node states
@@ -58,11 +48,11 @@ class ModelingAgent:
             - node values
         """
         # Already updated or no need to update (nothing changed).
-        if node.state == new_state:
+        if node.state == new_information_state:
             return
 
         # First, update the node's state.
-        node.state = new_state
+        node.state = new_information_state
 
         # End condition. Note: policy and node value won't change for leaf nodes.
         if not node.successors:
@@ -70,8 +60,8 @@ class ModelingAgent:
 
         # Update all individual agent models
         individual_agent_actions = node.individual_agent_actions
-        model_state = new_state['Models']
-        world_state = new_state['World State']
+        model_state = new_information_state['Models']
+        world_state = new_information_state['World State']
         resulting_models = {agent_name:
                                 {action: model_state[agent_name].update(world_state, action) for action in
                                  agent_actions}
@@ -94,16 +84,32 @@ class ModelingAgent:
         # After sub-tree/graph is complete, update node values.
         policy_backup(node, self.identity)
 
-    def update(self, old_state, observation, new_state):
+    def update(self, old_state, observation):
         # Update model
         self.model_state = State({agent_name: model.update(old_state, observation[agent_name])
                                   for agent_name, model in self.model_state.items()})
 
+    def _update_graph(self, new_state):
         if self.policy_graph_root:  # Can't update if the agent has not planned yet
             new_modeler_state = State(
                 {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
 
-            self.policy_graph_root = self.policy_graph_root.find_matching_successor(new_modeler_state, observation)
+            self.policy_graph_root = self.policy_graph_root.find_matching_successor(new_modeler_state)
+
+    def _set_scenario(self, scenario):
+        # Modify scenario with agent-specific adjustments (via function wrappers).
+        if isinstance(scenario, tuple):  # is a namedtuple
+            self.scenario = scenario._replace(transition=modeler_transition(scenario.transition),
+                                              actions=modeler_actions(scenario.actions),
+                                              end=modeler_end(scenario.end),
+                                              utility=modeler_utility(scenario.utility)
+                                              )
+        else:  # is a class
+            self.scenario = copy(scenario)
+            self.scenario.transition = modeler_transition(self.scenario.transition)
+            self.scenario.actions = modeler_actions(self.scenario.actions)
+            self.scenario.end = modeler_end(self.scenario.end)
+            self.scenario.utility = modeler_utility(self.scenario.utility)
 
 
 """

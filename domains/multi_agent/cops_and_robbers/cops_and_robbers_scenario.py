@@ -112,7 +112,8 @@ class CopsAndRobbersScenario:
 
         return new_state_distribution
 
-    def end(self, state):
+    @staticmethod
+    def end(state):
         """
         End conditions:
             - Round limit hit. Currently 50.
@@ -132,7 +133,7 @@ class CopsAndRobbersScenario:
         """
         Utility is only granted upon successful completion of the task. It is given as the number of remaining rounds.
         """
-        return (50 - new_state['Round']) if self.end(new_state) else 0
+        return (50 - new_state['Round']) if CopsAndRobbersScenario.end(new_state) else 0
 
     def _move_robbers(self, state):
         """

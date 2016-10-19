@@ -30,12 +30,12 @@ class FrequentistModel:
         total_observations = sum(self.counts[(state, action)] for action in actions)
         return Distribution({action: self.counts[(state, action)]/total_observations for action in actions})
 
-    def update(self, state, action):
+    def update(self, old_state, action):
         """
         Updates the count of observations of the action in the given state. Returns a new version!
         """
         new_model = self.copy()
-        new_model.counts[(state, action)] += 1
+        new_model.counts[(old_state, action)] += 1
         return new_model
 
     def copy(self):

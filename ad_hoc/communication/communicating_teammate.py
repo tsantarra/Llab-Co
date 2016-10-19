@@ -9,19 +9,21 @@ class CommunicatingTeammate:
         else:
             self.previous_communications = {}
 
+        self.identity = teammate_model.identity
         self.model = teammate_model
         self.scenario = scenario
 
     def predict(self, state):
 
         if state in self.previous_communications:
-            actions = self.scenario.actions(state)
-            return Distribution({action: 1.0 if action == self.previous_communications[state] else 0.0 for action in actions})
+            joint_actions = self.scenario.actions(state)
+            return Distribution({action: 1.0 if action == self.previous_communications[state] else 0.0
+                                 for action in joint_actions.individual_actions()})
 
         return self.model.predict(state)
 
-    def update(self, old_state, action):
-        return CommunicatingTeammate(self.model.update(old_state, action), self.scenario, self.previous_communications.copy())
+    def update(self, old_state, observation):
+        return CommunicatingTeammate(self.model.update(old_state, observation), self.scenario, self.previous_communications.copy())
 
     def communicated_policy_update(self, state_action_pairs):
         new_comms = self.previous_communications.copy()
@@ -34,8 +36,9 @@ class CommunicatingTeammate:
     def __copy__(self):
         return self.copy()
 
-    def __repr__(self):
-        return str(id(self))
+    def __str__(self):
+        return 'Communicating Teammate \nModel: {model}\nComms: {comms}'.format(model=str(self.model),
+                                                                                comms=len(self.previous_communications))
 
     def __eq__(self, other):
         return self.previous_communications == other.previous_communications and self.model == other.model

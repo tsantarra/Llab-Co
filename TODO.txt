@@ -2,13 +2,9 @@ BY PRIORITY (ISH)
 
     TODO
         - Simultaneous action
-            + Convert all existing domains
-            + also need to update all agent/model update functions! (as they take joint actions)
-                + test experts model next
             + communication :/
-        - test single agent scenario
-        - test multi-agent centralized scenario
-        - test multi-agent distributed scenario
+
+        - profiling test
 
         - finish domain
         - create a method of sampling policies

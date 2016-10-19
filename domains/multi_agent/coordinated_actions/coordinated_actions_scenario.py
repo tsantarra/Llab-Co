@@ -27,7 +27,7 @@ class CoordinatedActionsScenario:
         return 1 if pair[0] == pair[1] else 0
 
 
-class SampledPolicyTeammate:
+class RandomPolicyTeammate:
 
     def __init__(self, actions, rounds):
         from random import choice
@@ -37,5 +37,5 @@ class SampledPolicyTeammate:
     def get_action(self, state):
         return self.policy[state['Round']]
 
-    def update(self, old_state, observation, new_state):
+    def update(self, old_state, observation):
         pass

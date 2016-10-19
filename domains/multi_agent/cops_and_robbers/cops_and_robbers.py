@@ -7,6 +7,10 @@ from mdp.action import Action
 
 
 def centralized_carpy():
+    """
+    Runs the cops and robbers scenario using a centralized planner that controls all agents.
+    """
+    # Local imports
     from mdp.graph_planner import search, greedy_action
     from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import base_heuristic
 
@@ -32,10 +36,14 @@ def centralized_carpy():
 
 
 def ad_hoc_carpy():
+    """
+    Runs the cops and robbers scenario using a modeling agent and an 'unknown' agent.
+    """
+    # Local imports
     from domains.multi_agent.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
-    from multiagent.modeling_agent import ModelingAgent
-    from multiagent.communication.communication_scenario import communicate
-    from multiagent.communication.communicating_teammate import CommunicatingTeammate
+    from ad_hoc.modeling_agent import ModelingAgent
+    from ad_hoc.communication.communication_scenario import communicate
+    from ad_hoc.communication.communicating_teammate import CommunicatingTeammate
     from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import modeling_heuristic
 
     from random import choice
@@ -63,23 +71,24 @@ def ad_hoc_carpy():
     while not scenario.end(state):
         # Plan
         action = Action({agent_name: agent.get_action(state) for agent_name, agent in agents.items()})
-        #  if state['Turn'] == 'A':
-        #      action = communicate(state, agent, agents, 200)
-        #      show_graph(agent.policy_graph_root)
+
+        # Communicate
+        #  action = communicate(state, agent, agents, 200)
+        #  show_graph(agent.policy_graph_root)
 
         # Transition
         new_state = scenario.transition(state, action).sample()
 
+        # Update
+        for participating_agent in agents.values():
+            participating_agent.update(state, action)
+
         # Output
-        logging.debug('Action: ' + str(state['Turn']) + '\t' + str(action))
+        logging.debug('Action: ' + str(action))
         logging.debug('New state: ' + scenario.show_state(new_state) + '\n')
         print('Action:', action)
         print(scenario.show_state(new_state))
         print(agent.model_state)
-
-        # Update
-        for participating_agent in agents.values():
-            participating_agent.update(state, action, new_state)
 
         state = new_state
 
@@ -88,8 +97,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     try:
-        centralized_carpy()
-        #ad_hoc_carpy()
+        #centralized_carpy()
+        ad_hoc_carpy()
 
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')

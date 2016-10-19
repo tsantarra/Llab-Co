@@ -1,25 +1,32 @@
-import logging
+import mdp.graph_planner as dpthts
 
 
-def calculate_optimal_policy():
-    from domains.multi_agent.assembly.assembly_scenario import *
-    import mdp.graph_planner as dpthts
-    # Initialize map
-    scenario = assembly_scenario
+class SampledPolicyTeammate:
+    pass
 
+
+
+"""
+alternate communication strategies
+    - EARLY TERMINATION CONDITION
+    - exhaustive (small domain only?)
+    - most disagreed on
+    - most variance?
+    - product of the two?
+    - myopic
+"""
+
+
+def calculate_optimal_policy(scenario):
     # Retrieve initial state.
     state = scenario.initial_state()
     print('Initial state:\n', state)
 
     node = None
-    logging.debug('Beginning search.')
     while not scenario.end(state):
         # Plan
         (action, node) = dpthts.search(state, scenario, 1000, root_node=node)
         state = scenario.transition(state, action).sample()
-
-        logging.debug('Action: ' + str(action))
-        logging.debug('New state: ' + str(state) + '\n' + str(state))
 
         node = [node for node in node.successors[action] if node.state == state][0]
 
@@ -31,3 +38,4 @@ def make_teammates():
     policy = calculate_optimal_policy()
 
     # do stuff to sample
+

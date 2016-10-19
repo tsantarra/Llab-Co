@@ -2,7 +2,7 @@ from collections import defaultdict
 from heapq import heappop, heappush
 
 from mdp.distribution import Distribution
-from multiagent.models.experts_model import ExpertsModel
+from ad_hoc.models.experts_model import ExpertsModel
 
 (WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
     ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')
@@ -112,10 +112,11 @@ def init_map_cache(maze):
 
 def a_star_predict(state, target, actions, map_cache):
     partner_loc, target_loc = state['P'], state[target]
-    action_list = actions(state)
+    joint_actions = actions(state)
+    action_list = joint_actions.individual_actions('P')
 
     action_probs = Distribution({action: 0.01 for action in action_list})
-    best_action = 'P-' + map_cache[(partner_loc, target_loc)][0]
+    best_action = map_cache[(partner_loc, target_loc)][0]
     assert best_action in action_probs
     action_probs[best_action] = 0.99
     action_probs.normalize()
@@ -130,7 +131,7 @@ def build_experts_model(scenario, maze, initial_state):
                                for key in initial_state if 'Robber' in key})
     predictors.normalize()
 
-    return ExpertsModel(scenario, predictors)
+    return ExpertsModel(scenario, predictors, 'P')
 
 
 # The actual teammate
@@ -147,8 +148,11 @@ class AstarTeammate:
     def predict(self, state):
         return a_star_predict(state, self.target, self.scenario.actions, self.cached_paths)
 
-    def update(self, agent_name, old_state, observation, new_state):
+    def update(self, agent_name, old_state):
         pass
+
+    def __str__(self):
+        return 'A* pursuing {target}'.format(target=self.target)
 
     def __eq__(self, other):
         return self.target == other.target
