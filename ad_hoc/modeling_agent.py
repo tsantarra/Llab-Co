@@ -59,13 +59,14 @@ class ModelingAgent:
             return
 
         # Update all individual agent models
-        individual_agent_actions = node.individual_agent_actions
+        individual_agent_actions = node.action_space.individual_actions()
         model_state = new_information_state['Models']
         world_state = new_information_state['World State']
         resulting_models = {agent_name:
                                 {action: model_state[agent_name].update(world_state, action) for action in
                                  agent_actions}
-                            for agent_name, agent_actions in individual_agent_actions.items()}
+                            for agent_name, agent_actions in individual_agent_actions.items()
+                            if agent_name in model_state}
 
         for successor_node, joint_action in [(succ_node, action) for action, succ_dist in node.successors.items()
                                              for succ_node in succ_dist]:
@@ -151,7 +152,7 @@ def policy_backup(node, agent):
 def get_max_action(node, agent):
     """ Gets the action maximizing the expected payoff for a given node. """
     agent_action_values = individual_agent_action_values(agent, node.state, node.action_space,
-                                                         node.calculate_action_values())
+                                                         node.action_values())
     return max(agent_action_values, key=lambda action: agent_action_values[action])
 
 """

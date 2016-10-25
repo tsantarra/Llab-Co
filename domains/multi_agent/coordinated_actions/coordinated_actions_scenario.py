@@ -31,7 +31,7 @@ class RandomPolicyTeammate:
 
     def __init__(self, actions, rounds):
         from random import choice
-        self.policy = {round: choice(actions) for round in range(1, rounds+1)}
+        self.policy = {round: choice(actions) for round in range(1, rounds+2)}
         print('POLICY:', self.policy)
 
     def get_action(self, state):

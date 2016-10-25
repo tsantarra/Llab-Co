@@ -12,6 +12,7 @@ from itertools import product
 class Action(Mapping):
     def __init__(self, agent_action_dict):
         self.__dict = agent_action_dict.copy()
+        self.__hash = None
 
     @staticmethod
     def all_joint_actions(individual_action_lists):
@@ -44,20 +45,19 @@ class Action(Mapping):
         return 'Action(' + str(self.__dict) + ')'
 
     def __hash__(self):
-        return hash(tuple(self.items()))
+        if not self.__hash:
+            self.__hash = hash(tuple(self.__dict.items()))
+        return self.__hash
 
 
 class JointActionSpace:
     def __init__(self, individual_agent_actions):
-        self.agent_actions = individual_agent_actions
+        self.agent_actions = {name: set(actions) for name, actions in individual_agent_actions.items()}
         self.joint_actions = self.all_joint_actions()
 
     def all_joint_actions(self):
-        agent_names = self.agent_actions.keys()
-        ordered_action_lists = [self.agent_actions[name] for name in agent_names]
-
-        return [Action(dict(zip(agent_names, combination)))
-                for combination in product(*ordered_action_lists)]
+        action_lists = [[(name, action) for action in action_list] for name, action_list in self.agent_actions.items()]
+        return [Action(dict(combination)) for combination in product(*action_lists)]
 
     def individual_actions(self, agent_name=None):
         if agent_name:

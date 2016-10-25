@@ -15,20 +15,19 @@ def run_coordinated_actions():
     # Agents
     teammate = RandomPolicyTeammate(actions=scenario.action_set, rounds=scenario.rounds)
     agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammate(teammate_model=FrequentistModel(scenario, 'Teammate'), scenario=scenario)})
-    agents = {'Agent': agent, 'Teammate': teammate}
+    agent_dict = {'Agent': agent, 'Teammate': teammate}
 
     # Execution loop
     while not scenario.end(state):
         # Have the agents select actions
-        action = Action({agent_name: agent.get_action(state) for agent_name, agent in agents.items()})
+        action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
 
-        #  action = communicate(state, agent, agent_dict, 200)
-        #  show_graph(agent.policy_graph_root)
+        action = communicate(agent, agent_dict, 200)
 
         new_state = scenario.transition(state, action).sample()
 
         # Update agent info
-        for participating_agent in agents.values():
+        for participating_agent in agent_dict.values():
             participating_agent.update(state, action)
 
         # Output

@@ -26,7 +26,7 @@ def centralized_assembly():
     node = None
     while not scenario.end(state):
         # Plan
-        node = search(state, scenario, 1000, root_node=node)
+        node = search(state, scenario, 1000, root_node=node, heuristic=lambda state: 0)
         action = greedy_action(node)
 
         # Transition
@@ -52,13 +52,13 @@ def ad_hoc_assembly():
     teammate = None
     teammate_model = CommunicatingTeammate(teammate_model= None, scenario=scenario)
     agent = ModelingAgent(scenario, 'A', {'P': teammate_model})
-    agents = {'A': agent, 'P': teammate}
+    agent_dict = {'A': agent, 'P': teammate}
 
     # Main loop
     logging.debug('Beginning simulation.')
     while not scenario.end(state):
         # Have the agents select actions
-        action = Action({agent_name: agent.get_action(state) for agent_name, agent in agents.items()})
+        action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
 
         #  action = communicate(state, agent, agent_dict, 200)
         #  show_graph(agent.policy_graph_root)
@@ -66,7 +66,7 @@ def ad_hoc_assembly():
         new_state = scenario.transition(state, action).sample()
 
         # Update agent info
-        for participating_agent in agents.values():
+        for participating_agent in agent_dict.values():
             participating_agent.update(state, action)
 
         # Output

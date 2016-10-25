@@ -3,10 +3,11 @@ BY PRIORITY (ISH)
     TODO
         - Simultaneous action
             + communication :/
+                - figured out key error, but i'm not sure why or if it's completely fixed.
+                - early termination
+                    + NEED TO FIX POLICIES AT COMMS OTHERWISE ESTIMATES ARE WRONG
+                - actions - filter out states with only one action for the agent
 
-        - profiling test
-
-        - finish domain
         - create a method of sampling policies
         - create a teammate class for sampled policies
         - create the framework for the process

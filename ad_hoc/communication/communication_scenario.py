@@ -1,3 +1,9 @@
+"""
+The communication process for learning a teammate's intentions in an multiagent MDP can be viewed itself as an MDP,
+just one that is exponentially larger than that of the original problem. The idea here is to construct a communication
+policy, that is, a series of intention queries that will eventually shape the primary agent's own action policy.
+"""
+
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import map_tree, search, greedy_action
@@ -12,6 +18,13 @@ Query = namedtuple('Query', ['agent', 'state'])
 
 class CommScenario:
     def __init__(self, policy_graph, initial_model_state, identity, comm_cost=0):
+        """
+        Args:
+            policy_graph:           The policy graph for the agent whose policy may be modified by obtaining info.
+            initial_model_state:    The current state of the agent's model of the other agents involved.
+            identity:               The name of the agent.
+            comm_cost:              The amount of resources given up by the agent to communicate with another agent.
+        """
         # Save current policy graph for future reference
         self._policy_root = policy_graph
         self._state_graph_map = map_tree(self._policy_root)
@@ -30,9 +43,30 @@ class CommScenario:
         self.comm_cost = comm_cost  # Set cost per instance of communication
 
     def initial_state(self):
+        """
+        The communication state is simply a list of queries and responses along with an 'End?' flag, indicating the
+        agent has voluntarily ended the communication process.
+        """
         return State({'Queries': State(), 'End?': False})
 
     def actions(self, policy_state):
+        """
+        Each query action available to an agent corresponds with a state in the policy graph. In effect, performing the
+        query action is simply asking the other agent what its policy action is for the given state. In order to reduce
+        the space of queried states, there are some criteria for pruning states:
+
+            - The scenario is terminal. It does not matter what any agent's policy is at such a state.
+
+            - The state has already been queried. The agent already has the necessary information.
+
+            - The state is not reachable. Given the current information of the other agents' policies, some states may
+            be excluded as there is a 0% likelihood of being in the state in the future.
+
+            - The other agent only has one available action. There is no uncertainty about its eventual action.
+
+        The agent may additionally 'Halt' the communication process. This is a vital addition, as in scenarios with a
+        cost associated with each communcative action, the agent must minimize the number of queries it poses.
+        """
         # No actions for halted case.
         if policy_state['End?']:
             return set()
@@ -43,41 +77,50 @@ class CommScenario:
         # Calculate reachable states
         reachable_nodes = set()
         compute_reachable_nodes(self._policy_root, reachable_nodes, model_state)
-        reachable_states = set(node.state['World State'] for node in reachable_nodes)
+        reachable_states = set(node.state['World State'] for node in reachable_nodes
+                               if not node.scenario_end)  # Automatically filter out end states
 
+        # Construct the action set over all other agents
         action_set = set()
         for agent_name in model_state:
-            possible_query_states = reachable_states - set(query.state for query in policy_state['Queries']
-                                                           if query.agent == agent_name) \
-                                    - self.previous_queries[agent_name]
+            possible_queries = reachable_states \
+                               - set(query.state for query in policy_state['Queries'] if query.agent == agent_name) \
+                               - self.previous_queries[agent_name]
 
             action_set |= set(Action({self.agent_identity: Query(agent_name, state)})
-                              for state in possible_query_states)
+                              for state in possible_queries)
 
         action_set.add(Action({self.agent_identity: 'Halt'}))
         return action_set
 
-    def transition(self, policy_state, query_action):
-        # Termination action TODO WRONG SINCE SIMULTANEOUS UPDATE
-        if query_action[self.agent_identity] == 'Halt':
+    def transition(self, policy_state, action):
+        """
+        For a given query, consider the potential reponses from the modeled agent. Then construct a new policy state
+        for each possibility.
+        """
+        # Get the agent's action
+        query_action = action[self.agent_identity]
+
+        # Termination action
+        if query_action == 'Halt':
             return Distribution({policy_state.update({'End?': True}): 1.0})
 
         # The transition probabilities are dependent on the model formed by all current queries.
-        agent_name, query_world_state = query_action
+        target_agent_name, query_world_state = query_action
         model_state = self._get_model_state(policy_state)
-        predicted_responses = model_state[agent_name].predict(query_world_state)
+        predicted_responses = model_state[target_agent_name].predict(query_world_state)
 
+        # Consider all possible results
         resulting_states = Distribution()
-        for agent_action, probability in predicted_responses.items():
+        for target_agent_action, probability in predicted_responses.items():
             # Add query to current queries (as a copy)
-            new_query_state = policy_state['Queries'].update({query_action: agent_action})
-            new_policy_state = policy_state.update({'Queries': new_query_state})
+            new_query_set = policy_state['Queries'].update({query_action: target_agent_action})
+            new_policy_state = policy_state.update({'Queries': new_query_set})
 
             # Construct new policy state
             resulting_states[new_policy_state] = probability
 
-        # assert policy_state not in resulting_states, 'Accidental self parent. ' + str(policy_state)
-
+        # Sanity check.
         assert abs(sum(resulting_states.values()) - 1.0) < 10e-6, \
             'Predicted query action distribution does not sum to 1.'
 
@@ -89,27 +132,52 @@ class CommScenario:
 
         Case 1: All reachable states have been queried.
 
-        Case 2: Can we bound the total possible remaining util to be gained from communication?
-                - Fix policy -> min path -> lower bound for what we're currently going to get
-                - Consider all non-policy actions -> max path -> upper bound for changing policy
-                - If change max - fixed min < comm cost, no comm would be worthwhile
+        Case 2: We can bound the amount of util to be gained from further communication. If that potential is less
+                than the cost of communication, there is no incentive to continue.
+                - Bounds: max out of policy util - min in policy util
         """
         if policy_state['End?']:
             return True
 
         model_state = self._get_model_state(policy_state)
-
         nodes = set()
         compute_reachable_nodes(node=self._policy_root, visited_set=nodes, model_state=model_state)
         reachable_states = set(node.state['World State'] for node in nodes)
 
         # all teammate reachable states - all queried states
-        return len(reachable_states
-                   - set(query.state for query in policy_state['Queries'])
-                   - set(comm_state for comm_set in self.previous_queries.values()
-                         for comm_state in comm_set)) == 0
+        if len(reachable_states
+                       - set(query.state for query in policy_state['Queries'])
+                       - set(comm_state for comm_set in self.previous_queries.values() for comm_state in comm_set)) \
+                == 0:
+            return True
+
+        # Early termination
+        policy = self._get_policy(policy_state)
+        root_node = self._policy_root
+        next_action = policy[root_node.state]
+
+        # Safety value
+        policy_successors = root_node.successors[next_action]
+        safety_value = policy_successors.expectation({successor: min_exp_util_fixed_policy(successor,
+                                                                                           {},
+                                                                                           self.agent_identity,
+                                                                                           policy)
+                                                      for successor in policy_successors})
+
+        # For all non-policy actions at the current node, consider the best possible return.
+        optimistic_values = {alternative_action:
+                                 successor_dist.expectation(
+                                     {successor: max_exp_util(successor, {}) for successor in successor_dist})
+                             for alternative_action, successor_dist in root_node.successors.items()
+                             if alternative_action != next_action}
+
+        return max(optimistic_values.values()) - safety_value <= self.comm_cost
 
     def utility(self, old_policy_state, action, new_policy_state):
+        """
+        The expected utility for a single query is given as the change in expected utilities for policies before and
+        after the query.
+        """
         # If the action is to stop communicating, there is no further utility gain.
         if action[self.agent_identity] == 'Halt':
             return 0
@@ -125,6 +193,9 @@ class CommScenario:
         return exp_util_new_policy - exp_util_old_policy - self.comm_cost
 
     def _get_model_state(self, policy_state):
+        """
+        To save on computation, we have cached model states corresponding to policy states.
+        """
         if policy_state in self._model_state_cache:
             return self._model_state_cache[policy_state]
         else:
@@ -139,6 +210,11 @@ class CommScenario:
             return model_state
 
     def _get_policy(self, policy_state):
+        """
+        To save on computation, we have cached agent policies by policy/information states. When a policy hasn't been
+        computed for a given policy state, compute one with a graph traversal.
+        """
+
         def compute_policy(node, action_values, new_policy):
             action, action_value = max(action_values.items(), key=lambda pair: pair[1])
             new_policy[node.state] = action
@@ -156,6 +232,10 @@ class CommScenario:
             return policy
 
     def _get_policy_ev(self, policy_state, policy):
+        """
+        Calculate the expected utility of a given policy.
+        """
+
         def use_precomputed_policy(node, action_values, policy):
             action = policy[node.state]
             return action_values[action]
@@ -166,66 +246,70 @@ class CommScenario:
                                      agent_identity=self.agent_identity)
 
 
-def communicate(state, agent, agent_dict, passes):
+def communicate(agent, agent_dict, passes):
+    """
+    This is the primary method for initiating a series of policy queries. It is run as any other scenario:
+        - Initiate scenario
+        - Plan via graph search
+        - Traverse through graph, querying the other agents
+        - Recalculate agent models and the primary agent's policy
+    """
     # Initialize scenario
     comm_scenario = CommScenario(policy_graph=agent.policy_graph_root,
                                  initial_model_state=agent.policy_graph_root.state['Models'],
+                                 identity=agent.identity,
                                  comm_cost=0)
 
-    print('BEGIN COMMUNICATION')
+    print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', greedy_action(agent.policy_graph_root))
     # Complete graph search
-    (query_action, comm_graph_node) = search(state=comm_scenario.initial_state(),
-                                             scenario=comm_scenario,
-                                             iterations=passes,
-                                             heuristic=lambda comm_state: 0,
-                                             view=True)
+    comm_graph_node = search(state=comm_scenario.initial_state(),
+                             scenario=comm_scenario,
+                             iterations=passes,
+                             heuristic=lambda comm_state: 0,
+                             view=True)
 
-    from visualization.graph import show_graph
-    if comm_graph_node.successors:
-        show_graph(comm_graph_node, skip_cross_optimization=True)
+    action = greedy_action(comm_graph_node)
+    query_action = action[agent.identity]
 
     # Initial communication options
     current_policy_state = comm_graph_node.state
 
     while not current_policy_state['End?']:
         # Check for termination
-        if query_action[agent.identity] == 'Halt':
+        if query_action == 'Halt':
             print('Halt')
             break
 
-        # response
-        query_target = agent_dict[query_action.name]
-        response = query_target.get_action(query_action)
+        # Response
+        query_target = agent_dict[query_action.agent]
+        response = query_target.get_action(query_action.state)
+        print('Query:\n{state}\nResponse: {response}'.format(state=query_action.state, response=response))
 
-        # update position in policy state graph
+        # Update position in policy state graph
         new_query_state = current_policy_state['Queries'].update({query_action: response})
         new_policy_state = current_policy_state.update({'Queries': new_query_state})
+        comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=action)
 
-        print('Query:', query_action)
-        print('Response:', response)
-        for stac, val in comm_graph_node.successor_transition_values.items():
-            print('policy state\n', stac[0])
-            print('query state\n', stac[1])
-            print('val:', val)
-        print('Util:', comm_graph_node.successor_transition_values[(new_policy_state, query_action)])
+        # Check if graph ends
+        if not comm_graph_node.successors:
+            break
 
-        comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=query_action)
-
-        # calculate next step
-        query_action = greedy_action(comm_graph_node)[agent.identity]
+        # Calculate next step
+        action = greedy_action(comm_graph_node)
+        query_action = action[agent.identity]
         current_policy_state = comm_graph_node.state
 
     # update model
     queries = comm_graph_node.state['Queries'].items()
     for agent_name in [name for name in agent_dict if name != 'Agent']:
-        agent_queries = [(query, response) for query, response in queries if query.name == agent_name]
+        agent_queries = [(query, response) for query, response in queries if query.agent == agent_name]
         new_model = agent.model_state[agent_name].communicated_policy_update(agent_queries)
         agent.model_state = agent.model_state.update({agent_name: new_model})
 
     new_root_state = agent.policy_graph_root.state.update({'Models': agent.model_state})
     agent.update_policy_graph(agent.policy_graph_root, new_root_state)
 
-    action = agent.get_action(state)
+    action = greedy_action(agent.policy_graph_root)
     print('END COMMUNICATION/// NEW ACTION:', action)
 
     return action
@@ -243,12 +327,13 @@ def traverse_policy_graph(node, node_values, model_state, policy, policy_fn, age
         return node.future_value
 
     # Update all individual agent models
-    individual_agent_actions = node.individual_agent_actions
+    individual_agent_actions = node.action_space.individual_actions()
     world_state = node.state['World State']
     resulting_models = {agent_name:
                             {action: model_state[agent_name].update(world_state, action) for action in
                              agent_actions}
-                        for agent_name, agent_actions in individual_agent_actions.items()}
+                        for agent_name, agent_actions in individual_agent_actions.items()
+                        if agent_name in model_state}
 
     # Calculate expected return for each action at the given node
     joint_action_values = defaultdict(float)
@@ -266,10 +351,10 @@ def traverse_policy_graph(node, node_values, model_state, policy, policy_fn, age
 
             joint_action_values[joint_action] += result_probability * \
                                                  (node.successor_transition_values[(
-                                                 resulting_state_node.state, joint_action)] + resulting_node_value)
+                                                     resulting_state_node.state, joint_action)] + resulting_node_value)
 
     # Now breakdown joint actions so we can calculate the primary agent's action values
-    agent_individual_actions = node.individual_agent_actions
+    agent_individual_actions = node.action_space.individual_actions()
     other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                for other_agent, other_agent_model in model_state.items()}
 
@@ -302,19 +387,16 @@ def compute_reachable_nodes(node, visited_set, model_state):
                                           if prob == 0.0)
                          for other_agent, other_agent_model in model_state.items()}
 
-    # Filter out - considers all existing joint actions. Probably faster to construct a new set of joint actions.
-    # joint_actions = [joint_action for joint_action in node.successors
-    #                 if all(joint_action[agent] not in ruled_out_actions[agent] for agent in model_state)]
-
     individual_actions = {agent_name: action_set - ruled_out_actions[agent_name]
-                          for agent_name, action_set in node.individual_agent_actions.items()}
+                          for agent_name, action_set in node.action_space.individual_actions().items()
+                          if agent_name in ruled_out_actions}
 
     resulting_models = {agent_name:
                             {action: model_state[agent_name].update(world_state, action) for action in
                              agent_actions}
                         for agent_name, agent_actions in individual_actions.items()}
 
-    for joint_action in Action.all_joint_actions(individual_actions):
+    for joint_action in node.action_space:
         # Update model state
         new_model_state = State({agent_name: resulting_models[agent_name][joint_action[agent_name]]
                                  for agent_name in model_state})
@@ -327,7 +409,7 @@ def compute_reachable_nodes(node, visited_set, model_state):
 
 ################################################# In progress #####################################################
 
-def min_exp_util(node, node_values, policy):
+def min_exp_util_fixed_policy(node, node_values, agent_identity, policy):
     """ Searching for minimum expected utility within the given policy. """
     # Already covered this node and subgraph
     if node in node_values:
@@ -339,16 +421,36 @@ def min_exp_util(node, node_values, policy):
 
     # Recurse through subgraph.
     for successor in node.successor_set():
-        min_exp_util(successor, node_values, policy)
+        min_exp_util_fixed_policy(successor, node_values,  agent_identity, policy)
+
+    # Calculate new minimum over new node values. Only consider actions that match the given policy!
+    action_values = {
+        action: sum(node.successor_transition_values[(successor.state, action)] + node_values[successor]
+                    for successor, probability in successor_distribution.items())
+        for action, successor_distribution in node.successors.items()
+        if action[agent_identity] == policy[node.state]}
+
+    node_values[node] = min(action_values.values())
+
+
+def max_exp_util(node, node_values):
+    """ Search for maximum expected utility given one or more policy changes. """
+    # Already covered this node and subgraph
+    if node in node_values:
+        return
+
+    # Leaf node. Simply the node's future value.
+    if not node.successors:
+        node_values[node] = node.future_value
+
+    # Recurse through subgraph.
+    for successor in node.successor_set():
+        max_exp_util(successor, node_values)
 
     # Calculate new minimum over new node values.
+    action_values = {
+        action: sum(node.successor_transition_values[(successor.state, action)] + node_values[successor]
+                    for successor, probability in successor_distribution.items())
+        for action, successor_distribution in node.successors.items()}
 
-
-
-
-def max_exp_util(node, node_values, policy):
-    """ Search for maximum expected utility given one or more policy changes. """
-
-    # Note: due to the online nature of comm planning, we need only find the max of outcome distributions over changes
-    # in the root's policy, not all possible policy changes.
-    pass
+    node_values[node] = max(action_values.values())

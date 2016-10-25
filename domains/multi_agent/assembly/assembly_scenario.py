@@ -41,12 +41,10 @@ def initial_state():
     """
     Gives the initial state of the scenario.
         - Empty inventory for each agent
-        - Recipes made; not sure we need this
         - Round
     """
     return State({'Inventory 1': ItemCounts({comp: 0 for comp in possible_components}),
                   'Inventory 2': ItemCounts({comp: 0 for comp in possible_components}),
-                  'Recipes Made': ItemCounts({recipe: 0 for recipe in recipes}),
                   'Round': 0})
 
 
@@ -88,8 +86,6 @@ def transition(state, action):
     inventory1 = dict(new_state_dict['Inventory 1'])
     inventory2 = dict(new_state_dict['Inventory 2'])
 
-    recipes_made = dict(new_state_dict['Recipes Made'])
-
     # Agent1 actions
     if 'Prepare' == agent1_action.act:
         item = agent1_action.object
@@ -107,11 +103,9 @@ def transition(state, action):
         recipe = agent2_action.object
         for item, count in recipe.items():
             inventory2[item] -= count
-        recipes_made[recipe] += 1
 
     new_state_dict['Inventory 1'] = ItemCounts(inventory1)
     new_state_dict['Inventory 2'] = ItemCounts(inventory2)
-    new_state_dict['Recipes Made'] = ItemCounts(recipes_made)
     new_state_dict['Round'] += 1
 
     return Distribution({State(new_state_dict): 1.0})  # all possible outcomes and their associated probabilities

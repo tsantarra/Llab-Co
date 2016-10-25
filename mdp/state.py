@@ -42,7 +42,6 @@ class State(Mapping):
         new_copy = self.copy()
         new_copy.__dict.update(args)
         return new_copy
-        #return State(self.copy(), **args) # unpack doesn't work if args={...} doesn't have string keys.
 
     def remove(self, keys):
         """
@@ -69,7 +68,7 @@ class State(Mapping):
         return len(self.__dict)
 
     def __eq__(self, other):
-        return all((key in self and key in other) and (self[key] == other[key]) for key in (self.keys() | other.keys()))
+        return self.__dict == other.__dict
 
     def __lt__(self, other):
         return tuple(self.items()) < tuple(other.items())
@@ -91,3 +90,16 @@ class State(Mapping):
         Returns a new state with features specified only where they are shared between self and state.
         """
         return State({key: self[key] for key in (self.keys() & state.keys()) if self[key] == state[key]})
+
+
+if __name__ == '__main__':
+    import timeit
+
+    data = {'x': list(range(5)), 'y': list(range(10))}
+    state1 = State(data)
+    state2 = State(data)
+
+    t1 = timeit.Timer("state1 == state2", "from __main__ import state1, state2")
+    t2 = timeit.Timer("state1.dict_eq(state2)", "from __main__ import state1, state2")
+    print('t1', t1.timeit(100000) / 100000)
+    print('t2', t2.timeit(100000) / 100000)

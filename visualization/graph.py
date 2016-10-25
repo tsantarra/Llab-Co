@@ -170,7 +170,7 @@ def _median_pos(xcoords, up):
                 targets = node.predecessors
                 target_horizon = horizon-1
             else:
-                targets = node.successors_set()
+                targets = node.successor_set()
                 target_horizon = horizon+1
 
             if targets and target_horizon >= 0:
