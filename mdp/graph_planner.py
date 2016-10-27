@@ -38,7 +38,7 @@ from random import choice
 from mdp.distribution import Distribution
 
 
-def greedy_action(node):
+def greedy_action(node, tie_selector=choice):
     """
     Returns the action with the largest expected payoff, breaking ties randomly.
     """
@@ -52,10 +52,10 @@ def greedy_action(node):
     max_action, max_val = max(action_values.items(), key=lambda pair: pair[1])
 
     ties = [action for action in action_values if action_values[action] == max_val]
-    return choice(ties)
+    return tie_selector(ties)
 
 
-def _traverse_nodes(node, scenario):
+def _traverse_nodes(node, scenario, tie_selector):
     """
     UCT down to leaf node.
     """
@@ -87,7 +87,7 @@ def _traverse_nodes(node, scenario):
 
         tied_actions = [a for a in action_values if action_values[a] == best_value]
 
-        node = Distribution(incomplete_successors[choice(tied_actions)]).sample()
+        node = Distribution(incomplete_successors[tie_selector(tied_actions)]).sample()
 
     return node
 
@@ -247,7 +247,8 @@ def _prune(node, node_map, checked):
         _prune(successor, node_map, checked)
 
 
-def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, root_node=None, view=False):
+def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, tie_selector=choice,
+           root_node=None, view=False):
     """
     Search game tree according to THTS.
     """
@@ -274,7 +275,7 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
         node = root_node
 
         # UCT through existing nodes.
-        node = _traverse_nodes(node, scenario)
+        node = _traverse_nodes(node, scenario, tie_selector)
 
         # Expand a new node from leaf.
         node = _expand_leaf(node, scenario, heuristic, node_map)

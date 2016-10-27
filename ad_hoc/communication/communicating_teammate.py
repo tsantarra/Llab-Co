@@ -18,7 +18,7 @@ class CommunicatingTeammate:
         if state in self.previous_communications:
             joint_actions = self.scenario.actions(state)
             return Distribution({action: 1.0 if action == self.previous_communications[state] else 0.0
-                                 for action in joint_actions.individual_actions()})
+                                 for action in joint_actions.individual_actions(self.identity)})
 
         return self.model.predict(state)
 

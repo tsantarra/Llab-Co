@@ -14,23 +14,10 @@ class Action(Mapping):
         self.__dict = agent_action_dict.copy()
         self.__hash = None
 
-    @staticmethod
-    def all_joint_actions(individual_action_lists):
-        agent_names = individual_action_lists.keys()
-        ordered_action_lists = [individual_action_lists[name] for name in agent_names]
-
-        return [Action(dict(zip(agent_names, combination)))
-                for combination in product(*ordered_action_lists)]
-
-    @staticmethod
-    def all_individual_actions(list_of_joint_actions):
-        agent_names = list(list_of_joint_actions[0].keys())
-
-        return {name: set(action[name] for action in list_of_joint_actions) for name in agent_names}
-
-    def join(self, other_action):
-        assert not self.keys() & other_action.keys(), 'Overlapping joint action keys. ' + str(self) + str(other_action)
-        return Action({**self, **other_action})
+    def update(self, agent_actions):
+        new_dict = self.__dict.copy()
+        new_dict.update(agent_actions)
+        return Action(new_dict)
 
     def __getitem__(self, key):
         return self.__dict[key]
@@ -69,6 +56,11 @@ class JointActionSpace:
         assert all(key in self.agent_actions for key in fixed_actions), 'Missing agent while fixing actions:' + \
                 str(fixed_actions) + ' ' + str(self.agent_actions)
         return JointActionSpace({**self.agent_actions, **fixed_actions})
+
+    def constrain(self, fixed_agent_actions):
+        new_individual_actions = self.agent_actions.copy()
+        new_individual_actions.update(fixed_agent_actions)
+        return JointActionSpace(new_individual_actions)
 
     def __iter__(self):
         return iter(self.joint_actions)

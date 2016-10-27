@@ -13,18 +13,20 @@ class CoordinatedActionsScenario:
         return State({'Seen': (), 'Round': 1})
 
     def actions(self, state):
-        return JointActionSpace({'Agent': list(self.action_set), 'Teammate': list(self.action_set)})
+        if state['Round'] <= self.rounds:
+            return JointActionSpace({'Agent': list(self.action_set), 'Teammate': list(self.action_set)})
+        else:
+            return JointActionSpace({'Agent': [], 'Teammate': []})
 
     def transition(self, state, action):
         return Distribution({state.update({'Round': state['Round'] + 1,
-                                           'Seen': state['Seen'] + (tuple(action.values()),)}): 1.0})
+                                           'Seen': state['Seen'] + (tuple(sorted(action.values())),)}): 1.0})
 
     def end(self, state):
         return state['Round'] > self.rounds
 
     def utility(self, old_state, action, new_state):
-        pair = new_state['Seen'][-1]
-        return 1 if pair[0] == pair[1] else 0
+        return 1 if action['Agent'] == action['Teammate'] else 0
 
 
 class RandomPolicyTeammate:

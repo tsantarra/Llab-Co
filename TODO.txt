@@ -2,10 +2,10 @@ BY PRIORITY (ISH)
 
     TODO
         - Simultaneous action
-            + communication :/
-                - figured out key error, but i'm not sure why or if it's completely fixed.
+            + communication :
+                - ordering for graph search
                 - early termination
-                    + NEED TO FIX POLICIES AT COMMS OTHERWISE ESTIMATES ARE WRONG
+                    + test
                 - actions - filter out states with only one action for the agent
 
         - create a method of sampling policies
