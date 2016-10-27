@@ -3,15 +3,19 @@ The communication process for learning a teammate's intentions in an multiagent 
 just one that is exponentially larger than that of the original problem. The idea here is to construct a communication
 policy, that is, a series of intention queries that will eventually shape the primary agent's own action policy.
 """
+from heapq import heappush, heappop
+from random import choice
+
 from ad_hoc.modeling_agent import get_max_action
 from mdp.distribution import Distribution
 from mdp.state import State
-from mdp.graph_planner import map_tree, search, greedy_action
+from mdp.graph_planner import map_graph, search, greedy_action
 from mdp.action import Action, JointActionSpace
 
-from functools import reduce
+from functools import reduce, partial
 from operator import mul
 from collections import defaultdict, namedtuple
+from math import inf as infinity
 
 Query = namedtuple('Query', ['agent', 'state'])
 
@@ -27,7 +31,7 @@ class CommScenario:
         """
         # Save current policy graph for future reference
         self._policy_root = policy_graph
-        self._state_graph_map = map_tree(self._policy_root)
+        self._state_graph_map = map_graph(self._policy_root)
         self.agent_identity = identity
 
         # Caches of commonly computed items
@@ -86,7 +90,10 @@ class CommScenario:
                                - set(query.state for query in policy_state['Queries'] if query.agent == agent_name)
 
             action_set |= set(Action({self.agent_identity: Query(agent_name, state)})
-                              for state in possible_queries)
+                              for state in possible_queries
+                              if len([action for action, prob in model_state[agent_name].predict(state).items()
+                                     if prob > 0.0])
+                              )
 
         action_set.add(Action({self.agent_identity: 'Halt'}))
         return action_set
@@ -183,7 +190,7 @@ class CommScenario:
         optimistic_value = max_out_of_policy_node_values[root_node]
 
         if optimistic_value - safety_value <= self.comm_cost:
-            print('Early termination! {opt} {safe} {cost}'.format(opt=optimistic_value,
+            print('Early termination! max={opt} min={safe} cost={cost}'.format(opt=optimistic_value,
                                                                   safe=safety_value,
                                                                   cost=self.comm_cost))
             return True
@@ -263,7 +270,7 @@ class CommScenario:
                                      agent_identity=self.agent_identity)
 
 
-def communicate(agent, agent_dict, passes):
+def communicate(agent, agent_dict, passes, comm_cost=0):
     """
     This is the primary method for initiating a series of policy queries. It is run as any other scenario:
         - Initiate scenario
@@ -275,15 +282,24 @@ def communicate(agent, agent_dict, passes):
     comm_scenario = CommScenario(policy_graph=agent.policy_graph_root,
                                  initial_model_state=agent.policy_graph_root.state['Models'],
                                  identity=agent.identity,
-                                 comm_cost=0)
+                                 comm_cost=comm_cost)
 
-    print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', get_max_action(agent.policy_graph_root, agent.identity))
+    original_action = get_max_action(agent.policy_graph_root, agent.identity)
+    print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', original_action)
     # Complete graph search
+    state_depth_map = map_graph_depth(agent.policy_graph_root)
     comm_graph_node = search(state=comm_scenario.initial_state(),
                              scenario=comm_scenario,
                              iterations=passes,
                              heuristic=lambda comm_state: 0,
-                             view=True)
+                             view=True,
+                             tie_selector=partial(query_tie_breaker,
+                                                  priorities=state_depth_map,
+                                                  identity=agent.identity))
+
+    # No communication can help or no communication possible.
+    if not comm_graph_node.successors:
+        return original_action
 
     action = greedy_action(comm_graph_node)
     query_action = action[agent.identity]
@@ -488,3 +504,30 @@ def max_exp_util_free_policy(node, node_values, policy_commitments):
         for action in action_space}
 
     node_values[node] = max(action_values.values())
+
+
+def map_graph_depth(root):
+    """ Map each state according to it's depth in the policy graph. """
+    process_list = [(0, root)]
+    depth_map = {root.state['World State']: 0}
+
+    # Queue all nodes in tree according to depth
+    while process_list:
+        level, node = process_list.pop()
+
+        for successor in node.successor_set():
+            if successor.state['World State'] not in depth_map:
+                process_list.append((level + 1, successor))
+                depth_map[successor.state['World State']] = min(level + 1,
+                                                                depth_map.get(successor.state['World State'], infinity))
+
+    return depth_map
+
+
+def query_tie_breaker(tied_query_actions, priorities, identity):
+    """ We want to break query ties by preferring states that the closest to the root (maximum chance of pruning)."""
+    tied_queries = [action[identity] for action in tied_query_actions if action[identity] != 'Halt']
+    min_query_depth = min(priorities[query.state] for query in tied_queries)
+    min_tied_queries = [query for query in tied_queries if priorities[query.state] == min_query_depth]
+
+    return Action({identity: choice(min_tied_queries)})

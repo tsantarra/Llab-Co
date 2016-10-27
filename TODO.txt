@@ -1,13 +1,6 @@
 BY PRIORITY (ISH)
 
     TODO
-        - Simultaneous action
-            + communication :
-                - ordering for graph search
-                - early termination
-                    + test
-                - actions - filter out states with only one action for the agent
-
         - create a method of sampling policies
         - create a teammate class for sampled policies
         - create the framework for the process

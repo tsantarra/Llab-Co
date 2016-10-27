@@ -222,7 +222,7 @@ def detect_cycle(node):
     return dfs(node, initial_node_set, set(), set())
 
 
-def map_tree(node):
+def map_graph(node):
     """
     Builds a dict mapping of states to corresponding nodes in the graph.
     """
@@ -259,9 +259,9 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
         root_node = GraphNode(state, scenario)
-        node_map = map_tree(root_node)
+        node_map = map_graph(root_node)
     else:
-        node_map = map_tree(root_node)
+        node_map = map_graph(root_node)
         _prune(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
@@ -296,7 +296,7 @@ def graph_traversal(root, top_down=False):
     while process_list:
         level, node = process_list.pop()
 
-        for successor in [succ for succ in node.successor_set()]:
+        for successor in node.successor_set():
             if successor not in added:
                 # Add to process list and added set
                 process_list.append((level + 1, successor))

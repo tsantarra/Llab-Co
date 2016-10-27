@@ -22,7 +22,7 @@ def run_coordinated_actions():
         # Have the agents select actions
         action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
 
-        agent_action = communicate(agent, agent_dict, 100)
+        agent_action = communicate(agent=agent, agent_dict=agent_dict, passes=1000, comm_cost=0)
         action = action.update({'Agent': agent_action})
 
         new_state = scenario.transition(state, action).sample()
