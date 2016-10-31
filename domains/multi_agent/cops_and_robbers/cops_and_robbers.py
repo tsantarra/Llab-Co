@@ -41,9 +41,9 @@ def ad_hoc_carpy():
     """
     # Local imports
     from domains.multi_agent.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
-    from ad_hoc.modeling_agent import ModelingAgent
-    from ad_hoc.communication.communication_scenario import communicate
-    from ad_hoc.communication.communicating_teammate import CommunicatingTeammate
+    from agents.modeling_agent import ModelingAgent
+    from agents.communication.communication_scenario import communicate
+    from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
     from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import modeling_heuristic
 
     from random import choice
@@ -57,8 +57,8 @@ def ad_hoc_carpy():
     teammate = AstarTeammate(scenario=scenario,
                              target=choice([key for key in state if 'Robber' in key]),
                              maze=scenario.maze)
-    teammate_model = CommunicatingTeammate(teammate_model=build_experts_model(scenario, scenario.maze, state),
-                                           scenario=scenario)
+    teammate_model = CommunicatingTeammateModel(teammate_model=build_experts_model(scenario, scenario.maze, state),
+                                                scenario=scenario)
 
     agent = ModelingAgent(scenario=scenario,
                           identity='A',

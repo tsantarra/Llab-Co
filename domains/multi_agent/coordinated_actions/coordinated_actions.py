@@ -1,8 +1,8 @@
 from domains.multi_agent.coordinated_actions.coordinated_actions_scenario import CoordinatedActionsScenario, RandomPolicyTeammate
-from ad_hoc.communication.communicating_teammate import CommunicatingTeammate
-from ad_hoc.communication.communication_scenario import communicate
-from ad_hoc.modeling_agent import ModelingAgent
-from ad_hoc.models.frequentist_model import FrequentistModel
+from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
+from agents.communication.communication_scenario import communicate
+from agents.modeling_agent import ModelingAgent
+from agents.models.frequentist_model import FrequentistModel
 from visualization.graph import show_graph
 from mdp.action import Action
 
@@ -14,7 +14,7 @@ def run_coordinated_actions():
 
     # Agents
     teammate = RandomPolicyTeammate(actions=scenario.action_set, rounds=scenario.rounds)
-    agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammate(teammate_model=FrequentistModel(scenario, 'Teammate'), scenario=scenario)})
+    agent = ModelingAgent(scenario, 'Agent', {'Teammate': CommunicatingTeammateModel(teammate_model=FrequentistModel(scenario, 'Teammate'), scenario=scenario)})
     agent_dict = {'Agent': agent, 'Teammate': teammate}
 
     # Execution loop

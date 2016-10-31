@@ -2,7 +2,7 @@ from collections import defaultdict
 from heapq import heappop, heappush
 
 from mdp.distribution import Distribution
-from ad_hoc.models.experts_model import ExpertsModel
+from agents.models.experts_model import ExpertsModel
 
 (WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT) = \
     ('*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<')

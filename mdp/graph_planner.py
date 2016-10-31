@@ -248,7 +248,7 @@ def _prune(node, node_map, checked):
 
 
 def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, tie_selector=choice,
-           root_node=None, view=False):
+           root_node=None, view=False, prune=True):
     """
     Search game tree according to THTS.
     """
@@ -259,9 +259,10 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
         root_node = GraphNode(state, scenario)
-        node_map = map_graph(root_node)
-    else:
-        node_map = map_graph(root_node)
+
+    node_map = map_graph(root_node)
+
+    if prune:
         _prune(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
@@ -284,32 +285,6 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
         _backup(node, scenario, backup_op=backup_op)
 
     return root_node
-
-
-def graph_traversal(root, top_down=False):
-    """ Provide an iterable over all nodes in the graph, in order of depth (greatest to least)."""
-    final_queue = [(0, root)]
-    process_list = [(0, root)]
-    added = {root}
-
-    # Queue all nodes in tree accordingto depth
-    while process_list:
-        level, node = process_list.pop()
-
-        for successor in node.successor_set():
-            if successor not in added:
-                # Add to process list and added set
-                process_list.append((level + 1, successor))
-                added.add(successor)
-
-                # Adjust priority level depending on direction of traversal
-                priority = level + 1 if top_down else -1 * (level + 1)
-                heappush(final_queue, (priority, successor))
-
-    # Return nodes
-    while final_queue:
-        priority, node = heappop(final_queue)
-        yield node
 
 
 class GraphNode:
@@ -375,6 +350,9 @@ class GraphNode:
         return matches[0]
 
     def successor_set(self, action=None):
+        """
+        A short interface for grabbing child nodes without having to process the action-based successor dict.
+        """
         if action:
             return self.successors[action]
         else:
