@@ -30,7 +30,6 @@
 
 """
 
-import logging
 from heapq import heappop, heappush
 from math import sqrt, log
 from random import choice
@@ -241,14 +240,14 @@ def _prune(node, node_map, checked):
     node.predecessors -= prune_set
 
     for pruned_node in prune_set:
-        pruned_node.successors = None
+        pruned_node.successors = {}
 
     for successor in [succ for succ in node.successor_set() if succ not in checked]:
         _prune(successor, node_map, checked)
 
 
 def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, tie_selector=choice,
-           root_node=None, view=False, prune=True):
+           root_node=None, prune=True):
     """
     Search game tree according to THTS.
     """
@@ -269,7 +268,6 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
     for step in range(passes):
         # If entire tree has been searched, halt iteration.
         if root_node.complete:
-            print('Graph complete: {passes} passes'.format(passes=step))
             break
 
         # Start at root
@@ -323,11 +321,15 @@ class GraphNode:
         """
         For every action, return the expectation over stochastic transitions to successors states.
         """
-        self.__action_values = {
-                    action: sum(self.successor_transition_values[(successor.state, action)] + successor.future_value
+        if self.successors:
+            self.__action_values = {
+                    action: sum(probability * (self.successor_transition_values[(successor.state, action)] +
+                                              successor.future_value)
                                 for successor, probability in successor_distribution.items())
                     for action, successor_distribution in self.successors.items()}
-        return self.__action_values
+            return self.__action_values
+        else:
+            return {action: 0 for action in self.action_space}
 
     def find_matching_successor(self, state, action=None):
         """

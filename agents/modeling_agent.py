@@ -17,26 +17,35 @@ from copy import copy
 
 
 class ModelingAgent:
-    def __init__(self, scenario, identity, models, heuristic=None):
+    def __init__(self, scenario, identity, models, iterations=1000, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
+        self.__original_scenario = scenario
         self._set_scenario(scenario)
 
         self.identity = identity
         self.model_state = State(models)
+        self.iterations = iterations
         self.heuristic = heuristic
         self.policy_graph_root = None
         self.policy_backup = partial(policy_backup, agent=self.identity)
+
+    def copy(self):
+        return ModelingAgent(scenario=self.__original_scenario,
+                             identity=self.identity,
+                             models=self.model_state.copy(),
+                             iterations=self.iterations,
+                             heuristic=self.heuristic)
 
     def get_action(self, state):
         self._update_graph(state)
         local_state = State({'World State': state, 'Models': self.model_state})
 
         node = search(state=local_state,
-                                scenario=self.scenario,
-                                iterations=1000,
-                                backup_op=self.policy_backup,
-                                heuristic=self.heuristic,
-                                root_node=self.policy_graph_root)
+                      scenario=self.scenario,
+                      iterations=self.iterations,
+                      backup_op=self.policy_backup,
+                      heuristic=self.heuristic,
+                      root_node=self.policy_graph_root)
         self.policy_graph_root = node
         return get_max_action(node, self.identity)
 
@@ -62,23 +71,25 @@ class ModelingAgent:
         individual_agent_actions = node.action_space.individual_actions()
         model_state = new_information_state['Models']
         world_state = new_information_state['World State']
-        resulting_models = {agent_name:
-                                {action: model_state[agent_name].update(world_state, action) for action in
-                                 agent_actions}
+        resulting_models = {agent_name: {action: model_state[agent_name].update(world_state, action)
+                                         for action in agent_actions}
                             for agent_name, agent_actions in individual_agent_actions.items()
                             if agent_name in model_state}
 
+        node.successor_transition_values = {}
         for successor_node, joint_action in [(succ_node, action) for action, succ_dist in node.successors.items()
                                              for succ_node in succ_dist]:
             # Construct new model state from individual agent models
             new_model_state = State({agent_name: resulting_models[agent_name][joint_action[agent_name]]
-                               for agent_name in model_state})
+                                     for agent_name in model_state})
 
             # Calculate new successor state
             old_succ_state = successor_node.state
             new_succ_state = old_succ_state.update({'Models': new_model_state})
-            node.successor_transition_values[(new_succ_state, joint_action)] = node.successor_transition_values.pop(
-                (old_succ_state, joint_action))
+
+            # Update transition value table for new states.
+            node.successor_transition_values[(new_succ_state, joint_action)] = \
+                self.scenario.utility(node.state, joint_action, new_succ_state)
 
             self.update_policy_graph(successor_node, new_succ_state)
 
@@ -94,7 +105,6 @@ class ModelingAgent:
         if self.policy_graph_root:  # Can't update if the agent has not planned yet
             new_modeler_state = State(
                 {'World State': new_state, 'Models': self.model_state})  # new_state.update({'Models': self.models})
-
             self.policy_graph_root = self.policy_graph_root.find_matching_successor(new_modeler_state)
 
     def _set_scenario(self, scenario):
@@ -130,10 +140,11 @@ def individual_agent_action_values(agent_name, state, joint_action_space, joint_
     agent_actions = joint_action_space.individual_actions(agent_name)
     agent_action_values = {action: 0 for action in agent_actions}
     for agent_action in agent_actions:
-        for joint_action in joint_action_space.fix_actions({agent_name: agent_action}):
+        for joint_action in joint_action_space.fix_actions({agent_name: [agent_action]}):
             agent_action_values[agent_action] += joint_action_values[joint_action] * \
-                reduce(mul, [other_agent_predictions[other_agent][joint_action[other_agent]]
-                             for other_agent in other_agent_predictions])
+                                                 reduce(mul,
+                                                        [other_agent_predictions[other_agent][joint_action[other_agent]]
+                                                         for other_agent in other_agent_predictions])
 
     return agent_action_values
 
@@ -145,7 +156,8 @@ def policy_backup(node, agent):
         - the agent's expectations of teammates' policies
     """
     if node.successors:
-        agent_action_values = individual_agent_action_values(agent, node.state, node.action_space, node.calculate_action_values())
+        agent_action_values = individual_agent_action_values(agent, node.state, node.action_space,
+                                                             node.calculate_action_values())
         node.future_value = max(agent_action_values.values())
 
 
@@ -154,6 +166,7 @@ def get_max_action(node, agent):
     agent_action_values = individual_agent_action_values(agent, node.state, node.action_space,
                                                          node.action_values())
     return max(agent_action_values, key=lambda action: agent_action_values[action])
+
 
 """
 Wrappers for scenario from the position of the modeling agent.

@@ -1,23 +1,66 @@
+import logging
 import sys
 import traceback
-import logging
 
-from domains.multi_agent.assembly.assembly_scenario import *
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
-from agents.communication.communication_scenario import communicate
 from agents.modeling_agent import ModelingAgent
+from domains.multi_agent.assembly.assembly_scenario import *
 from mdp.action import Action
 
 
+def get_node_set(root):
+    """
+    Traverse graph. Return set of nodes.
+    """
+    process_list = [root]
+    added = {root}
+
+    # Queue all nodes in tree accordingto depth
+    while process_list:
+        node = process_list.pop()
+
+        for successor in node.successor_set():
+            if successor not in added:
+                # Add to process list and added set
+                process_list.append(successor)
+                added.add(successor)
+
+    return added
+
+
+def check_graph_sizes():
+    # Local imports
+    from mdp.graph_planner import search, greedy_action
+    from itertools import product
+    import time
+
+    components = [3]
+    recipes = [3,5]
+    rounds = [7,8,9,11]
+    ingredients = [5,10]
+
+    for comp, rec, rnds, ingred in sorted(product(components, recipes, rounds, ingredients), key=lambda s: max(s)):
+        # Initialize map
+        scenario = AssemblyScenario(comp, rec, rnds, ingred)
+        state = scenario.initial_state()
+
+        print('components:', comp, 'recipes:', rec,'rounds:', rnds, 'ingredients:', ingred)
+        start = time.time()
+        node = search(state, scenario, 100000, root_node=None, heuristic=lambda state: 0)
+        diff = time.time() - start
+        nodes = get_node_set(node)
+
+        print('Size:', len(nodes))
+        print('Val:', node.future_value)
+        print('Time:', diff)
+
+
 def centralized_assembly():
-    """
-    Runs the cops and robbers scenario using a centralized planner that controls all agents.
-    """
     # Local imports
     from mdp.graph_planner import search, greedy_action
 
     # Initialize map
-    scenario = assembly_scenario
+    scenario = AssemblyScenario()
     state = scenario.initial_state()
     print('Initial state:\n', state)
 
@@ -44,12 +87,11 @@ def centralized_assembly():
 
 def sampled_assembly():
     """
-    Runs the cops and robbers scenario using a centralized planner that controls all agents.
     """
-    from agents.communication.sampled_policy_teammate import SampledPolicyTeammate
-    scenario = assembly_scenario
-    agent_dict = {'Agent1': SampledPolicyTeammate('Agent1', scenario, 10, 1000),
-                  'Agent2': SampledPolicyTeammate('Agent2', scenario, 10, 1000)}
+    from agents.sampled_policy_teammate import SampledPolicyTeammate
+    scenario = AssemblyScenario()
+    agent_dict = {'Agent1': SampledPolicyTeammate('Agent1', scenario, 10, 10000),
+                  'Agent2': SampledPolicyTeammate('Agent2', scenario, 10, 10000)}
 
     state = scenario.initial_state()
 
@@ -75,14 +117,14 @@ def sampled_assembly():
 
 def ad_hoc_assembly():
     # Initialize scenario and beginning state.
-    scenario = assembly_scenario
+    scenario = AssemblyScenario()
     state = scenario.initial_state()
     logging.debug('Initial state:\n' + str(state))
 
     # Agents
     teammate = None
     teammate_model = CommunicatingTeammateModel(teammate_model= None, scenario=scenario)
-    agent = ModelingAgent(scenario, 'A', {'P': teammate_model})
+    agent = ModelingAgent(scenario, 'A', {'P': teammate_model}, heuristic=lambda assembly_state: 0)
     agent_dict = {'A': agent, 'P': teammate}
 
     # Main loop
@@ -111,7 +153,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     try:
-        sampled_assembly()
+        check_graph_sizes()
+        #sampled_assembly()
         #centralized_assembly()
         #ad_hoc_assembly()
 

@@ -92,7 +92,7 @@ class CommScenario:
             action_set |= set(Action({self.agent_identity: Query(agent_name, state)})
                               for state in possible_queries
                               if len([action for action, prob in model_state[agent_name].predict(state).items()
-                                     if prob > 0.0])
+                                     if prob > 0.0]) > 1  # Must have two or more probable actions.
                               )
 
         action_set.add(Action({self.agent_identity: 'Halt'}))
@@ -292,7 +292,6 @@ def communicate(agent, agent_dict, passes, comm_cost=0):
                              scenario=comm_scenario,
                              iterations=passes,
                              heuristic=lambda comm_state: 0,
-                             view=True,
                              tie_selector=partial(query_tie_breaker,
                                                   priorities=state_depth_map,
                                                   identity=agent.identity))
@@ -343,7 +342,7 @@ def communicate(agent, agent_dict, passes, comm_cost=0):
     new_root_state = agent.policy_graph_root.state.update({'Models': agent.model_state})
     agent.update_policy_graph(agent.policy_graph_root, new_root_state)
 
-    action = get_max_action(agent.policy_graph_root, agent_name)
+    action = get_max_action(agent.policy_graph_root, agent.identity)
     print('END COMMUNICATION/// NEW ACTION:', action)
 
     return action
@@ -418,7 +417,7 @@ def compute_reachable_nodes(node, visited_set, model_state):
 
     world_state = node.state['World State']
     predicted_actions = {other_agent: set(action for action, prob in other_agent_model.predict(world_state).items()
-                                          if prob != 0.0)
+                                          if prob > 0)
                          for other_agent, other_agent_model in model_state.items()}
 
     resulting_models = {agent_name:
@@ -468,7 +467,7 @@ def min_exp_util_fixed_policy(node, node_values, agent_identity, policy, policy_
 
     # Construct new joint action space given constraints. Calculate new expected utils for each joint action.
     action_values = {
-        action: sum(node.successor_transition_values[(successor.state, action)] + node_values[successor]
+        action: sum(probability * (node.successor_transition_values[(successor.state, action)] + node_values[successor])
                     for successor, probability in node.successors[action].items())
         for action in action_space}
 
@@ -499,7 +498,7 @@ def max_exp_util_free_policy(node, node_values, policy_commitments):
 
     # Construct new joint action space given constraints. Calculate new expected utils for each joint action.
     action_values = {
-        action: sum(node.successor_transition_values[(successor.state, action)] + node_values[successor]
+        action: sum(probability * (node.successor_transition_values[(successor.state, action)] + node_values[successor])
                     for successor, probability in node.successors[action].items())
         for action in action_space}
 

@@ -1,24 +1,20 @@
 BY PRIORITY (ISH)
 
+
     TODO
-        - create a method of sampling policies
-        - create a teammate class for sampled policies
-        - create the framework for the process
-            + sample teammates
-            + create expert set
-            + plan online, updating teammate weights
-            + communicate
-                - EARLY TERMINATION CONDITION
-                - exhaustive (small domain only?)
-                - most disagreed on
-                - most variance?
-                - product of the two?
-                - myopic
-        - logging results
-            + score
-            + successful passes
-            + unused resources
-            + number of comms
+        -  3, 5, 4, 5 is sizeable (30k belief nodes, 3k states)
+        - comm exhausts itself (no more eligible states), but util does not improve.
+            - only in assembly, though. Why is val always 1.0???
+            - OVER RATIONAL -> IDENTICAL POLICIES -> BAD POLICY -> constant util
+
+    Experiment goals (Show ____):
+        - exhaustive good, but infeasible
+        - myopic bad
+        - entropy okay
+        - variance better (hopefully)
+        - weighting by likelihood (either) -> best
+
+        - more experience -> less comms?
 
     Places that traverse the policy graph:
         - graph_planner
@@ -36,15 +32,6 @@ BY PRIORITY (ISH)
             + _add_edges
             + _edge_labels
 
-    Old bugs?
-        - Okay, often second round of comms shows graph where all nodes are 0 value
-            - may occur because all states that can be queried have been pruned (yet are actions for some reason)
-        - also, the graph viz thing fails a bunch
-        - write paper
-        - recalculate node values (and policy) in update_policy_graph_models
-        - don't "get action" on root; just get the greedy action; or have update_policy_graph_models return the action
-        - post comm, selects incorrect answer
-        - equality issue when updating position in policy graph
 
     Paper notes:
         - Noa Agmon leading paper -> task is to find the best possible REACHABLE joint actions/plans

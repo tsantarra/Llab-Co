@@ -20,7 +20,7 @@ class CoordinatedActionsScenario:
 
     def transition(self, state, action):
         return Distribution({state.update({'Round': state['Round'] + 1,
-                                           'Seen': state['Seen'] + (tuple(sorted(action.values())),)}): 1.0})
+                                           'Seen': state['Seen'] + (action,)}): 1.0})
 
     def end(self, state):
         return state['Round'] > self.rounds

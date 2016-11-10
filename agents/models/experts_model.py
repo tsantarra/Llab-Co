@@ -42,7 +42,7 @@ class ExpertsModel:
         for expert in new_model.experts:
             predictions = expert.predict(old_state)
             logging.debug('Predictions:'+str(predictions))
-            new_model.experts[expert] *= predictions[action]
+            new_model.experts[expert] *= predictions[action] * 0.9 + (1.0/len(new_model.experts)) * 0.1
 
         logging.debug('New vals:' + str(new_model))
         new_model.experts.normalize()
@@ -54,7 +54,9 @@ class ExpertsModel:
         """
         Creates a new instance of this model.
         """
-        return ExpertsModel(scenario=self.scenario, expert_distribution=dict(self.experts), identity=self.identity)
+        return ExpertsModel(scenario=self.scenario,
+                            expert_distribution={key: prob for key, prob in self.experts.items()},
+                            identity=self.identity)
 
     def __str__(self):
         return '\t'.join('Expert({expert}) Prob={prob}'.format(expert=expert, prob=prob)
@@ -62,7 +64,7 @@ class ExpertsModel:
 
     def __eq__(self, other):
         return all(key in other.experts for key in self.experts) \
-                and all(self.experts[key] == other.experts[key] for key in self.experts)
+                and all(abs(self.experts[key] - other.experts[key]) < 10e-6 for key in self.experts)
 
     def __hash__(self):
         return hash(self.experts)

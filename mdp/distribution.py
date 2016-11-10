@@ -48,7 +48,7 @@ class Distribution(dict):
         """
         total = sum(self.values())
 
-        assert total > 0, 'State distribution probability total = 0.'
+        assert total > 0, 'State distribution probability total = 0. \n' + str(self)
 
         for item in self.keys():
             self[item] /= total
@@ -75,7 +75,7 @@ class Distribution(dict):
         return Distribution({**self})
 
     def __repr__(self):
-        return '\nDistribution {\n' + '\n'.join(str(key) + '\nP=' + str(val) + '\n'
+        return '\nDistribution {\n' + '\n'.join(str(key) + ' P=' + str(val)
                                                 for key, val in self.items()) + '} /Distribution\n'
 
     def __eq__(self, other):
