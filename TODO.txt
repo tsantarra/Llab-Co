@@ -3,9 +3,6 @@ BY PRIORITY (ISH)
 
     TODO
         -  3, 5, 4, 5 is sizeable (30k belief nodes, 3k states)
-        - comm exhausts itself (no more eligible states), but util does not improve.
-            - only in assembly, though. Why is val always 1.0???
-            - OVER RATIONAL -> IDENTICAL POLICIES -> BAD POLICY -> constant util
 
     Experiment goals (Show ____):
         - exhaustive good, but infeasible

@@ -89,8 +89,17 @@ def entropy(root, eligible_states):
 
     node_set = [node for node in get_active_node_set(root) if node.state['World State'] in eligible_states]
     possible_targets = root.state['Models'].keys()
-    entropies = {Query(target, node.state['World State']): entropy_calc(node, target)
-                 for node in node_set for target in possible_targets}
+
+    entropies = {}
+    for target in possible_targets:
+        for node in node_set:
+            state = node.state['World State']
+            query = Query(target, state)
+            if state in entropies:
+                existing = entropies[query]
+                entropies[query] = max(existing, entropy_calc(node, target))
+            else:
+                entropies[query] = entropy_calc(node, target)
 
     return max(entropies, key=lambda q: entropies[q])
 
@@ -112,8 +121,16 @@ def weighted_entropy(root, eligible_states):
     node_set = [node for node in get_active_node_set(root) if node.state['World State'] in eligible_states]
     node_probs = node_likelihoods(root)
     possible_targets = root.state['Models'].keys()
-    entropies = {Query(target, node.state['World State']): node_probs[node] * entropy_calc(node, target)
-                 for node in node_set for target in possible_targets}
+    entropies = {}
+    for target in possible_targets:
+        for node in node_set:
+            state = node.state['World State']
+            query = Query(target, state)
+            if state in entropies:
+                existing = entropies[query]
+                entropies[query] = max(existing, node_probs[node] * entropy_calc(node, target))
+            else:
+                entropies[query] = node_probs[node] * entropy_calc(node, target)
 
     return max(entropies, key=lambda q: entropies[q])
 
@@ -142,8 +159,16 @@ def variance_in_util(root, eligible_states):
 
     node_set = [node for node in get_active_node_set(root) if node.state['World State'] in eligible_states]
     possible_targets = root.state['Models'].keys()
-    entropies = {Query(target, node.state['World State']): var_calc(node, target)
-                 for node in node_set for target in possible_targets}
+    entropies = {}
+    for target in possible_targets:
+        for node in node_set:
+            state = node.state['World State']
+            query = Query(target, state)
+            if state in entropies:
+                existing = entropies[query]
+                entropies[query] = max(existing, var_calc(node, target))
+            else:
+                entropies[query] = var_calc(node, target)
 
     return max(entropies, key=lambda q: entropies[q])
 
@@ -174,8 +199,16 @@ def weighted_variance(root, eligible_states):
     node_set = [node for node in get_active_node_set(root) if node.state['World State'] in eligible_states]
     node_probs = node_likelihoods(root)
     possible_targets = root.state['Models'].keys()
-    entropies = {Query(target, node.state['World State']): node_probs[node] * var_calc(node, target)
-                 for node in node_set for target in possible_targets}
+    entropies = {}
+    for target in possible_targets:
+        for node in node_set:
+            state = node.state['World State']
+            query = Query(target, state)
+            if state in entropies:
+                existing = entropies[query]
+                entropies[query] = max(existing, node_probs[node] * var_calc(node, target))
+            else:
+                entropies[query] = node_probs[node] * var_calc(node, target)
 
     return max(entropies, key=lambda q: entropies[q])
 

@@ -12,9 +12,11 @@ from mdp.action import Action
 import sys
 import csv
 
+from mdp.state import State
+
 
 def initialize_agents(scenario, num_models):
-    teammate = SampledPolicyTeammate('Agent2', scenario, rationality=2, min_graph_iterations=1000)
+    teammate = SampledPolicyTeammate('Agent2', scenario, rationality=0.5, min_graph_iterations=1000)
 
     model_set = [SampledPolicyTeammate('Agent2', scenario, rationality=0.5, min_graph_iterations=1000) for _ in range(num_models)]
     expert_model = ExpertsModel(scenario, {model: 1./num_models for model in model_set}, 'Agent2')
@@ -45,7 +47,7 @@ def run_initial_attempts(scenario, ad_hoc_agent, teammate, num_attempts):
         ad_hoc_agent.policy_graph_root = None
 
 
-def run_comm_attempt(scenario, ad_hoc_agent, teammate, comm_method, max_queries=50):
+def run_comm_attempt(scenario, ad_hoc_agent, teammate, comm_method, stop_val, max_queries=50):
     agent_dict = {'Agent1': ad_hoc_agent, 'Agent2': teammate}
     state = scenario.initial_state()
 
@@ -76,28 +78,38 @@ def run_comm_attempt(scenario, ad_hoc_agent, teammate, comm_method, max_queries=
         new_root_state = policy_graph_root.state.update({'Models': ad_hoc_agent.model_state})
         ad_hoc_agent.update_policy_graph(policy_graph_root, new_root_state)
 
-        ############################### FINISH RUN ###############################
-        #finish_run(state.copy(), scenario, ad_hoc_agent.copy(), teammate, num_queries)
-        print('val:', ad_hoc_agent.policy_graph_root.future_value)
+        # Log
+        exp_util = ad_hoc_agent.policy_graph_root.future_value
+        log_results(len(query_set), exp_util)
+
+        # Output and termination check
+        print('val:', exp_util)
+        if abs(exp_util - stop_val) < 10e-6:
+            break
 
         # recalculate eligible set, as some nodes may be unreachable now.
         query_set.add(query_action.state)
         eligible_states = set(node.state['World State'] for node in get_active_node_set(policy_graph_root))
         eligible_states -= query_set
 
-        # Check agent's policy
-        new_agent_action = get_max_action(policy_graph_root, ad_hoc_agent.identity)
+
+def perfect_knowledge_val(scenario, ad_hoc_agent, teammate):
+    agent = ad_hoc_agent.copy()
+    agent.policy_graph_root = None
+    agent.model_state = State({teammate.identity: ExpertsModel(scenario, {teammate: 1.0}, teammate.identity)})
+
+    state = scenario.initial_state()
+    agent.get_action(state)
+    return agent.policy_graph_root.future_value
 
 
-
-def log(num_comms, exp_util, util, passes, attempts):
-    dir = sys.argv[1]
-    process = sys.argv[2]
+def log_results(num_comm, exp_util):
+    dir = "C://Users//Trevor//Google Drive//aamas_laptop_results//"
     global params
 
     with open(dir + 'results.csv', 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(params + [num_comms, exp_util, util, process, passes, attempts])
+        writer.writerow(params + [num_comm, exp_util, ])
 
 
 if __name__ == '__main__':
@@ -106,37 +118,39 @@ if __name__ == '__main__':
 
     #csv_dir = sys.argv[1]
 
-    num_prior_models = [3, 10]
+    num_prior_models = [3, 10, 20]
     current_exp = [0, 5, 20]
     comm_methods = {weighted_variance:'weighted variance', variance_in_util:'variance', weighted_entropy: 'weighted entropy', entropy: 'entropy'}
 
-    for trial in range(1):
-        for num_models, num_attempts in product(num_prior_models, current_exp):
+    for num_models, num_attempts in product(num_prior_models, current_exp):
 
-            try:
-                # Initialize scenario and agents. These will be kept constant across comm methods.
-                scenario = AssemblyScenario(num_components=3, rounds=4, ingredients_per_recipe=4)
-                ad_hoc_agent, teammate = initialize_agents(scenario, num_models)
+        try:
+            # Initialize scenario and agents. These will be kept constant across comm methods.
+            scenario = AssemblyScenario(num_components=3, rounds=5, ingredients_per_recipe=4)
+            ad_hoc_agent, teammate = initialize_agents(scenario, num_models)
 
-                # Run initial attempts, keeping the agent's model
-                run_initial_attempts(scenario, ad_hoc_agent, teammate, num_attempts)
+            # Perfect knowledge exp util
+            perfect_util = perfect_knowledge_val(scenario, ad_hoc_agent, teammate)
 
-                for comm_method in comm_methods:
-                    # Bookkeeping
-                    global params
-                    params = [trial, num_models, num_attempts, comm_methods[comm_method]]
-                    print(params)
+            # Run initial attempts, keeping the agent's model
+            run_initial_attempts(scenario, ad_hoc_agent, teammate, num_attempts)
 
-                    # Create copy for comparison, as they'll diverge with different information.
-                    test_agent = ad_hoc_agent.copy()
+            for comm_method in comm_methods:
+                # Bookkeeping
+                global params
+                params = [num_models, num_attempts, comm_methods[comm_method]]
+                print(params)
 
-                    # Run current attempt, communicating in the first round
-                    run_comm_attempt(scenario, test_agent, teammate, comm_method, max_queries=5000)
+                # Create copy for comparison, as they'll diverge with different information.
+                test_agent = ad_hoc_agent.copy()
 
-            except KeyboardInterrupt:
-                print('KEYBOARD INTERRUPT')
-                raise
+                # Run current attempt, communicating in the first round
+                run_comm_attempt(scenario, test_agent, teammate, comm_method, stop_val=perfect_util, max_queries=5000)
 
-            except:
-                print('error:', sys.exc_info()[0])
-                raise
+        except KeyboardInterrupt:
+            print('KEYBOARD INTERRUPT')
+            raise
+
+        except:
+            print('error:', sys.exc_info()[0])
+            raise
