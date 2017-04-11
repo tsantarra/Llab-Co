@@ -88,7 +88,7 @@ class AssemblyScenario:
                 action_list += [AssemblyAction('Pass', ingredient) for ingredient in self.possible_components
                                 if state['Inventory 1'][ingredient] > 0]
 
-            agent_actions[agent] = action_list
+            agent_actions[agent] += action_list
 
         return JointActionSpace(agent_actions)
 

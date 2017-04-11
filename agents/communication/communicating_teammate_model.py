@@ -23,7 +23,7 @@ class CommunicatingTeammateModel:
         return self.model.predict(state)
 
     def update(self, old_state, observation):
-        return CommunicatingTeammateModel(self.model.update(old_state, observation), self.scenario, self.previous_communications.copy())
+        return CommunicatingTeammateModel(self.model.update(old_state, observation), self.scenario, self.previous_communications) #save memory by not copying prev?
 
     def communicated_policy_update(self, state_action_pairs):
         new_comms = self.previous_communications.copy()
@@ -31,7 +31,7 @@ class CommunicatingTeammateModel:
         return CommunicatingTeammateModel(self.model.copy(), self.scenario, new_comms)
 
     def copy(self):
-        return CommunicatingTeammateModel(self.model.copy(), self.scenario, self.previous_communications.copy())
+        return CommunicatingTeammateModel(self.model.copy(), self.scenario, self.previous_communications) #save memory by not copying prev?
 
     def __copy__(self):
         return self.copy()

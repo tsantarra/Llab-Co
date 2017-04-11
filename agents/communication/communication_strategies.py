@@ -243,7 +243,6 @@ def myopic(root, agent_identity, eligible_states):
             query_ev[query] = sum(prob*calc_ev(agent, model, query, action)
                                                        for action, prob in model.predict(world_state).items())
 
-
     return max(query_ev, key=lambda q: query_ev[q])
 
 

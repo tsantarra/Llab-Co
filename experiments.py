@@ -16,9 +16,9 @@ from mdp.state import State
 
 
 def initialize_agents(scenario, num_models):
-    teammate = SampledPolicyTeammate('Agent2', scenario, rationality=0.5, min_graph_iterations=1000)
+    teammate = SampledPolicyTeammate('Agent2', scenario, rationality=1.0, min_graph_iterations=100)
 
-    model_set = [SampledPolicyTeammate('Agent2', scenario, rationality=0.5, min_graph_iterations=1000) for _ in range(num_models)]
+    model_set = [SampledPolicyTeammate('Agent2', scenario, rationality=1.0, min_graph_iterations=100) for _ in range(num_models)]
     expert_model = ExpertsModel(scenario, {model: 1./num_models for model in model_set}, 'Agent2')
     comm_model = CommunicatingTeammateModel(expert_model, scenario)
 
@@ -59,6 +59,7 @@ def run_comm_attempt(scenario, ad_hoc_agent, teammate, comm_method, stop_val, ma
     # The communication loop.
     eligible_states = set(node.state['World State'] for node in get_active_node_set(policy_graph_root))
     query_set = set()
+    print('comm states:', len(eligible_states))
     while eligible_states and len(query_set) < max_queries:
         # Decide on a query
         query_action = comm_method(root=policy_graph_root, eligible_states=eligible_states)
@@ -92,6 +93,8 @@ def run_comm_attempt(scenario, ad_hoc_agent, teammate, comm_method, stop_val, ma
         eligible_states = set(node.state['World State'] for node in get_active_node_set(policy_graph_root))
         eligible_states -= query_set
 
+        print('new comm states:', len(eligible_states))
+
 
 def perfect_knowledge_val(scenario, ad_hoc_agent, teammate):
     agent = ad_hoc_agent.copy()
@@ -104,7 +107,7 @@ def perfect_knowledge_val(scenario, ad_hoc_agent, teammate):
 
 
 def log_results(num_comm, exp_util):
-    dir = "C://Users//Trevor//Google Drive//aamas_laptop_results//"
+    dir = "D://Google Drive//aamas_results//"
     global params
 
     with open(dir + 'results.csv', 'a', newline='') as file:
@@ -118,7 +121,7 @@ if __name__ == '__main__':
 
     #csv_dir = sys.argv[1]
 
-    num_prior_models = [3, 10, 20]
+    num_prior_models = [ 10, 20]
     current_exp = [0, 5, 20]
     comm_methods = {weighted_variance:'weighted variance', variance_in_util:'variance', weighted_entropy: 'weighted entropy', entropy: 'entropy'}
 
@@ -126,11 +129,13 @@ if __name__ == '__main__':
 
         try:
             # Initialize scenario and agents. These will be kept constant across comm methods.
-            scenario = AssemblyScenario(num_components=3, rounds=5, ingredients_per_recipe=4)
+            scenario = AssemblyScenario(num_components=3, rounds=4, ingredients_per_recipe=4)
             ad_hoc_agent, teammate = initialize_agents(scenario, num_models)
 
             # Perfect knowledge exp util
             perfect_util = perfect_knowledge_val(scenario, ad_hoc_agent, teammate)
+            ad_hoc_agent.policy_graph_root = None
+            print('perfect util:', perfect_util)
 
             # Run initial attempts, keeping the agent's model
             run_initial_attempts(scenario, ad_hoc_agent, teammate, num_attempts)

@@ -2,7 +2,22 @@ BY PRIORITY (ISH)
 
 
     TODO
-        -  3, 5, 4, 5 is sizeable (30k belief nodes, 3k states)
+        - finish OSG requirements
+        - go over algorithm code
+        - go over experimental setup
+        - run small test
+        - finalize changes and run
+
+    OSG Setup Requirements
+        - compress personal files (may not be necessary)
+        - how to handle errors?
+        - collect output files
+
+    OSG Structure
+        - fabfile logs in and performs remote commands
+        - submit file specifies requirements for computation in condor network as well as what to run (.sh file)
+        - .sh file loads modules/copies data and runs actual python files, converting output
+
 
     Experiment goals (Show ____):
         - exhaustive good, but infeasible
@@ -13,7 +28,14 @@ BY PRIORITY (ISH)
 
         - more experience -> less comms?
 
-    Places that traverse the policy graph:
+    Active learning:
+        - Fisher information? - dependent on model parameters
+        - Query by committee
+            - useful for set of prior models
+            - also works on N best (most likely) sequence labelings (using model predictions, generate the top most likely outcomes, use that as committee)
+
+
+    Places that traverse the policy graph: (why did I make this list?)
         - graph_planner
             + create_node_set
             + prune
@@ -86,9 +108,6 @@ BY PRIORITY (ISH)
     Domains
         Managing 2+ teammates simultaneously.
             Helps with reviewer criticism
-        StarCraft
-            Note: will have to figure out queue in scenario; also, caps for research (cannot keep researching same thing over and over)
-            Evaluation? Battle simulator? Heuristic? Match to one or more possible goals?
         Small domains:
             Multi-armed bandit (introduce conflict in same bandit? shared obs? someone explores while the other exploits?)
             Cooperative flocking (various roles?)
@@ -121,3 +140,53 @@ Nice to have, but completely beyond the scope of the current project.
         Epsilon merging
         Multi-level graph partitioning
 
+
+Modeling Notes:
+
+    An interface for an agent model which can make state-based predictions as well as update with new information.
+
+    We can take the state + operators approach. It works for state because all scenarios have a similar underlying
+    representation: state features and values. But a model?
+
+    Is it just a state-action mapping? No. It's a state x obs history -> action mapping. Just like a POMDP.
+    Is dynamic programming relevant here, as with belief states?
+
+    Is it a calculation? It can be, but it may be potentially computationally intensive.
+
+    Should we cache the already computed components? How does a model update affect cached results?
+
+    Is a model Markovian? 30 heads/70 tails -> 30% prediction, but 3/7 is updated very differently.
+
+    Eventually, the MDP planner will run with state being scenario state + current model. It needs to be hashable.
+
+    Other goal: override components with communication. Single instant commitments + multiple trial trends.
+
+    In effect, a model is a distribution over possible instances. Communication highlights which instant we are in.
+    A partially observable case with observations in two forms.
+
+    Update instance model with every observation/communication.
+    Update global model... between trials?
+
+    There are dependent components and conditionally independent components. A factored model?
+
+    Multiple issues here:
+        - Deterministic teammate or probabilistic
+            + obs/comms are gold truths for deterministic
+            + obs/comms are instances of possible plans in probabilistic
+        - Global vs individual model
+            + global model can be updated later
+            + individual model should be updated online
+
+    What should I choose?
+        - I like the idea of stochastic models
+        - general model to individual is some weird interpolation
+
+    Global model -> a distribution over potential instances of behavior   (a prior)
+    Observations and communication -> adjust probabilities, improving expectation (?)
+    Learning -> what is the association between the global model and the individual model?
+
+    A big problem is what to do when an agent is different from anything seen, when it defies expectation.
+
+    What we want:
+        - when behavior aligns with known instances: converge to plan
+        - when behavior is different: remain uncertain (let comm handle it)

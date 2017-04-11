@@ -1,0 +1,38 @@
+# Standard universe
+Universe = vanilla
+
+# Shell file we want to run
+Executable = remote_run_test.sh
+
+# Files to transfer and trasnfer settings
+should_transfer_files = YES
+transfer_input_files = python_virtenv_demo.tar.gz, misshapen.tar.gz, util.py, find_PsTs.py
+when_to_transfer_output = ON_EXIT
+# Notification = Error  # only email if error
+
+# Log file save location
+output        = Log/job_hc2_v1.$(Cluster).$(Process).out
+error         = Log/job_hc2_v1.$(Cluster).$(Process).error
+log           = Log/job_hc2_v1.$(Cluster).$(Process).log
+
+# Specs needed on nodes
+request_cpus = 1
+request_memory = 4GB
+request_disk = 1GB
+
+
+# Node requirements
++WantsStashCache = true
+#requirements = (HAS_MODULES == True)
+
+# Arguments for the shell file we run
+Arguments = $(Cluster) $(Process)
+
+# Do 10 processes (0-9)
+queue 10
+
+Queue Arguments From (
+    15 2000
+    30 2000
+    45 6000
+)

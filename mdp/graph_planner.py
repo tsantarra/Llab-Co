@@ -270,6 +270,11 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
         if root_node.complete:
             break
 
+        # check size of graph
+        node_set = set()
+        create_node_set(root_node, node_set)
+        print(len(node_set), 'nodes at step', step)
+
         # Start at root
         node = root_node
 
@@ -365,7 +370,7 @@ class GraphNode:
         Returns a string representation of the node.
         """
         return "<" + "Val:" + "%.2f" % self.future_value + " Vis:" + str(self.visits) + ' ' + str(
-            self.complete) + ">"  # + '\n' + str(self.state)
+            self.complete) + ">"  + '\n' + str(self.state['World State']['Inventory 1']) + '\n' + str(self.state['World State']['Inventory 2'])
 
     def finite_horizon_string(self, horizon=1, indent=0):
         """

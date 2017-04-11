@@ -1,8 +1,53 @@
-from random import randint
-
+from domains.multi_agent.assembly.assembly import get_node_set
 from mdp.graph_planner import search
 from mdp.distribution import Distribution
 from math import exp
+
+global_scenario = None
+global_graph = None
+
+
+def plan(scenario):
+    global global_scenario, global_graph
+
+    global_scenario = scenario
+    global_graph = search(scenario.initial_state(), scenario, 100000)
+
+
+def action_probabilities(node, rationality, identity):
+    """
+    Given an association of values with all joint actions available, return the expectation over each individual
+    agent action.
+    """
+    joint_action_space = node.action_space
+    joint_action_values = node.action_values()
+
+    joint_action_probabilities = Distribution({joint_action: exp(rationality * value)
+                                               for joint_action, value in joint_action_values.items()})
+    joint_action_probabilities.normalize()
+
+    individual_action_probabilities = {action: 0 for action in joint_action_space.individual_actions(identity)}
+    for joint_action, prob in joint_action_probabilities.items():
+        individual_action_probabilities[joint_action[identity]] += prob
+
+    assert abs(sum(individual_action_probabilities.values()) - 1) <= 10e-5, 'Probabilities do not add up.'
+
+    return Distribution(individual_action_probabilities)
+
+
+def sample_policy(scenario, rationality, identity):
+    global global_graph
+
+    if not global_graph:
+        plan(scenario)
+
+    policy = {}
+    nodes = get_node_set(global_graph)
+
+    for node in nodes:
+        policy[node.state] = action_probabilities(node, rationality, identity).sample()
+
+    return policy
 
 
 class SampledPolicyTeammate:
@@ -15,7 +60,7 @@ class SampledPolicyTeammate:
         self.min_graph_iterations = min_graph_iterations
 
         # Variables for calculating the policy and storing results
-        self.fixed_policy = {}
+        self.fixed_policy = sample_policy(scenario, rationality, identity)
 
     def copy(self):
         new_teammate = SampledPolicyTeammate(self.identity, self.scenario, self.rationality, self.min_graph_iterations)
