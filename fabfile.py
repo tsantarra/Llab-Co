@@ -8,7 +8,7 @@ env.hosts = ['login.osgconnect.net']
 
 # Declare remote username and key info (optional)
 env.user = 'tsantarra'
-env.password = ''
+env.password = 'Joseph88?'
 
 
 def test_run():
@@ -17,6 +17,7 @@ def test_run():
     with cd('Llab-Co'):
         run("mkdir Log")
         run("condor_submit osg_setup.submit")
+
         # Need to wait until done running; should be less than 5 minutes
         time.sleep(300)
         get("./out*")

@@ -18,7 +18,7 @@ mkdir out
 
 # Run python script
 #./python_virtenv_demo/bin/python2.7 find_PsTs.py
-python test_run.py $1 $2
+python3.4 test_run.py $1 $2
 
 # tar output file
 tar -czf out.$1.$2.tar.gz out
