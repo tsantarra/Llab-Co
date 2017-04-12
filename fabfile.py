@@ -11,6 +11,17 @@ env.user = 'tsantarra'
 env.password = ''
 
 
+def test_run():
+
+    run('git clone https://github.com/tsantarra/Llab-Co')
+    with cd('Llab-Co'):
+        run("mkdir Log")
+        run("condor_submit osg_setup.submit")
+        # Need to wait until done running; should be less than 5 minutes
+        time.sleep(300)
+        get("./out*")
+
+
 def setup():
     run('git clone https://github.com/tsantarra/Llab-Co')
 
@@ -28,7 +39,6 @@ def check():
 
 
 def collect_output():
-
     # grab files
     with cd('test_dir'):
         get("./out*")

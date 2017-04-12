@@ -6,7 +6,8 @@ Executable = remote_run_test.sh
 
 # Files to transfer and trasnfer settings
 should_transfer_files = YES
-transfer_input_files = python_virtenv_demo.tar.gz, misshapen.tar.gz, util.py, find_PsTs.py
+transfer_input_files = remote_run_test.sh, test_run.py
+#transfer_input_files = python_virtenv_demo.tar.gz, misshapen.tar.gz, util.py, find_PsTs.py
 when_to_transfer_output = ON_EXIT
 # Notification = Error  # only email if error
 
@@ -22,14 +23,14 @@ request_disk = 1GB
 
 
 # Node requirements
-+WantsStashCache = true
+#+WantsStashCache = true
 #requirements = (HAS_MODULES == True)
 
 # Arguments for the shell file we run
-Arguments = $(Cluster) $(Process)
+# Arguments = $(Cluster) $(Process)
 
 # Do 10 processes (0-9)
-queue 10
+# queue 10
 
 Queue Arguments From (
     15 2000
