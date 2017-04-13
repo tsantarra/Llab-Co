@@ -2,6 +2,7 @@ import time
 from fabric.api import env, run
 from fabric.context_managers import cd
 from fabric.operations import get
+from fabric.contrib.files import exists
 
 # Declare remote host
 env.hosts = ['login.osgconnect.net']
@@ -12,9 +13,12 @@ env.password = 'Joseph88?'
 
 
 def test_run():
+    if not exists('Llab-Co'):
+        run('git clone https://github.com/tsantarra/Llab-Co')
 
-    run('git clone https://github.com/tsantarra/Llab-Co')
     with cd('Llab-Co'):
+        run('git init')
+        run('git pull')
         run("mkdir Log")
         run("condor_submit osg_setup.submit")
 
