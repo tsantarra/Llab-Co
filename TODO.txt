@@ -2,16 +2,18 @@ BY PRIORITY (ISH)
 
 
     TODO
-        - finish OSG requirements
         - go over algorithm code
         - go over experimental setup
         - run small test
         - finalize changes and run
 
-    OSG Setup Requirements
-        - compress personal files (may not be necessary)
-        - how to handle errors?
-        - collect output files
+    Desires for experimental domain:
+        - Multiple policies are successful
+        - Scalable
+        - Rearrangeable
+            + add or remove policy dependencies
+        - clear way to author/sample/learn teammate policies
+
 
     OSG Structure
         - fabfile logs in and performs remote commands
