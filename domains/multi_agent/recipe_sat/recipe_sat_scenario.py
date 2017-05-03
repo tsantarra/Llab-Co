@@ -15,6 +15,7 @@ class RecipeScenario:
 
     def __init__(self, num_conditions, num_agents, num_valid_recipes, recipe_size):
         self.num_conditions = num_conditions
+        self.all_conditions = set(range(num_conditions))
         self.agents = ['Agent' + str(i) for i in range(1, num_agents+1)]
         self.recipes = self.__make_recipes(num_valid_recipes, recipe_size)
         self.success_util = 10
@@ -22,7 +23,7 @@ class RecipeScenario:
 
     def initial_state(self):
         """ Gives the initial state of the scenario. """
-        return State({'Conditions': Conditions({i: False for i in range(self.num_conditions)}),
+        return State({'Conditions': set(),
                       'Complete': False,
                       })
 
@@ -33,8 +34,8 @@ class RecipeScenario:
             return JointActionSpace(agent_actions)
 
         # Otherwise, set actions for each remaining condition.
-        unset_conditions = [key for key, val in state['Conditions'].items() if val is False]
-        agent_actions = {agent: unset_conditions + ['End'] for agent in self.agents}
+        unset_conditions = self.all_conditions - state['Conditions']
+        agent_actions = {agent: list(unset_conditions) + ['End'] for agent in self.agents}
 
         return JointActionSpace(agent_actions)
 
@@ -49,7 +50,7 @@ class RecipeScenario:
             action_set -= {'End'}
 
         # Update conditions
-        new_state_dict['Conditions'] = new_state_dict['Conditions'].update({cnd: True for cnd in action_set})
+        new_state_dict['Conditions'] |= action_set
 
         # Return all possible outcomes and their associated probabilities.
         return Distribution({State(new_state_dict): 1.0})
@@ -67,8 +68,12 @@ class RecipeScenario:
         if not new_state['Complete']:
             return util
         else:
-            # TODO - check for valid recipe first
-            return util
+            # check for complete recipe
+            set_conditions = new_state['Conditions']
+            if any(len(recipe - set_conditions) == 0 for recipe in self.recipes):
+                return util + self.success_util
+            else:
+                return util
 
     def end(self, state):
         """ Returns True if the scenario has reached an end state. """
