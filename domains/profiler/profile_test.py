@@ -34,12 +34,12 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     # import test
-    from domains.multi_agent.assembly.assembly import centralized_assembly
-
+    from domains.multi_agent.recipe_sat.recipe_sat import centralized_recipe_sat
+    import time
     # Run code
     profiler.enable()
 
-    centralized_assembly()
+    centralized_recipe_sat()
 
     profiler.disable()
 
@@ -47,17 +47,18 @@ if __name__ == "__main__":
     stats_string = io.StringIO()
     sort_by = 'time'  # calls, cumulative, file, line, module, name, nfl (for name/file/line), pcalls, stdname, time
 
+
     pstats.Stats(profiler, stream=stats_string).strip_dirs().sort_stats(sort_by).print_stats()
     results = stats_string.getvalue()
+    #print(results)
     results = results.split('\n')
 
-    # Print top time intensive calls
     for i in range(4):  # Header lines
         print(results[i])
 
     cols = results[4].split()
     padding = 3
-    all_targets = [(max(len(row.split()[col]) for row in results[4:20]) + padding)
+    all_targets = [(max(len(row.split()[col]) for row in results[4:] if (len(row.split()) >= len(cols))) + padding)
                    for col in range(len(cols))]
 
     for i in range(4, 25):  # Table
@@ -68,9 +69,8 @@ if __name__ == "__main__":
             ncalls = int(items[0].split('/')[0])
             tottime = float(items[1])
             cumtime = float(items[3])
-            items[2] = "{0:.16f}".format(tottime/ncalls)
-            items[4] = "{0:.16f}".format(cumtime/ncalls)
-            print('\tEstimated savings: ', tottime - ncalls * 0.000001)
+            items[2] = "{0:.6f}".format(tottime/ncalls)
+            items[4] = "{0:.6f}".format(cumtime/ncalls)
 
         print(''.join(item + ' ' * (target - len(item)) for item, target in zip(items, all_targets)))
 

@@ -139,7 +139,8 @@ def _expand_leaf(node, scenario, heuristic, node_map):
 
                 new_successors[new_node] = prob
 
-            node.successors[action] = new_successors
+            # added new function call to adjust property (see GraphNode)
+            node.add_new_successors(action, new_successors)
 
     return node
 
@@ -183,12 +184,17 @@ def _backup(node, scenario, backup_op):
                 added.add(predecessor)
 
 
-def create_node_set(node, node_set):
-    """ Fills a given set of nodes with all unique nodes in the subtree. """
-    node_set.add(node)
-    for successor in [successor_node for successor_node in node.successor_set()
-                      if successor_node not in node_set]:
-        create_node_set(successor, node_set)
+def create_node_set(node, node_set=None):
+    if node_set is None:
+        node_set = set()
+
+    open_set = {node}
+    while open_set:
+        node = open_set.pop()
+        node_set.add(node)
+        open_set |= node.successor_set() - node_set
+
+    return node_set
 
 
 def detect_cycle(node):
@@ -213,21 +219,15 @@ def detect_cycle(node):
         complete.add(current)
         return False
 
-    # Create initial sets
-    initial_node_set = set()
-    create_node_set(node, initial_node_set)
-
     # Return result (all nodes are reachable from the node, so only one call is necessary)
-    return dfs(node, initial_node_set, set(), set())
+    return dfs(node, create_node_set(node), set(), set())
 
 
 def map_graph(node):
     """
     Builds a dict mapping of states to corresponding nodes in the graph.
     """
-    node_set = set()
-    create_node_set(node, node_set)
-    return {n.state: n for n in node_set}
+    return {n.state: n for n in create_node_set(node)}
 
 
 def _prune(node, node_map, checked):
@@ -270,11 +270,6 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
         if root_node.complete:
             break
 
-        # check size of graph
-        node_set = set()
-        create_node_set(root_node, node_set)
-        print(len(node_set), 'nodes at step', step)
-
         # Start at root
         node = root_node
 
@@ -308,7 +303,8 @@ class GraphNode:
 
         # Due to the dynamic programming approach, allow multiple predecessors.
         self.predecessors = {predecessor} if predecessor else set()
-        self.successors = {}  # Action: child node dictionary to keep links to successors
+        self._successors = {}  # Action: child node dictionary to keep links to successors
+        self._succ_set = set()
         self.successor_transition_values = {}
 
         # visits of the node so far; count initialization as a visit
@@ -356,6 +352,15 @@ class GraphNode:
             state)
         return matches[0]
 
+    @property
+    def successors(self):
+        return self._successors
+
+    @successors.setter
+    def successors(self, new_successors):
+        self._successors = new_successors
+        self._succ_set = set(successor for successor_dist in self.successors.values() for successor in successor_dist)
+
     def successor_set(self, action=None):
         """
         A short interface for grabbing child nodes without having to process the action-based successor dict.
@@ -363,7 +368,11 @@ class GraphNode:
         if action:
             return self.successors[action]
         else:
-            return set(successor for successor_dist in self.successors.values() for successor in successor_dist)
+            return self._succ_set
+
+    def add_new_successors(self, action, new_successors):
+        self._successors[action] = new_successors
+        self._succ_set |= new_successors.keys()
 
     def __repr__(self):
         """
@@ -395,3 +404,7 @@ class GraphNode:
         self_vars = vars(self)
         other_vars = vars(other)
         return (self_vars.keys() == other_vars.keys()) and all(self_vars[key] == other_vars[key] for key in self_vars)
+
+    def reachable_subgraph_size(self):
+        return len(create_node_set(self))
+
