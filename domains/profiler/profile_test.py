@@ -47,7 +47,6 @@ if __name__ == "__main__":
     stats_string = io.StringIO()
     sort_by = 'time'  # calls, cumulative, file, line, module, name, nfl (for name/file/line), pcalls, stdname, time
 
-
     pstats.Stats(profiler, stream=stats_string).strip_dirs().sort_stats(sort_by).print_stats()
     results = stats_string.getvalue()
     #print(results)

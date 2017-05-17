@@ -7,7 +7,7 @@ def centralized_recipe_sat():
     from mdp.graph_planner import search, greedy_action
 
     # Initialize map
-    scenario = RecipeScenario(num_conditions=10, num_agents=2, num_valid_recipes=15, recipe_size=4)
+    scenario = RecipeScenario(num_conditions=14, num_agents=2, num_valid_recipes=15, recipe_size=4)
     print('\n'.join(str(recipe) for recipe in scenario.recipes))
     state = scenario.initial_state()
     print('Initial state:\n', state)
