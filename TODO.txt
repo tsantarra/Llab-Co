@@ -12,6 +12,9 @@ BY PRIORITY (ISH)
         - can reduce planning time by only completing a backup policy calculation every X iterations
         - in theory, this could be a huge speedup without losing asymptotic convergence
 
+        - traverse nodes - incomplete successors
+
+
     Recipe sat domain
         - Sample teammate policies
             - optimal vs suboptimal
