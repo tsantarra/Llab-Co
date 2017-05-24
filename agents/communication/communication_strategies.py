@@ -18,7 +18,7 @@ def node_likelihoods(root):
     node_probabilities = defaultdict(float)
     node_probabilities[root] = 1.0
 
-    # Queue all nodes in tree accordingto depth
+    # Queue all nodes in tree according to depth
     while process_list:
         level, node = heappop(process_list)
         node_probability = node_probabilities[node]
