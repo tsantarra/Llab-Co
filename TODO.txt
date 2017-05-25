@@ -7,6 +7,27 @@ BY PRIORITY (ISH)
         - run small test
         - finalize changes and run
 
+    May tasks:
+        - sampled policy teammate for recipe stat (also how many optimal policies)
+        - comms
+            - test comm heuristics
+            - decide on stopping criteria (dec theory?)
+            - full comm alg? pruned dec theory?
+        - recipe sat
+            - test domain to fix parameters
+                - num recipes
+                - num conditions
+                - max length
+        - experimental setups
+            - vary cost of comm
+            - vary cost of conflict
+            - vary prior knowledge
+            - vary num trials with same team (pre-comm)
+            - vary heuristics
+            - improving outcome for suboptimal team policy? (like Noa's work)
+            - multiple teammates
+        - planning optimization
+
     Planning note:
         - >1/3 of the planning time is spent calculating action values (during backup)
         - can reduce planning time by only completing a backup policy calculation every X iterations
@@ -15,16 +36,7 @@ BY PRIORITY (ISH)
         - traverse nodes - incomplete successors
 
 
-    Recipe sat domain
-        - Sample teammate policies
-            - optimal vs suboptimal
-            - optimal
-                - iterate over graph, note all optimal actions in each state
-                - use random.choice to pick one of each.... does order matter? bottom up?
-                - itertools can likely yield every optimal policy (n! x pruned section) policies
 
-        - number of recipes?
-        - pruning policies? reachable policies?
 
     Desires for experimental domain:
         - Multiple policies are successful
