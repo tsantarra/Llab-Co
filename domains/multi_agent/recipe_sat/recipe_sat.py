@@ -1,11 +1,8 @@
 from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
-from domains.profiler.profile_test import profile
+from mdp.graph_planner import search, greedy_action
 
 
 def centralized_recipe_sat():
-    # Local imports
-    from mdp.graph_planner import search, greedy_action
-
     # Initialize map
     scenario = RecipeScenario(num_conditions=14, num_agents=2, num_valid_recipes=15, recipe_size=4)
     print('\n'.join(str(recipe) for recipe in scenario.recipes))

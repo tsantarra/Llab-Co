@@ -31,8 +31,9 @@
 """
 
 from heapq import heappop, heappush
-from math import sqrt, log
+from math import sqrt, log, inf
 from random import choice
+from itertools import count
 
 from mdp.distribution import Distribution
 
@@ -246,7 +247,7 @@ def _prune(node, node_map, checked):
         _prune(successor, node_map, checked)
 
 
-def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=None, tie_selector=choice,
+def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristic=None, tie_selector=choice,
            root_node=None, prune=True):
     """
     Search game tree according to THTS.
@@ -265,9 +266,9 @@ def search(state, scenario, iterations, backup_op=_expectation_max, heuristic=No
         _prune(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
-    for step in range(passes):
-        # If entire tree has been searched, halt iteration.
-        if root_node.complete:
+    for step in count(1):
+        # If entire tree has been searched, halt iteration. Also, halt if max passes has been reached.
+        if root_node.complete or step > passes:
             break
 
         # Start at root
