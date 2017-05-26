@@ -1,6 +1,5 @@
 BY PRIORITY (ISH)
 
-
     TODO
         - go over algorithm code
         - go over experimental setup
@@ -8,7 +7,6 @@ BY PRIORITY (ISH)
         - finalize changes and run
 
     May tasks:
-        - sampled policy teammate for recipe stat (also how many optimal policies)
         - comms
             - test comm heuristics
             - decide on stopping criteria (dec theory?)
@@ -34,9 +32,6 @@ BY PRIORITY (ISH)
         - in theory, this could be a huge speedup without losing asymptotic convergence
 
         - traverse nodes - incomplete successors
-
-
-
 
     Desires for experimental domain:
         - Multiple policies are successful

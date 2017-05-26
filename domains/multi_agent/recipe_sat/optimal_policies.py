@@ -1,5 +1,8 @@
 from itertools import product
+from functools import reduce
+from operator import mul
 from random import sample, randint
+from math import log
 
 from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
 from mdp.graph_planner import search, map_graph
@@ -25,6 +28,10 @@ def calculate_optimal_policies(scenario):
         if not optimal_policy_space[state]:
             optimal_policy_space[state] = [None]
 
+    num_optimal_policies = reduce(mul, [len(actions) for actions in optimal_policy_space.values()])
+    log_num = log(num_optimal_policies, 10)
+    print(num_optimal_policies, 'optimal policies')
+    print(log_num, 'digits')
     return optimal_policy_space
 
 
@@ -51,6 +58,6 @@ def get_team_policies(scenario, num_policies):
 
 
 if __name__ == '__main__':
-    scenario = RecipeScenario(num_conditions=10, num_agents=2, num_valid_recipes=2, recipe_size=4)
-
-    print('\n\n'.join(str(pol) for pol in get_team_policies(scenario, 4)))
+    scenario = RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=5, recipe_size=4)
+    calculate_optimal_policies(scenario)
+    #print('\n\n'.join(str(pol) for pol in get_team_policies(scenario, 4)))

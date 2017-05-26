@@ -79,11 +79,18 @@ class RecipeScenario:
 
     def __make_recipes(self, num_recipes, conditions, recipe_length=None):
         """ Generate some subset of combinations that can be used as recipes. """
+        def num_combs(n, r): return factorial(n)/(factorial(r) * factorial(n-r))
+
         if recipe_length:
+            combs = num_combs(len(conditions), recipe_length)
+            if not combs >= num_recipes:
+                raise ValueError(
+                    'Not enough conditions to generate {num_recipes} recipes. Possible combinations: {combs}'.format(
+                        num_recipes=num_recipes, combs=int(combs)))
+
             return sample(list(combinations(conditions, recipe_length)), num_recipes)
 
         # otherwise, choose length of recipe that covers num_recipes
-        num_combs = lambda n, r: factorial(n)/(factorial(r) * factorial(n-r))
         recipe_length = 1
 
         # increase recipe length until num recipes is satisfied
