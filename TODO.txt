@@ -16,12 +16,14 @@ BY PRIORITY (ISH)
                 - num recipes
                 - num conditions
                 - max length
+
         - experimental setups
             - vary cost of comm
             - vary cost of conflict
             - vary prior knowledge
             - vary num trials with same team (pre-comm)
             - vary heuristics
+            - vary comm action space (with heuristics)
             - improving outcome for suboptimal team policy? (like Noa's work)
             - multiple teammates
         - planning optimization
