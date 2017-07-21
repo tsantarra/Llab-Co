@@ -1,5 +1,10 @@
 BY PRIORITY (ISH)
 
+    Status
+        - domain is in place, but needs some exploration for motivation/complexity
+        - the planner appears as ready to go as ever, though backprop could cut down by only happening occasionally
+        - have not looked at comms algorithms yet. need to iterate/test/profile/fix
+
     TODO
         - go over algorithm code
         - go over experimental setup
@@ -9,7 +14,6 @@ BY PRIORITY (ISH)
     May tasks:
         - comms
             - test comm heuristics
-            - decide on stopping criteria (dec theory?)
             - full comm alg? pruned dec theory?
         - recipe sat
             - test domain to fix parameters

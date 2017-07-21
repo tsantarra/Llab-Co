@@ -53,18 +53,16 @@ def node_likelihoods(root):
 
 def get_active_node_set(root):
     """
-    Traverse graph. Return set of nodes.
+    Traverse graph. Return set of non-terminal nodes with non-zero probability.
     """
     process_list = [root]
     added = {root}
 
-    # Queue all nodes in tree accordingto depth
     while process_list:
         node = process_list.pop()
 
         for successor in node.successor_set():
             if successor not in added:
-                # Add to process list and added set
                 process_list.append(successor)
                 added.add(successor)
 
