@@ -1,16 +1,21 @@
 BY PRIORITY (ISH)
 
+    Status as of 7/6
+        - Recently created new domain with small state space and large policy space. (Yay!)
+        - It seems I left off at profiling/optimizing the code.
+        - Where I should start:
+
     TODO
         - go over algorithm code
         - go over experimental setup
         - run small test
         - finalize changes and run
 
-    May tasks:
+    Tasks:
         - comms
             - test comm heuristics
-            - decide on stopping criteria (dec theory?)
-            - full comm alg? pruned dec theory?
+            - full comm alg? pruned dec theory? YES
+
         - recipe sat
             - test domain to fix parameters
                 - num recipes
@@ -26,14 +31,17 @@ BY PRIORITY (ISH)
             - vary comm action space (with heuristics)
             - improving outcome for suboptimal team policy? (like Noa's work)
             - multiple teammates
+
         - planning optimization
+            - can attempt backup operator optimization with little risk
+
 
     Planning note:
         - >1/3 of the planning time is spent calculating action values (during backup)
         - can reduce planning time by only completing a backup policy calculation every X iterations
         - in theory, this could be a huge speedup without losing asymptotic convergence
 
-        - traverse nodes - incomplete successors
+        - traverse nodes - incomplete successors calculations slow. I'm not sure this can be helped.
 
     Desires for experimental domain:
         - Multiple policies are successful
@@ -52,37 +60,23 @@ BY PRIORITY (ISH)
     Experiment goals (Show ____):
         - exhaustive good, but infeasible
         - myopic bad
-        - entropy okay
-        - variance better (hopefully)
-        - weighting by likelihood (either) -> best
+        - entropy okay (p log p)
+        - variance in util better (hopefully)  (E[U' - E[U]])
+        - weighting by likelihood (either) -> best   Ps (p log p)   ///   Ps (E[U' - E[U]])   (Ps = prob state)
+        - if we had a paramaterized model, we could use Fisher information, but we don't (thank god)
 
         - more experience -> less comms?
 
     Active learning:
-        - Fisher information? - dependent on model parameters
+        - Fisher information? - dependent on model parameters (which we're not using a parameterized model)
         - Query by committee
             - useful for set of prior models
             - also works on N best (most likely) sequence labelings (using model predictions, generate the top most likely outcomes, use that as committee)
 
-
-    Places that traverse the policy graph: (why did I make this list?)
-        - graph_planner
-            + create_node_set
-            + prune
-            + GraphNode.finite_horizon_string
-        - modeling_agent
-            + update_policy_graph
-        - communication_scenario
-            + traverse_policy_graph
-            + compute_reachable_nodes
-            + min_in_policy
-            + max_out_of_policy
-        - visualization
-            + _add_edges
-            + _edge_labels
-
-
     Paper notes:
+        - Search through hypothesis space. V subset of H - version space - set of hypotheses which are
+            consistent with the observed data. See Burr Settles stuff on active learning.
+        - Similar to minimizing expected error of prediction (forward looking through queries), but with a diff objective function
         - Noa Agmon leading paper -> task is to find the best possible REACHABLE joint actions/plans
         - Definition of problem
             - decentralized MDP variant
@@ -187,36 +181,4 @@ Modeling Notes:
 
     Is a model Markovian? 30 heads/70 tails -> 30% prediction, but 3/7 is updated very differently.
 
-    Eventually, the MDP planner will run with state being scenario state + current model. It needs to be hashable.
-
-    Other goal: override components with communication. Single instant commitments + multiple trial trends.
-
-    In effect, a model is a distribution over possible instances. Communication highlights which instant we are in.
-    A partially observable case with observations in two forms.
-
-    Update instance model with every observation/communication.
-    Update global model... between trials?
-
-    There are dependent components and conditionally independent components. A factored model?
-
-    Multiple issues here:
-        - Deterministic teammate or probabilistic
-            + obs/comms are gold truths for deterministic
-            + obs/comms are instances of possible plans in probabilistic
-        - Global vs individual model
-            + global model can be updated later
-            + individual model should be updated online
-
-    What should I choose?
-        - I like the idea of stochastic models
-        - general model to individual is some weird interpolation
-
-    Global model -> a distribution over potential instances of behavior   (a prior)
-    Observations and communication -> adjust probabilities, improving expectation (?)
-    Learning -> what is the association between the global model and the individual model?
-
-    A big problem is what to do when an agent is different from anything seen, when it defies expectation.
-
-    What we want:
-        - when behavior aligns with known instances: converge to plan
-        - when behavior is different: remain uncertain (let comm handle it)
+    In effect, a model is a distribution over possible policy instances. Communication highlights which instance we are in.

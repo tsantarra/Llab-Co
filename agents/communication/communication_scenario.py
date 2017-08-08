@@ -3,7 +3,6 @@ The communication process for learning a teammate's intentions in an multiagent 
 just one that is exponentially larger than that of the original problem. The idea here is to construct a communication
 policy, that is, a series of intention queries that will eventually shape the primary agent's own action policy.
 """
-from heapq import heappush, heappop
 from random import choice
 
 from agents.modeling_agent import get_max_action
@@ -180,7 +179,7 @@ class CommScenario:
 
         # For all non-policy actions at the current node, consider the best possible return.
         # Add in agent's non-policy next action
-        policy_commitments[root_node.state][self.agent_identity] = agent_available_actions - set([agent_next_action])
+        policy_commitments[root_node.state][self.agent_identity] = agent_available_actions - {agent_next_action}
 
         max_out_of_policy_node_values = {}
         max_exp_util_free_policy(node=root_node,

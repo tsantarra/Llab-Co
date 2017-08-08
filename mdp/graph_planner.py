@@ -61,10 +61,10 @@ def _traverse_nodes(node, scenario, tie_selector):
     """
     while node.untried_actions == [] and len(node.successors) != 0:  # and not scenario.end(node.state):
         # With node labeling (complete), we only want to consider incomplete successors.
-        incomplete_successors = {act: {child: prob for child, prob in node.successors[act].items()
+        incomplete_successors = {act: {child: prob for child, prob in node_dist.items()
                                        if not child.complete}
-                                 for act in node.successors}
-        assert not all(len(successor_dist) == 0 for successor_dist in incomplete_successors.values()), \
+                                 for act, node_dist in node.successors.items()}
+        assert any(len(successor_dist) != 0 for successor_dist in incomplete_successors.values()), \
             'No legal targets for traversal.' + '\n' + node.finite_horizon_string(horizon=1)
 
         action_values = {}
