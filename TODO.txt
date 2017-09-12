@@ -1,15 +1,12 @@
 BY PRIORITY (ISH)
 
-    Status as of 7/6
-        - Recently created new domain with small state space and large policy space. (Yay!)
-        - It seems I left off at profiling/optimizing the code.
-        - Where I should start:
-
     TODO
-        - go over algorithm code
-        - go over experimental setup
+        - DONE go over algorithm code
+        - add pruning/heuristic selection to algorithm (comm scenario - actions)
+        - go over communication process code (in comm scenario)
         - run small test
-        - finalize changes and run
+        - go over experimental setup
+        - finalize changes and run first test!!!
 
     Tasks:
         - comms
@@ -35,6 +32,35 @@ BY PRIORITY (ISH)
         - planning optimization
             - can attempt backup operator optimization with little risk
 
+    Data to log:
+        Meta data (not operational data)
+            - Parameters
+                + Comm cost
+                + Heuristic
+                + Branching limit
+                + Graph size (comm and policy)
+                + Prior knowledge
+            - Trial number
+        Per run
+            Per step
+                - Expected util pre comm
+                - Each comm
+                - Each expected util after comm
+
+    How:
+        Docs: https://docs.python.org/3/howto/logging.html
+        Cookbook: https://docs.python.org/3/howto/logging-cookbook.html
+        Custom formatting: https://stackoverflow.com/questions/14844970/modifying-logging-message-format-based-on-message-logging-level-in-python3
+        BaseRotatingHandler -> custom subclass to "rotate" between files (for different runs?)
+
+        Tiers:
+            - Debug: Dump any message (little/no format). Can be used for params (init) and odd outputs for... debugging.
+            - Info: Reserved strictly for computational output.
+            - Warning?
+            - Error: For errors.
+            - Critical?
+        Handlers -
+        Filters - each handler (and logger!) can filter by record level (warning/debug/etc) https://stackoverflow.com/questions/1383254/logging-streamhandler-and-standard-streams
 
     Planning note:
         - >1/3 of the planning time is spent calculating action values (during backup)
