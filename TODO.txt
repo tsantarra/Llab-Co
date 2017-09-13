@@ -9,6 +9,7 @@ BY PRIORITY (ISH)
         - finalize changes and run first test!!!
 
     Tasks:
+        - SET UP ENV TO INCLUDE logmatic-python (for logging in JSON!)
         - comms
             - test comm heuristics
             - full comm alg? pruned dec theory? YES
@@ -41,6 +42,7 @@ BY PRIORITY (ISH)
                 + Graph size (comm and policy)
                 + Prior knowledge
             - Trial number
+            - Process info?
         Per run
             Per step
                 - Expected util pre comm
@@ -52,7 +54,8 @@ BY PRIORITY (ISH)
         Cookbook: https://docs.python.org/3/howto/logging-cookbook.html
         Custom formatting: https://stackoverflow.com/questions/14844970/modifying-logging-message-format-based-on-message-logging-level-in-python3
         BaseRotatingHandler -> custom subclass to "rotate" between files (for different runs?)
-
+        JSON logging: https://logmatic.io/blog/python-logging-with-json-steroids/
+                      https://doc.logmatic.io/docs/python
         Tiers:
             - Debug: Dump any message (little/no format). Can be used for params (init) and odd outputs for... debugging.
             - Info: Reserved strictly for computational output.

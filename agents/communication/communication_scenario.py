@@ -1,10 +1,8 @@
 """
 The communication process for learning a teammate's intentions in an multiagent MDP can be viewed itself as an MDP,
 just one that is exponentially larger than that of the original problem. The idea here is to construct a communication
-policy, that is, a series of intention queries that will eventually shape the primary agent's own action policy.
+policy, that is, a series of teammate policy queries that will eventually shape the primary agent's own action policy.
 """
-from random import choice
-
 from agents.modeling_agent import get_max_action
 from mdp.distribution import Distribution
 from mdp.state import State
@@ -15,12 +13,14 @@ from functools import reduce, partial
 from operator import mul
 from collections import defaultdict, namedtuple
 from math import inf as infinity
+from random import choice
+from heapq import heappush, heappop
 
 Query = namedtuple('Query', ['agent', 'state'])
 
 
 class CommScenario:
-    def __init__(self, policy_graph, initial_model_state, identity, comm_cost=0):
+    def __init__(self, policy_graph, initial_model_state, identity, evaluation_function, max_branching_factor=infinity, comm_cost=0):
         """
         Args:
             policy_graph:           The policy graph for the agent whose policy may be modified by obtaining info.
@@ -32,6 +32,8 @@ class CommScenario:
         self._policy_root = policy_graph
         self._state_graph_map = map_graph(self._policy_root)
         self.agent_identity = identity
+        self._evaluation_function = evaluation_function
+        self._max_branches = max_branching_factor
 
         # Caches of commonly computed items
         self._policy_cache = {}
@@ -94,6 +96,8 @@ class CommScenario:
                                      if prob > 0.0]) > 1  # Must have two or more probable actions.
                               )
 
+
+
         action_set.add(Action({self.agent_identity: 'Halt'}))
         return action_set
 
@@ -153,48 +157,7 @@ class CommScenario:
                                           if query.agent == target_agent)) == 0 for target_agent in model_state):
             return True
 
-        # Early termination
-        policy = self._get_policy(policy_state)
-        root_node = self._policy_root
-        agent_next_action = policy[root_node.state]
-        action_space = root_node.action_space
-        agent_available_actions = action_space.individual_actions(self.agent_identity)
-
-        # Policy commitments
-        policy_commitments = defaultdict(dict)
-        for query, action in policy_state['Queries'].items():
-            policy_commitments[query.state][query.agent] = [action]
-
-        root_constraints = policy_commitments[root_node.state] if root_node.state in policy_commitments else {}
-
-        # Safety value - Expectation over possible resulting states from all actions that fit the agent's policy
-        min_in_policy_node_values = {}
-        min_exp_util_fixed_policy(node=root_node,
-                                  node_values=min_in_policy_node_values,
-                                  agent_identity=self.agent_identity,
-                                  policy=policy,
-                                  policy_commitments=policy_commitments)
-
-        safety_value = min_in_policy_node_values[root_node]
-
-        # For all non-policy actions at the current node, consider the best possible return.
-        # Add in agent's non-policy next action
-        policy_commitments[root_node.state][self.agent_identity] = agent_available_actions - {agent_next_action}
-
-        max_out_of_policy_node_values = {}
-        max_exp_util_free_policy(node=root_node,
-                                 node_values=max_out_of_policy_node_values,
-                                 policy_commitments=policy_commitments)
-
-        optimistic_value = max_out_of_policy_node_values[root_node]
-
-        if optimistic_value - safety_value <= self.comm_cost:
-            print('Early termination! max={opt} min={safe} cost={cost}'.format(opt=optimistic_value,
-                                                                  safe=safety_value,
-                                                                  cost=self.comm_cost))
-            return True
-        else:
-            return False
+        return False
 
     def utility(self, old_policy_state, action, new_policy_state):
         """
@@ -237,7 +200,6 @@ class CommScenario:
         To save on computation, we have cached agent policies by policy/information states. When a policy hasn't been
         computed for a given policy state, compute one with a graph traversal.
         """
-
         def compute_policy(node, action_values, new_policy):
             action, action_value = max(action_values.items(), key=lambda pair: pair[1])
             new_policy[node.state] = action
@@ -248,7 +210,7 @@ class CommScenario:
         else:
             policy = {}
             model_state = self._get_model_state(policy_state)
-            expected_util = traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
+            _ = traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
                                                   policy=policy, policy_fn=compute_policy,
                                                   agent_identity=self.agent_identity)
             self._policy_cache[policy_state] = policy
@@ -258,7 +220,6 @@ class CommScenario:
         """
         Calculate the expected utility of a given policy.
         """
-
         def use_precomputed_policy(node, action_values, policy):
             action = policy[node.state]
             return action_values[action]
@@ -285,6 +246,7 @@ def communicate(agent, agent_dict, passes, comm_cost=0):
 
     original_action = get_max_action(agent.policy_graph_root, agent.identity)
     print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', original_action)
+
     # Complete graph search
     state_depth_map = map_graph_depth(agent.policy_graph_root)
     comm_graph_node = search(state=comm_scenario.initial_state(),
@@ -439,6 +401,33 @@ def compute_reachable_nodes(node, visited_set, model_state):
             compute_reachable_nodes(successor_node, visited_set, new_model_state)
 
 
+def map_graph_depth(root):
+    """ Map each state according to it's depth in the policy graph. """
+    process_list = [(0, root)]
+    depth_map = {root.state['World State']: 0}
+
+    # Queue all nodes in tree according to depth. Process top down (via heap) to ensure minimum depth for each state.
+    while process_list:
+        level, node = heappop(process_list)
+
+        for successor in node.successor_set():
+            if successor.state['World State'] not in depth_map:
+                heappush(process_list, (level+1, successor))
+                depth_map[successor.state['World State']] = min(level + 1,
+                                                                depth_map.get(successor.state['World State'], infinity))
+
+    return depth_map
+
+
+def query_tie_breaker(tied_query_actions, priorities, identity):
+    """ We want to break query ties by preferring states that the closest to the root (maximum chance of pruning)."""
+    tied_queries = [action[identity] for action in tied_query_actions if action[identity] != 'Halt']
+    min_query_depth = min(priorities[query.state] for query in tied_queries)
+    min_tied_queries = [query for query in tied_queries if priorities[query.state] == min_query_depth]
+
+    return Action({identity: choice(min_tied_queries)})
+
+
 def min_exp_util_fixed_policy(node, node_values, agent_identity, policy, policy_commitments):
     """ Searching for minimum expected utility within the given policy. """
     # Already covered this node and subgraph
@@ -503,29 +492,3 @@ def max_exp_util_free_policy(node, node_values, policy_commitments):
 
     node_values[node] = max(action_values.values())
 
-
-def map_graph_depth(root):
-    """ Map each state according to it's depth in the policy graph. """
-    process_list = [(0, root)]
-    depth_map = {root.state['World State']: 0}
-
-    # Queue all nodes in tree according to depth
-    while process_list:
-        level, node = process_list.pop()
-
-        for successor in node.successor_set():
-            if successor.state['World State'] not in depth_map:
-                process_list.append((level + 1, successor))
-                depth_map[successor.state['World State']] = min(level + 1,
-                                                                depth_map.get(successor.state['World State'], infinity))
-
-    return depth_map
-
-
-def query_tie_breaker(tied_query_actions, priorities, identity):
-    """ We want to break query ties by preferring states that the closest to the root (maximum chance of pruning)."""
-    tied_queries = [action[identity] for action in tied_query_actions if action[identity] != 'Halt']
-    min_query_depth = min(priorities[query.state] for query in tied_queries)
-    min_tied_queries = [query for query in tied_queries if priorities[query.state] == min_query_depth]
-
-    return Action({identity: choice(min_tied_queries)})

@@ -4,11 +4,12 @@ from fabric.context_managers import cd
 from fabric.operations import get
 from fabric.contrib.files import exists
 
-# Declare remote host
+# Declare remote host and other info
 env.hosts = ['login.osgconnect.net']
 
 # Declare remote username and key info (optional)
 env.user = 'tsantarra'
+env.key_filename = 'private_ssh_key'
 env.password = 'Joseph88?'
 
 
@@ -40,7 +41,8 @@ def run_demo():
 
 
 def check():
-    run("watch -n2 condor_q " + env.user)
+    run('ls')
+    #run("watch -n2 condor_q " + env.user)
 
 
 def collect_output():
