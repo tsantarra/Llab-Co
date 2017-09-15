@@ -49,6 +49,8 @@ BY PRIORITY (ISH)
                 - Each comm
                 - Each expected util after comm
 
+
+
     How:
         Docs: https://docs.python.org/3/howto/logging.html
         Cookbook: https://docs.python.org/3/howto/logging-cookbook.html
@@ -64,6 +66,28 @@ BY PRIORITY (ISH)
             - Critical?
         Handlers -
         Filters - each handler (and logger!) can filter by record level (warning/debug/etc) https://stackoverflow.com/questions/1383254/logging-streamhandler-and-standard-streams
+
+    OSG Process:
+        fabfile
+            - Connects via ssh into OSG
+            - Logs in with account name and rsa key
+            - Runs various Linux commands
+                + git init, pull, mkdir for logs
+                + condor_submit osg_setup.submit
+                + waits, then pulls files in output folder
+        submit file
+            - specifies criteria for deploying computation
+                + shell file to run
+                + output, error, log destinations
+                + requests for computers, memory, disk space
+                + specifies command line args to each individual process
+        shell file
+            - loads python, unpacks virtual env and files
+            - mkdir for output
+            - runs python script with arguments
+            - compresses output
+
+
 
     Planning note:
         - >1/3 of the planning time is spent calculating action values (during backup)

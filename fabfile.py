@@ -20,7 +20,7 @@ def test_run():
     with cd('Llab-Co'):
         run('git init')
         run('git pull')
-        run("mkdir Log")
+        run("mkdir -p Log")
         run("condor_submit osg_setup.submit")
 
         # Need to wait until done running; should be less than 5 minutes
