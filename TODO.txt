@@ -2,6 +2,7 @@ BY PRIORITY (ISH)
 
     TODO
         - DONE go over algorithm code
+            - not done: check action value cache methods (add extra done for work)
         - add pruning/heuristic selection to algorithm (comm scenario - actions)
         - go over communication process code (in comm scenario)
         - run small test
@@ -74,7 +75,7 @@ BY PRIORITY (ISH)
             - Runs various Linux commands
                 + git init, pull, mkdir for logs
                 + condor_submit osg_setup.submit
-                + waits, then pulls files in output folder
+                + waits, then pulls files in output folder (move to separate method/fab call)
         submit file
             - specifies criteria for deploying computation
                 + shell file to run

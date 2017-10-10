@@ -90,8 +90,8 @@ def sampled_assembly():
     """
     from agents.sampled_policy_teammate import SampledPolicyTeammate
     scenario = AssemblyScenario()
-    agent_dict = {'Agent1': SampledPolicyTeammate('Agent1', scenario, 10, 10000),
-                  'Agent2': SampledPolicyTeammate('Agent2', scenario, 10, 10000)}
+    agent_dict = {'Agent1': SampledPolicyTeammate('Agent1', scenario, 10, 1000),
+                  'Agent2': SampledPolicyTeammate('Agent2', scenario, 10, 1000)}
 
     state = scenario.initial_state()
 
@@ -153,8 +153,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     try:
-        check_graph_sizes()
-        #sampled_assembly()
+        #check_graph_sizes()
+        sampled_assembly()
         #centralized_assembly()
         #ad_hoc_assembly()
 

@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     # import test
     from domains.multi_agent.recipe_sat.recipe_sat import centralized_recipe_sat
-    import time
+
     # Run code
     profiler.enable()
 
@@ -49,10 +49,10 @@ if __name__ == "__main__":
 
     pstats.Stats(profiler, stream=stats_string).strip_dirs().sort_stats(sort_by).print_stats()
     results = stats_string.getvalue()
-    #print(results)
     results = results.split('\n')
 
-    for i in range(4):  # Header lines
+    # Header lines
+    for i in range(4):
         print(results[i])
 
     cols = results[4].split()
@@ -60,7 +60,8 @@ if __name__ == "__main__":
     all_targets = [(max(len(row.split()[col]) for row in results[4:] if (len(row.split()) >= len(cols))) + padding)
                    for col in range(len(cols))]
 
-    for i in range(4, 25):  # Table
+    # Table
+    for i in range(4, 25):
         items = results[i].split()
         items = items[0:len(cols)-1] + [''.join(items[len(cols)-1:])]  # rejoin spaces in built-in method signatures
 

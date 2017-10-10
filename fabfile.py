@@ -9,8 +9,8 @@ env.hosts = ['login.osgconnect.net']
 
 # Declare remote username and key info (optional)
 env.user = 'tsantarra'
+#env.password = 'can put password here if not using ssh'
 env.key_filename = 'private_ssh_key'
-env.password = 'Joseph88?'
 
 
 def test_run():
@@ -50,19 +50,3 @@ def collect_output():
     with cd('test_dir'):
         get("./out*")
 
-
-# Commands to execute on the remote server
-def OLD_run_demo():
-    run("git clone https://github.com/srcole/demo_OSG_python")
-    with cd('demo_OSG_python'):
-        run("chmod +x create_virtenv.sh")
-        run("./create_virtenv.sh")
-        run("rm -R python_virtenv_demo")
-        run("mv lfp_set/ /stash/user/"+env.user+"/lfp_set/")
-        run("tar -cvzf misshapen.tar.gz misshapen")
-        run("rm -R misshapen")
-        run("mkdir Log")
-        run("condor_submit sub_PsTs.submit")
-        # Need to wait until done running; should be less than 5 minutes
-        time.sleep(300)
-        get("./out*")
