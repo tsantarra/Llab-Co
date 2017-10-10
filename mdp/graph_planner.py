@@ -34,6 +34,7 @@ from heapq import heappop, heappush
 from math import sqrt, log, inf
 from random import choice
 from itertools import count
+from collections import defaultdict
 
 from mdp.distribution import Distribution
 
@@ -60,15 +61,18 @@ def _traverse_nodes(node, scenario, tie_selector):
     UCT down to leaf node.
     """
     while node.untried_actions == [] and len(node.successors) != 0:  # and not scenario.end(node.state):
+        """
         # With node labeling (complete), we only want to consider incomplete successors.
         incomplete_successors = {act: {child: prob for child, prob in node_dist.items()
                                        if not child.complete}
                                  for act, node_dist in node.successors.items()}
         assert any(len(successor_dist) != 0 for successor_dist in incomplete_successors.values()), \
             'No legal targets for traversal.' + '\n' + node.finite_horizon_string(horizon=1)
+        """
 
+        """
         action_values = {}
-        action_counts = {}
+        #action_counts = {}
         for action, successor_distribution in incomplete_successors.items():
             if len(successor_distribution) == 0:  # All successors from action are complete. Do not add action.
                 continue
@@ -77,17 +81,27 @@ def _traverse_nodes(node, scenario, tie_selector):
                 prob * (node.successor_transition_values[(child.state, action)] + child.future_value)
                 for child, prob in successor_distribution.items())
             action_values[action] /= sum(successor_distribution.values())
-            action_counts[action] = sum(child.visits for child in successor_distribution)
+            #action_counts[action] = sum(child.visits for child in successor_distribution)
+        """
+
+        action_complete_status = {act: all(child.complete for child in node_dist)
+                                  for act, node_dist in node.successors.items()}
 
         # UCT criteria with exploration factor = node value (from THTS paper)
+        action_values = {act: val for act, val in node.action_values().items()
+                         if not action_complete_status[act]}
         best_action, best_value = max(action_values.items(),
                                       key=lambda av: av[1] +
                                                      (node.future_value + 1) * sqrt(
-                                                         log(node.visits) / action_counts[av[0]]))
+                                                         log(node.visits) / node.action_counts[av[0]]))
 
         tied_actions = [a for a in action_values if action_values[a] == best_value]
+        selected_action = tie_selector(tied_actions)
+        node.action_counts[selected_action] += 1
 
-        node = Distribution(incomplete_successors[tie_selector(tied_actions)]).sample()
+        node = Distribution({child: prob for child, prob in node.successors[selected_action].items()
+                             if not child.complete}).sample()
+        #node = Distribution(incomplete_successors[tie_selector(tied_actions)]).sample()
 
     return node
 
@@ -143,6 +157,12 @@ def _expand_leaf(node, scenario, heuristic, node_map):
             # added new function call to adjust property (see GraphNode)
             node.add_new_successors(action, new_successors)
 
+            # set initial action count to 1
+            node.action_counts[action] = 1
+
+        # Calculate initial action values
+        node.calculate_action_values(force_recalculate=True)
+
     return node
 
 
@@ -162,6 +182,8 @@ def _backup(node, scenario, backup_op):
     """
     queue = [(0, node)]
     added = {node}
+    post_backup_changed_nodes = [node]
+
     while queue:
         # Process next node
         level, node = heappop(queue)
@@ -170,19 +192,31 @@ def _backup(node, scenario, backup_op):
         # Sample-based node update
         node.visits += 1
 
+        # store old value for delta updates
+        node._old_future_value = node.future_value
+
         # Value backup operator
         backup_op(node)
+
+        # Check for changes in value
+        node._has_changed = (node.future_value != node._old_future_value)
 
         # Labeling -> if all actions expanded and all child nodes complete, this node is complete
         if not node.complete and node.untried_actions == [] and \
                 all(child.complete for child in node.successor_set()):
             node.complete = True
+            node._has_changed = True
 
-        # Queue predecessors
-        for predecessor in node.predecessors:
-            if predecessor not in added:
-                heappush(queue, (level + 1, predecessor))
-                added.add(predecessor)
+        # Queue predecessors only if the node info has changed (policy value or complete status)
+        if node._has_changed:
+            post_backup_changed_nodes.append(node)
+            for predecessor in node.predecessors:
+                if predecessor not in added:
+                    heappush(queue, (level + 1, predecessor))
+                    added.add(predecessor)
+
+    for node in post_backup_changed_nodes:
+        node._has_changed = False
 
 
 def create_node_set(node, node_set=None):
@@ -313,25 +347,37 @@ class GraphNode:
         self.future_value = 0
         self.__action_values = None
 
+        # new optimizations
+        self.action_counts = defaultdict(int)
+        self._has_changed = False
+        self._old_future_value = self.future_value
+
     def action_values(self):
         if not self.__action_values:
-            return self.calculate_action_values()
+            return self.calculate_action_values(force_recalculate=True)
         else:
             return self.__action_values
 
-    def calculate_action_values(self):
+    def calculate_action_values(self, force_recalculate=False):
         """
         For every action, return the expectation over stochastic transitions to successors states.
         """
-        if self.successors:
+        if not self.successors:
+            return {action: 0 for action in self.action_space}
+
+        if force_recalculate:
             self.__action_values = {
                     action: sum(probability * (self.successor_transition_values[(successor.state, action)] +
-                                              successor.future_value)
+                                               successor.future_value)
                                 for successor, probability in successor_distribution.items())
                     for action, successor_distribution in self.successors.items()}
-            return self.__action_values
         else:
-            return {action: 0 for action in self.action_space}
+            for action, succ_dist in self._successors.items():
+                for child, probability in succ_dist.items():
+                    if child._has_changed:
+                        self.__action_values[action] += probability * (child.future_value - child._old_future_value)
+
+        return self.__action_values
 
     def find_matching_successor(self, state, action=None):
         """
