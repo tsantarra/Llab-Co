@@ -61,29 +61,6 @@ def _traverse_nodes(node, scenario, tie_selector):
     UCT down to leaf node.
     """
     while node.untried_actions == [] and len(node.successors) != 0:  # and not scenario.end(node.state):
-        """
-        # With node labeling (complete), we only want to consider incomplete successors.
-        incomplete_successors = {act: {child: prob for child, prob in node_dist.items()
-                                       if not child.complete}
-                                 for act, node_dist in node.successors.items()}
-        assert any(len(successor_dist) != 0 for successor_dist in incomplete_successors.values()), \
-            'No legal targets for traversal.' + '\n' + node.finite_horizon_string(horizon=1)
-        """
-
-        """
-        action_values = {}
-        #action_counts = {}
-        for action, successor_distribution in incomplete_successors.items():
-            if len(successor_distribution) == 0:  # All successors from action are complete. Do not add action.
-                continue
-
-            action_values[action] = sum(
-                prob * (node.successor_transition_values[(child.state, action)] + child.future_value)
-                for child, prob in successor_distribution.items())
-            action_values[action] /= sum(successor_distribution.values())
-            #action_counts[action] = sum(child.visits for child in successor_distribution)
-        """
-
         action_complete_status = {act: all(child.complete for child in node_dist)
                                   for act, node_dist in node.successors.items()}
 
@@ -101,7 +78,6 @@ def _traverse_nodes(node, scenario, tie_selector):
 
         node = Distribution({child: prob for child, prob in node.successors[selected_action].items()
                              if not child.complete}).sample()
-        #node = Distribution(incomplete_successors[tie_selector(tied_actions)]).sample()
 
     return node
 
