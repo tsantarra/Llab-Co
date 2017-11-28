@@ -39,7 +39,7 @@ class RecipeScenario:
 
     def transition(self, state, action):
         """  """
-        new_state_dict = dict(state.copy())
+        new_state_dict = dict(state)
         action_set = set(action.values())  # all unique actions
 
         # Mark completion

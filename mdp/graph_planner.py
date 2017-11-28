@@ -56,17 +56,15 @@ def greedy_action(node, tie_selector=choice):
     return tie_selector(ties)
 
 
-def _traverse_nodes(node, scenario, tie_selector):
+def _traverse_nodes(node, scenario, tie_selector=choice):
     """
     UCT down to leaf node.
     """
     while node.untried_actions == [] and len(node.successors) != 0:  # and not scenario.end(node.state):
-        action_complete_status = {act: all(child.complete for child in node_dist)
-                                  for act, node_dist in node.successors.items()}
-
         # UCT criteria with exploration factor = node value (from THTS paper)
         action_values = {act: val for act, val in node.action_values().items()
-                         if not action_complete_status[act]}
+                         if act in node.incomplete_action_nodes}
+
         best_action, best_value = max(action_values.items(),
                                       key=lambda av: av[1] +
                                                      (node.future_value + 1) * sqrt(
@@ -74,7 +72,10 @@ def _traverse_nodes(node, scenario, tie_selector):
 
         tied_actions = [a for a in action_values if action_values[a] == best_value]
         selected_action = tie_selector(tied_actions)
+
+        # Sample-based node update
         node.action_counts[selected_action] += 1
+        node.visits += 1
 
         node = Distribution({child: prob for child, prob in node.successors[selected_action].items()
                              if not child.complete}).sample()
@@ -133,6 +134,9 @@ def _expand_leaf(node, scenario, heuristic, node_map):
             # added new function call to adjust property (see GraphNode)
             node.add_new_successors(action, new_successors)
 
+            # testing new optimization feature
+            node.incomplete_action_nodes[action] = set(child for child in new_successors if not child.complete)
+
             # set initial action count to 1
             node.action_counts[action] = 1
 
@@ -165,9 +169,6 @@ def _backup(node, scenario, backup_op):
         level, node = heappop(queue)
         added.remove(node)
 
-        # Sample-based node update
-        node.visits += 1
-
         # store old value for delta updates
         node._old_future_value = node.future_value
 
@@ -176,6 +177,13 @@ def _backup(node, scenario, backup_op):
 
         # Check for changes in value
         node._has_changed = (node.future_value != node._old_future_value)
+
+        # Update node's incomplete actions/child nodes
+        # testing new optimization feature
+        for action, child_set in list(node.incomplete_action_nodes.items()):
+            child_set = set(child for child in child_set if not child.complete)
+            if len(child_set) == 0:
+                del node.incomplete_action_nodes[action]
 
         # Labeling -> if all actions expanded and all child nodes complete, this node is complete
         if not node.complete and node.untried_actions == [] and \
@@ -322,6 +330,7 @@ class GraphNode:
         self.visits = 1
         self.future_value = 0
         self.__action_values = None
+        self.incomplete_action_nodes = {}
 
         # new optimizations
         self.action_counts = defaultdict(int)

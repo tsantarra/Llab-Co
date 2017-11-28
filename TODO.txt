@@ -1,10 +1,94 @@
 BY PRIORITY (ISH)
 
+
+
+    On-policy vs off-policy
+        Same if policy is greedy (argmax a) and updated each cycle, so there really isn't a distinction here.
+        Off-policy - Q(s,a) <- Q(s,a) + c * (r(s) + y max_a' Q(s', a') - Q(s,a))  # Bellman backup      (estimates value of best policy)
+        On-policy -  Q(s,a) <- Q(s,a) + c * (r(s) + y * Q(s', pi(s'))  - Q(s,a))  # Fixed-policy backup (estimates value of given policy)
+
+    Variance in util not straightforward without MY policy probs
+        New heuristics!
+            - local entropy minimization - minimize p log p   (can be weighted by p(s))
+            - globabl entropy minimization - pick query to minimize p log p across entire graph (weighted by p(s)); needs to update entire policy graph
+
+            - local value of information - consider value increase at the state
+                sum p(a) (p'(s_t|a)V'(s_t|a) - p(s_t|a)V(s_t|a))   # p'(s_t) is dependent on policy from 0 to t-1 (not markovian), but V'(s_t)|a isn't. Two options:
+                    1. p'(s_t|a) ~= p(s_t|a) -> p(s_t) * sum p(a) (V'(s_t|a) - V(s_t|a))  # (0 if off policy!) how important it'd be if we were there, weighted by current likelihood
+                    2. p'(s_t|a) <= 1        -> sum p(a) (V'(s_t|a) - p(s_t|a)V(s_t|a))   # (!0 if off policy!) upper bound on the change of value this could contribute to V(s_0)
+            - global value of information - myopic query, then update entire policy
+
+            - local expected quadratic loss - linear loss is 0, no? [sum p(a) V(actual)] - V(expected) = V(expected) - V(expected)
+                p(s_t) sum p(a) (V(actual) - V(expected))^2   # p(s_t) or (p(s_t) - 0) is an upper bound on the potential change in prob of bad prediction (emphasizes on-policy, minimizes off-policy)
+            - global expected quadratic loss - query then update entire policy, calculate weighted sum of quadratic loss across entire graph
+
+    Each heuristic should be given the model state (in comm planner, not in node) and world state to predict on
+        things got crossed when using "node" as parameter
+
+    Justification for uniform policy distribution
+        - care equally about underestimating teammate's policy (out of policy) as overestimating (in-policy) the teammate (which disappoints us)
+        - if probabilities are biased toward policy, swings in util where incorrect prediction occurs have little weight
+        - in truth, (max prob of state - current prob of state) would give a better estimate, but max prob is expensive to calculate
+        - result of uniform -> highly stochastic transitions lead to unlikely states (which is fair, as we'd then care more about near-term predictions)
+
+
+
+    Quick notes
+        node_likelihoods
+            get_active_node_set
+            weighted_entropy
+            weighted_variance
+        get_active_node_set
+            each comm strategy
+            each comm loop
+            coordinated_actions -> heuristic_comm
+
+        !!! too much redundant calculation !!!
+
+        process should be:
+            main loop plans
+            main loop calls function that sets up comm scenario, does search, and returns a query (communicate()?)
+            comm loop plans
+            comm scenario actions() calls node_likelihoods
+            comm scenario actions() passes through series of filters to get universal eligible state set (eg no p=0 states given non-zero likelihood for all our policy decisions)
+
+            comm scenario actions() calls heuristic technique to rate queries, then heapq nlargest to get the top picks
+            comm loop completes and returns query
+            main loop queries, updates model, takes action, and repeats
+
+    check experiments
+        currently it uses run_comm_attempt which just takes the top heuristic eval as the comm
+            maybe use this as comparison?
+        need to use communicate() from communication_scenario, as it uses the planner to plan comms
+
+
+    brainstorming on scenario with one composite policy (actions and comms planned together)
+    new scenario would have the following changes:
+        actions now includes query actions (no state change, but model change (part of state rep))
+            except when world state denies it (agents in separate places, for instance)
+        early termination no longer holds, as it may need to query still to ensure good policy in future states where comms prevented
+        early termination, then, is really just a pruning eval for mixed scenarios with completely open comms
+        in open comms, prove continued comms end value <= early termination end value
+            basically show at that point, you've settled on the immediate action
+                if the action result is deterministic, they are equal in resulting value
+                otherwise, possibly save on comms from stochastic transition (avoid a state)
+                (only works for constant comm cost)
+        and the branching factor together makes the mdp just so big!
+        and it doesn't have to be comms/no comms, really you could adjust comm cost (high cost = impossible)
+
+
+
     TODO
-        - DONE go over algorithm code
-            - not done: check action value cache methods (add extra done for work)
-        - add pruning/heuristic selection to algorithm (comm scenario - actions)
+        - beyond 10 (total visits and action counts), the exploration term changes only by a factor of [0.98, 1.0]
+            Can probably short cut UCT calc by caching value at 10, then multiplying by 0.99 at each step
+            e.g. (future_value + 1 ) * cached_value * 0.99  (then update cached value to be * 0.99, or do that first)
+        - add pruning/heuristic selection to algorithm (comm scenario.actions() (only consider top 5, etc))
+        - add early termination to end() method of comm scenario
+            - remember we're early terminating for the current line of queries (for the current action), not for all queries
+        - comm search heuristic?
+            - want to estimate the gain gotten by optimally querying/terminating
         - go over communication process code (in comm scenario)
+        - add logging from new log_config json support
         - run small test
         - go over experimental setup
         - finalize changes and run first test!!!
@@ -31,7 +115,7 @@ BY PRIORITY (ISH)
             - improving outcome for suboptimal team policy? (like Noa's work)
             - multiple teammates
 
-        - planning optimization
+        - planning optimization?
             - can attempt backup operator optimization with little risk
 
     Data to log:
@@ -88,14 +172,6 @@ BY PRIORITY (ISH)
             - runs python script with arguments
             - compresses output
 
-
-
-    Planning note:
-        - >1/3 of the planning time is spent calculating action values (during backup)
-        - can reduce planning time by only completing a backup policy calculation every X iterations
-        - in theory, this could be a huge speedup without losing asymptotic convergence
-
-        - traverse nodes - incomplete successors calculations slow. I'm not sure this can be helped.
 
     Desires for experimental domain:
         - Multiple policies are successful

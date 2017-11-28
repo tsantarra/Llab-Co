@@ -3,24 +3,22 @@ The communication process for learning a teammate's intentions in an multiagent 
 just one that is exponentially larger than that of the original problem. The idea here is to construct a communication
 policy, that is, a series of teammate policy queries that will eventually shape the primary agent's own action policy.
 """
-from agents.modeling_agent import get_max_action
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import map_graph, search, greedy_action
-from mdp.action import Action, JointActionSpace
+from mdp.action import Action
+from agents.modeling_agent import get_max_action
+from agents.communication.graph_utilities import traverse_graph_topologically, compute_reachable_nodes, recursive_traverse_policy_graph
 
-from functools import reduce, partial
-from operator import mul
-from collections import defaultdict, namedtuple
+from collections import namedtuple, defaultdict
 from math import inf as infinity
-from random import choice
-from heapq import heappush, heappop
+from heapq import nlargest
 
 Query = namedtuple('Query', ['agent', 'state'])
 
 
 class CommScenario:
-    def __init__(self, policy_graph, initial_model_state, identity, evaluation_function, max_branching_factor=infinity, comm_cost=0):
+    def __init__(self, policy_graph, initial_model_state, identity, evaluate_query_fn=None, max_branching_factor=infinity, comm_cost=0):
         """
         Args:
             policy_graph:           The policy graph for the agent whose policy may be modified by obtaining info.
@@ -30,28 +28,29 @@ class CommScenario:
         """
         # Save current policy graph for future reference
         self._policy_root = policy_graph
-        self._state_graph_map = map_graph(self._policy_root)
         self.agent_identity = identity
-        self._evaluation_function = evaluation_function
+        self._evaluate_node_queries_fn = evaluate_query_fn if evaluate_query_fn else (lambda *args: 0)
         self._max_branches = max_branching_factor
+
+        # References to policy graph
+        self._state_graph_map = map_graph(self._policy_root)
 
         # Caches of commonly computed items
         self._policy_cache = {}
         self._model_state_cache = {}
 
         # Helpful references
-        self.previous_queries = {Query(name, comm_state): action for name, model in initial_model_state.items()
-                                 for comm_state, action in model.previous_communications.items()}
-        self._all_world_states_in_graph = set(state['World State'] for state in self._state_graph_map)
-        self._teammates_models_state = initial_model_state  # current model of teammate behavior
-        self.comm_cost = comm_cost  # Set cost per instance of communication
+        self.initial_state_queries = State({Query(name, comm_state): action for name, model in initial_model_state.items()
+                              for comm_state, action in model.previous_communications.items()})
+        self._teammates_models_state = initial_model_state  # Current model of teammate behavior
+        self.comm_cost = comm_cost  # Cost per instance of communication
 
     def initial_state(self):
         """
         The communication state is simply a list of queries and responses along with an 'End?' flag, indicating the
         agent has voluntarily ended the communication process.
         """
-        return State({'Queries': State(self.previous_queries), 'End?': False})
+        return State({'Queries': State(self.initial_state_queries), 'End?': False})
 
     def actions(self, policy_state):
         """
@@ -75,31 +74,60 @@ class CommScenario:
         if policy_state['End?']:
             return set()
 
-        # Compute or retrieve model state from communicated policy info
-        model_state = self._get_model_state(policy_state)
+        # Call provided query selector function
+        def prune_query(node, target_agent_name):
+            return node.scenario_end or \
+                (Query(target_agent_name, node.state['World State']) in policy_state['Queries']) or \
+                (len(node.action_space.individual_actions(target_agent_name)) <= 1)
 
-        # Calculate reachable states
-        reachable_nodes = set()
-        compute_reachable_nodes(self._policy_root, reachable_nodes, model_state)
-        reachable_states = set(node.state['World State'] for node in reachable_nodes
-                               if not node.scenario_end)  # Automatically filter out end states
+        # Need to consider all teammates involved.
+        query_evaluations = []
+        for target_agent, model in self._get_model_state(policy_state).items():
+            query_evaluations.extend(self._evaluate_node_queries_fn(self._policy_root, model, prune_query))
 
-        # Construct the action set over all other agents
-        action_set = set()
-        for agent_name in model_state:
-            possible_queries = reachable_states \
-                               - set(query.state for query in policy_state['Queries'] if query.agent == agent_name)
+        node_model_mapping = self._get_model_graph(policy_state)
+        # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
+        # resulting from different nodes having different evaluations (due to different models)
+        action_set = set(Action({self.agent_identity: query_val[0]}) for query_val in
+                         nlargest(self._max_branches, query_evaluations.items(), key=lambda qv: qv[1]))
 
-            action_set |= set(Action({self.agent_identity: Query(agent_name, state)})
-                              for state in possible_queries
-                              if len([action for action, prob in model_state[agent_name].predict(state).items()
-                                     if prob > 0.0]) > 1  # Must have two or more probable actions.
-                              )
-
-
-
+        # Add 'Halt" action for terminating queries
         action_set.add(Action({self.agent_identity: 'Halt'}))
         return action_set
+
+    def _get_model_graph(self, policy_state):
+        """ Update all models contained in graph based on query/policy state. """
+        node_model_map = {self._policy_root: self._get_model_state(policy_state)}
+
+        def update_model(node):
+            # Update all individual agent models
+            individual_agent_actions = node.action_space.individual_actions()
+            world_state = node.state['World State']
+            model_state = node_model_map[node]
+            resulting_models = {agent_name:
+                                    {action: model_state[agent_name].update(world_state, action) for action in
+                                     agent_actions}
+                                for agent_name, agent_actions in individual_agent_actions.items()
+                                if agent_name in model_state}
+
+            # Calculate expected return for each action at the given node
+            for joint_action, result_distribution in node.successors.items():
+                assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
+
+                # Construct new model state from individual agent models
+                new_model_state = State({agent_name: resulting_models[agent_name][joint_action[agent_name]]
+                                         for agent_name in model_state})
+
+                node_model_map.update({succ_node: new_model_state for succ_node in result_distribution})
+
+        # Pass update function to graph traversal
+        traverse_graph_topologically(self._policy_root, update_model, top_down=True)
+
+        assert len(node_model_map) > 2, 'Incorrect model update traversal.'
+
+        return node_model_map
+
+
 
     def transition(self, policy_state, action):
         """
@@ -210,9 +238,9 @@ class CommScenario:
         else:
             policy = {}
             model_state = self._get_model_state(policy_state)
-            _ = traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
-                                                  policy=policy, policy_fn=compute_policy,
-                                                  agent_identity=self.agent_identity)
+            _ = recursive_traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
+                                                policy=policy, policy_fn=compute_policy,
+                                                agent_identity=self.agent_identity)
             self._policy_cache[policy_state] = policy
             return policy
 
@@ -225,9 +253,9 @@ class CommScenario:
             return action_values[action]
 
         model_state = self._get_model_state(policy_state)
-        return traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
-                                     policy=policy, policy_fn=use_precomputed_policy,
-                                     agent_identity=self.agent_identity)
+        return recursive_traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
+                                               policy=policy, policy_fn=use_precomputed_policy,
+                                               agent_identity=self.agent_identity)
 
 
 def communicate(agent, agent_dict, passes, comm_cost=0):
@@ -248,14 +276,10 @@ def communicate(agent, agent_dict, passes, comm_cost=0):
     print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', original_action)
 
     # Complete graph search
-    state_depth_map = map_graph_depth(agent.policy_graph_root)
     comm_graph_node = search(state=comm_scenario.initial_state(),
                              scenario=comm_scenario,
                              iterations=passes,
-                             heuristic=lambda comm_state: 0,
-                             tie_selector=partial(query_tie_breaker,
-                                                  priorities=state_depth_map,
-                                                  identity=agent.identity))
+                             heuristic=lambda comm_state: 0)
 
     # No communication can help or no communication possible.
     if not comm_graph_node.successors:
@@ -308,187 +332,4 @@ def communicate(agent, agent_dict, passes, comm_cost=0):
 
     return action
 
-
-def traverse_policy_graph(node, node_values, model_state, policy, policy_fn, agent_identity):
-    """ Computes a policy maximizing expected utility given a probabilistic agent model for other agents. """
-    # Already visited this node. Return its computed value.
-    if node in node_values:
-        return node_values[node]
-
-    # Leaf node. Value already calculated as immediate + heuristic.
-    if not node.successors:
-        node_values[node] = node.future_value
-        return node.future_value
-
-    # Update all individual agent models
-    individual_agent_actions = node.action_space.individual_actions()
-    world_state = node.state['World State']
-    resulting_models = {agent_name:
-                            {action: model_state[agent_name].update(world_state, action) for action in
-                             agent_actions}
-                        for agent_name, agent_actions in individual_agent_actions.items()
-                        if agent_name in model_state}
-
-    # Calculate expected return for each action at the given node
-    joint_action_values = defaultdict(float)
-    for joint_action, result_distribution in node.successors.items():
-        assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
-
-        # Construct new model state from individual agent models
-        new_model_state = State({agent_name: resulting_models[agent_name][joint_action[agent_name]]
-                                 for agent_name in model_state})
-
-        # Traverse to successor nodes
-        for resulting_state_node, result_probability in result_distribution.items():
-            resulting_node_value = traverse_policy_graph(resulting_state_node, node_values, new_model_state, policy,
-                                                         policy_fn, agent_identity)
-
-            joint_action_values[joint_action] += result_probability * \
-                                                 (node.successor_transition_values[(
-                                                     resulting_state_node.state, joint_action)] + resulting_node_value)
-
-    # Now breakdown joint actions so we can calculate the primary agent's action values
-    agent_individual_actions = node.action_space.individual_actions()
-    other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
-                               for other_agent, other_agent_model in model_state.items()}
-
-    agent_action_values = {action: 0 for action in agent_individual_actions[agent_identity]}
-    for agent_action in agent_individual_actions[agent_identity]:
-        all_joint_actions_with_fixed_action = [action for action in joint_action_values
-                                               if action[agent_identity] == agent_action]
-
-        for joint_action in all_joint_actions_with_fixed_action:
-            probability_of_action = reduce(mul, [other_agent_action_dist[joint_action[other_agent]]
-                                                 for other_agent, other_agent_action_dist in
-                                                 other_agent_predictions.items()])
-            agent_action_values[agent_action] += probability_of_action * joint_action_values[joint_action]
-
-    # Compute the node value
-    node_values[node] = policy_fn(node, agent_action_values, policy)
-
-    return node_values[node]
-
-
-def compute_reachable_nodes(node, visited_set, model_state):
-    """ Fills a given set of nodes with all unique nodes in the subtree. """
-    visited_set.add(node)
-
-    if not node.successors:
-        return
-
-    world_state = node.state['World State']
-    predicted_actions = {other_agent: set(action for action, prob in other_agent_model.predict(world_state).items()
-                                          if prob > 0)
-                         for other_agent, other_agent_model in model_state.items()}
-
-    resulting_models = {agent_name:
-                            {action: model_state[agent_name].update(world_state, action) for action in
-                             agent_actions}
-                        for agent_name, agent_actions in predicted_actions.items()
-                        if agent_name in model_state}
-
-    individual_actions = node.action_space.individual_actions().copy()
-    individual_actions.update(predicted_actions)
-
-    for joint_action in JointActionSpace(individual_actions):
-        # Update model state
-        new_model_state = State({agent_name: resulting_models[agent_name][joint_action[agent_name]]
-                                 for agent_name in model_state})
-
-        # Traverse through applicable successor nodes
-        for successor_node in (successor for successor in node.successors[joint_action] if
-                               successor not in visited_set):
-            compute_reachable_nodes(successor_node, visited_set, new_model_state)
-
-
-def map_graph_depth(root):
-    """ Map each state according to it's depth in the policy graph. """
-    process_list = [(0, root)]
-    depth_map = {root.state['World State']: 0}
-
-    # Queue all nodes in tree according to depth. Process top down (via heap) to ensure minimum depth for each state.
-    while process_list:
-        level, node = heappop(process_list)
-
-        for successor in node.successor_set():
-            if successor.state['World State'] not in depth_map:
-                heappush(process_list, (level+1, successor))
-                depth_map[successor.state['World State']] = min(level + 1,
-                                                                depth_map.get(successor.state['World State'], infinity))
-
-    return depth_map
-
-
-def query_tie_breaker(tied_query_actions, priorities, identity):
-    """ We want to break query ties by preferring states that the closest to the root (maximum chance of pruning)."""
-    tied_queries = [action[identity] for action in tied_query_actions if action[identity] != 'Halt']
-    min_query_depth = min(priorities[query.state] for query in tied_queries)
-    min_tied_queries = [query for query in tied_queries if priorities[query.state] == min_query_depth]
-
-    return Action({identity: choice(min_tied_queries)})
-
-
-def min_exp_util_fixed_policy(node, node_values, agent_identity, policy, policy_commitments):
-    """ Searching for minimum expected utility within the given policy. """
-    # Already covered this node and subgraph
-    if node in node_values:
-        return
-
-    # Leaf node. Simply the node's future value.
-    if not node.successors:
-        node_values[node] = node.future_value
-        return
-
-    # Calculate new minimum expected util over action space.
-    action_space = node.action_space
-
-    # Set commitments
-    if node.state in policy_commitments:
-        action_space = action_space.constrain(
-            dict(**policy_commitments[node.state], **{agent_identity: policy[node.state]}))
-    else:
-        action_space = action_space.constrain({agent_identity: [policy[node.state]]})
-
-    # Recurse through only relevant portions of the subgraph.
-    for successor in set(successor for action in action_space for successor in node.successors[action]):
-        min_exp_util_fixed_policy(successor, node_values, agent_identity, policy, policy_commitments)
-
-    # Construct new joint action space given constraints. Calculate new expected utils for each joint action.
-    action_values = {
-        action: sum(probability * (node.successor_transition_values[(successor.state, action)] + node_values[successor])
-                    for successor, probability in node.successors[action].items())
-        for action in action_space}
-
-    node_values[node] = min(action_values.values())
-
-
-def max_exp_util_free_policy(node, node_values, policy_commitments):
-    """ Search for maximum expected utility given one or more policy changes. """
-    # Already covered this node and subgraph
-    if node in node_values:
-        return
-
-    # Leaf node. Simply the node's future value.
-    if not node.successors:
-        node_values[node] = node.future_value
-        return
-
-    # Calculate max minimum expected util. Only consider actions that match previous commitments!
-    action_space = node.action_space
-
-    # Set commitments
-    if node.state in policy_commitments:
-        action_space = action_space.constrain(policy_commitments[node.state])
-
-    # Recurse through subgraph.
-    for successor in set(successor for action in action_space for successor in node.successors[action]):
-        max_exp_util_free_policy(successor, node_values, policy_commitments)
-
-    # Construct new joint action space given constraints. Calculate new expected utils for each joint action.
-    action_values = {
-        action: sum(probability * (node.successor_transition_values[(successor.state, action)] + node_values[successor])
-                    for successor, probability in node.successors[action].items())
-        for action in action_space}
-
-    node_values[node] = max(action_values.values())
 

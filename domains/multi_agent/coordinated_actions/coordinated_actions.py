@@ -1,16 +1,16 @@
-from agents.communication.communication_strategies import get_active_node_set
 from domains.multi_agent.coordinated_actions.coordinated_actions_scenario import CoordinatedActionsScenario, RandomPolicyTeammate
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
-from agents.communication.communication_scenario import communicate
 from agents.modeling_agent import ModelingAgent, get_max_action
 from agents.models.frequentist_model import FrequentistModel
-from visualization.graph import show_graph
 from mdp.action import Action
 
 from agents.communication.communication_strategies import *
 
 
 def heuristic_comm(ad_hoc_agent, agent_dict, max_queries=1):
+    """ This comm methods just takes the top choice by heuristics and uses it as comm.
+        No communication 'policy' is searched/calculated.
+    """
     policy_graph_root = ad_hoc_agent.policy_graph_root
 
     original_agent_action = get_max_action(policy_graph_root, ad_hoc_agent.identity)
