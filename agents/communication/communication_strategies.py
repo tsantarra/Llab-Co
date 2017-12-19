@@ -6,6 +6,7 @@ from functools import reduce
 from mdp.distribution import Distribution
 from agents.communication.communication_scenario import Query
 from mdp.graph_planner import create_node_set
+from agents.communication.graph_utilities import recursive_traverse_policy_graph
 
 
 def example_heuristic(policy_root, target_agent_model, prune_fn):
@@ -41,7 +42,7 @@ def entropy_calc(policy_root, target_agent, prune_fn):
     candidate_nodes = set(node for node in candidate_nodes if not prune_fn(node))
 
     # Evaluate each remaining node.
-    node_evals = [(node, target_agent_model.name, evaluate(nod))]
+    node_evals = [(node, target_agent_model.name, evaluate(node))]
     #need updated model, not the one from the policy graph
     # need state from QUERY mdp (so as to include all updated ev)
     # which means we should store EV of every node as well...
@@ -100,7 +101,7 @@ def create_myopic_heuristic(root, agent_identity):
             new_model = model.communicated_policy_update([(query, action)])
             new_model_state = root.state['Models'].update({agent: new_model})
             policy = {}
-            expected_util = traverse_policy_graph(node=root, node_values={}, model_state=new_model_state,
+            expected_util = recursive_traverse_policy_graph(node=root, node_values={}, model_state=new_model_state,
                                                   policy=policy, policy_fn=compute_policy,
                                                   agent_identity=agent_identity)
 

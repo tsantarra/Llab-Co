@@ -7,18 +7,20 @@ from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import map_graph, search, greedy_action
 from mdp.action import Action
-from agents.modeling_agent import get_max_action
-from agents.communication.graph_utilities import traverse_graph_topologically, compute_reachable_nodes, recursive_traverse_policy_graph
+from agents.modeling_agent import get_max_action, single_agent_policy_backup
+from agents.communication.graph_utilities import map_graph_by_depth, traverse_graph_topologically, compute_reachable_nodes, recursive_traverse_policy_graph
 
 from collections import namedtuple, defaultdict
+from functools import partial
 from math import inf as infinity
 from heapq import nlargest
+from copy import deepcopy
 
 Query = namedtuple('Query', ['agent', 'state'])
 
 
 class CommScenario:
-    def __init__(self, policy_graph, initial_model_state, identity, evaluate_query_fn=None, max_branching_factor=infinity, comm_cost=0):
+    def __init__(self, policy_graph, initial_model_state, identity, evaluate_query_fn=None, max_branching_factor=infinity, comm_cost=0, policy_backup_op=single_agent_policy_backup()):
         """
         Args:
             policy_graph:           The policy graph for the agent whose policy may be modified by obtaining info.
@@ -27,23 +29,26 @@ class CommScenario:
             comm_cost:              The amount of resources given up by the agent to communicate with another agent.
         """
         # Save current policy graph for future reference
-        self._policy_root = policy_graph
-        self.agent_identity = identity
+        self._agent_identity = identity
+        self._policy_root = deepcopy(policy_graph)
+        self._teammates_models_state = initial_model_state  # Current model of teammate behavior
         self._evaluate_node_queries_fn = evaluate_query_fn if evaluate_query_fn else (lambda *args: 0)
         self._max_branches = max_branching_factor
+        self._policy_backup_op = policy_backup_op
+        self.comm_cost = comm_cost  # Cost per instance of communication
 
         # References to policy graph
         self._state_graph_map = map_graph(self._policy_root)
 
-        # Caches of commonly computed items
-        self._policy_cache = {}
-        self._model_state_cache = {}
-
         # Helpful references
         self.initial_state_queries = State({Query(name, comm_state): action for name, model in initial_model_state.items()
                               for comm_state, action in model.previous_communications.items()})
-        self._teammates_models_state = initial_model_state  # Current model of teammate behavior
-        self.comm_cost = comm_cost  # Cost per instance of communication
+        self._initial_policy_state = State({'Queries': State(self.initial_state_queries), 'End?': False})
+
+        # Caches of commonly computed items
+        self._policy_cache = {}
+        self._model_state_cache = {self._initial_policy_state: self._teammates_models_state}
+        self._policy_graph_cache = {self._initial_policy_state: self._policy_root}
 
     def initial_state(self):
         """
@@ -85,49 +90,14 @@ class CommScenario:
         for target_agent, model in self._get_model_state(policy_state).items():
             query_evaluations.extend(self._evaluate_node_queries_fn(self._policy_root, model, prune_query))
 
-        node_model_mapping = self._get_model_graph(policy_state)
         # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
         # resulting from different nodes having different evaluations (due to different models)
-        action_set = set(Action({self.agent_identity: query_val[0]}) for query_val in
+        action_set = set(Action({self._agent_identity: query_val[0]}) for query_val in
                          nlargest(self._max_branches, query_evaluations.items(), key=lambda qv: qv[1]))
 
         # Add 'Halt" action for terminating queries
-        action_set.add(Action({self.agent_identity: 'Halt'}))
+        action_set.add(Action({self._agent_identity: 'Halt'}))
         return action_set
-
-    def _get_model_graph(self, policy_state):
-        """ Update all models contained in graph based on query/policy state. """
-        node_model_map = {self._policy_root: self._get_model_state(policy_state)}
-
-        def update_model(node):
-            # Update all individual agent models
-            individual_agent_actions = node.action_space.individual_actions()
-            world_state = node.state['World State']
-            model_state = node_model_map[node]
-            resulting_models = {agent_name:
-                                    {action: model_state[agent_name].update(world_state, action) for action in
-                                     agent_actions}
-                                for agent_name, agent_actions in individual_agent_actions.items()
-                                if agent_name in model_state}
-
-            # Calculate expected return for each action at the given node
-            for joint_action, result_distribution in node.successors.items():
-                assert abs(sum(result_distribution.values()) - 1.0) < 10e-5, 'Action probabilities do not sum to 1.'
-
-                # Construct new model state from individual agent models
-                new_model_state = State({agent_name: resulting_models[agent_name][joint_action[agent_name]]
-                                         for agent_name in model_state})
-
-                node_model_map.update({succ_node: new_model_state for succ_node in result_distribution})
-
-        # Pass update function to graph traversal
-        traverse_graph_topologically(self._policy_root, update_model, top_down=True)
-
-        assert len(node_model_map) > 2, 'Incorrect model update traversal.'
-
-        return node_model_map
-
-
 
     def transition(self, policy_state, action):
         """
@@ -135,7 +105,7 @@ class CommScenario:
         for each possibility.
         """
         # Get the agent's action
-        query_action = action[self.agent_identity]
+        query_action = action[self._agent_identity]
 
         # Termination action
         if query_action == 'Halt':
@@ -193,7 +163,7 @@ class CommScenario:
         after the query.
         """
         # If the action is to stop communicating, there is no further utility gain.
-        if action[self.agent_identity] == 'Halt':
+        if action[self._agent_identity] == 'Halt':
             return 0
 
         # Calculate old policies
@@ -206,22 +176,69 @@ class CommScenario:
 
         return exp_util_new_policy - exp_util_old_policy - self.comm_cost
 
+    def _get_policy_graph(self, policy_state, old_policy_state=None):
+        """
+        Rather than save each bit of information separately (policy, EV, model state, etc), just keep
+        a single copy of the policy graph for each policy state. A new policy calculation is needed
+        for each step of the communicative search model anyway.
+        """
+        # If we have already calculated this new policy graph, return the cached version.
+        if policy_state in self._policy_graph_cache:
+            return self._policy_graph_cache[policy_state]
+
+        # If no reference policy state is given, use the initial one.
+        if old_policy_state is None:
+            old_policy_state = self._initial_policy_state
+
+        # Copy the most similar graph (from a similar policy state).
+        new_root = deepcopy(self._policy_graph_cache[old_policy_state])
+        keys_diff = policy_state['Queries'].keys() - old_policy_state['Queries'].keys()
+        assert len(keys_diff) <= 1, 'Incorrect number of keys in keys_diff between successive policy states.'
+
+        # If no difference in keys, the scenario action ending the comm sequence was selected. Use the existing graph.
+        if not keys_diff:
+            self._policy_graph_cache[policy_state] = self._policy_graph_cache[old_policy_state]
+            return self._policy_graph_cache[policy_state]
+
+        # Otherwise update graph and store difference.
+        query = keys_diff.pop()
+        response = policy_state['Queries'][query]
+
+        # First, update each node (order does not matter).
+        depth_map = map_graph_by_depth(new_root)
+        for node in depth_map:
+            # Update just the model corresponding to the query.
+            model_state = node.state['Models']
+            model_state = model_state.update({query.agent: model_state[query.agent].update(query.state, response)})
+            node.state = node.state.update({'Models': model_state})
+
+        # With new models set, recalculate the policy. This must be done bottom-up.
+        def update_graph(graph_node, horizon):
+            self._policy_backup_op(graph_node, self._agent_identity)
+
+        traverse_graph_topologically(depth_map, update_graph, top_down=False)
+
+        # Store and return new policy graph.
+        self._policy_graph_cache[policy_state] = new_root
+
+        return new_root
+
     def _get_model_state(self, policy_state):
         """
         To save on computation, we have cached model states corresponding to policy states.
         """
         if policy_state in self._model_state_cache:
             return self._model_state_cache[policy_state]
-        else:
-            new_models = {}
-            for name, model in self._teammates_models_state.items():
-                policy_pairs = [(query, action) for query, action in policy_state['Queries'].items()
-                                if query.agent == name]
-                new_models[name] = model.communicated_policy_update(policy_pairs)
 
-            model_state = State(new_models)
-            self._model_state_cache[policy_state] = model_state
-            return model_state
+        new_models = {}
+        for name, model in self._teammates_models_state.items():
+            policy_pairs = [(query, action) for query, action in policy_state['Queries'].items()
+                            if query.agent == name]
+            new_models[name] = model.communicated_policy_update(policy_pairs)
+
+        model_state = State(new_models)
+        self._model_state_cache[policy_state] = model_state
+        return model_state
 
     def _get_policy(self, policy_state):
         """
@@ -240,7 +257,7 @@ class CommScenario:
             model_state = self._get_model_state(policy_state)
             _ = recursive_traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
                                                 policy=policy, policy_fn=compute_policy,
-                                                agent_identity=self.agent_identity)
+                                                agent_identity=self._agent_identity)
             self._policy_cache[policy_state] = policy
             return policy
 
@@ -249,13 +266,12 @@ class CommScenario:
         Calculate the expected utility of a given policy.
         """
         def use_precomputed_policy(node, action_values, policy):
-            action = policy[node.state]
-            return action_values[action]
+            return action_values[policy[node.state]]
 
         model_state = self._get_model_state(policy_state)
         return recursive_traverse_policy_graph(node=self._policy_root, node_values={}, model_state=model_state,
                                                policy=policy, policy_fn=use_precomputed_policy,
-                                               agent_identity=self.agent_identity)
+                                               agent_identity=self._agent_identity)
 
 
 def communicate(agent, agent_dict, passes, comm_cost=0):
@@ -270,7 +286,7 @@ def communicate(agent, agent_dict, passes, comm_cost=0):
     comm_scenario = CommScenario(policy_graph=agent.policy_graph_root,
                                  initial_model_state=agent.policy_graph_root.state['Models'],
                                  identity=agent.identity,
-                                 comm_cost=comm_cost)
+                                 comm_cost=comm_cost) # backup op?!
 
     original_action = get_max_action(agent.policy_graph_root, agent.identity)
     print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', original_action)

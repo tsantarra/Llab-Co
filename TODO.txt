@@ -1,6 +1,34 @@
 BY PRIORITY (ISH)
 
+    Need to trim down communication scenario to just the required cached information. I believe I was caching more independent parts
+    (models, policies, evs, etc) than needed, but now we're recalculating entire policy graphs, which contain that information. No need
+    to have all of the separate parts.
+        _get_policy_graph(policy_state, old_policy_state=None)
+            - used by: nothing yet, but I believe this should be the main access function
+        _get_model_state(policy_state)
+            - used in _get_policy(below), _get_policy_ev (below), actions, end, transition
 
+        _get_policy(policy_state)
+            - used in utility
+        _get_policy_ev(policy_state, policy)
+            - used in utility (compare new policy ev with 'actual' ev under old policy)
+
+
+    From a python implementation of pomcp:
+        # Pre-calculate UCB values for a speed-up
+        self.fast_UCB = [[None for _ in range(POMCP.UCB_n)] for _ in range(POMCP.UCB_N)]
+
+        for N in range(POMCP.UCB_N):
+            for n in range(POMCP.UCB_n):
+                if n is 0:
+                    self.fast_UCB[N][n] = np.inf
+                else:
+                    self.fast_UCB[N][n] = agent.model.ucb_coefficient * np.sqrt(old_div(np.log(N + 1), n))
+
+        # Trevor note: can just use a finite-sized cache of UCB values, initially seeded like ^^.
+        # Can also just decorate a ucb func call with lru_cache. Smart!
+
+    Got graph traveral working. Updated models are now good.
 
     On-policy vs off-policy
         Same if policy is greedy (argmax a) and updated each cycle, so there really isn't a distinction here.

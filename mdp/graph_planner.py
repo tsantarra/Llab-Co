@@ -35,6 +35,7 @@ from math import sqrt, log, inf
 from random import choice
 from itertools import count
 from collections import defaultdict
+from copy import deepcopy
 
 from mdp.distribution import Distribution
 
@@ -411,7 +412,7 @@ class GraphNode:
         Returns a string representation of the node.
         """
         return "<" + "Val:" + "%.2f" % self.future_value + " Vis:" + str(self.visits) + ' ' + str(
-            self.complete) + ">"  + '\n' + str(self.state['World State']['Inventory 1']) + '\n' + str(self.state['World State']['Inventory 2'])
+            self.complete) + ">" + '\n' + str(self.state) + '\n' + str(self.state)
 
     def finite_horizon_string(self, horizon=1, indent=0):
         """
@@ -439,4 +440,13 @@ class GraphNode:
 
     def reachable_subgraph_size(self):
         return len(create_node_set(self))
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        result.state = self.state.copy()
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
 

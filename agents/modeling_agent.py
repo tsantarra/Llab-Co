@@ -27,7 +27,7 @@ class ModelingAgent:
         self.iterations = iterations
         self.heuristic = heuristic
         self.policy_graph_root = None
-        self.policy_backup = partial(policy_backup, agent=self.identity)
+        self.policy_backup = partial(single_agent_policy_backup, agent=self.identity)
 
     def copy(self):
         return ModelingAgent(scenario=self.__original_scenario,
@@ -94,7 +94,7 @@ class ModelingAgent:
             self.update_policy_graph(successor_node, new_succ_state)
 
         # After sub-tree/graph is complete, update node values.
-        policy_backup(node, self.identity)
+        single_agent_policy_backup(node, self.identity)
 
     def update(self, old_state, observation):
         # Update model
@@ -149,7 +149,7 @@ def individual_agent_action_values(agent_name, state, joint_action_space, joint_
     return agent_action_values
 
 
-def policy_backup(node, agent):
+def single_agent_policy_backup(node, agent):
     """
     Function given to graph search planner to backup mdp state values based on
         - the agent's expectation maximization process
