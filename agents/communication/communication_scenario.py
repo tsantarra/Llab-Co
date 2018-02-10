@@ -8,10 +8,10 @@ from mdp.state import State
 from mdp.graph_planner import map_graph, search, greedy_action
 from mdp.action import Action
 from agents.modeling_agent import get_max_action, single_agent_policy_backup
-from agents.communication.graph_utilities import map_graph_by_depth, traverse_graph_topologically, compute_reachable_nodes, recursive_traverse_policy_graph
+from agents.communication.graph_utilities import map_graph_by_depth, traverse_graph_topologically, \
+    compute_reachable_nodes, recursive_traverse_policy_graph
 
-from collections import namedtuple, defaultdict
-from functools import partial
+from collections import namedtuple
 from math import inf as infinity
 from heapq import nlargest
 from copy import deepcopy
@@ -87,8 +87,9 @@ class CommScenario:
 
         # Need to consider all teammates involved.
         query_evaluations = []
-        for target_agent, model in self._get_model_state(policy_state).items():
-            query_evaluations.extend(self._evaluate_node_queries_fn(self._policy_root, model, prune_query))
+        policy_graph = self._get_policy_graph(policy_state)
+        for target_agent in self._teammates_models_state:
+            query_evaluations.extend(self._evaluate_node_queries_fn(policy_graph, target_agent, prune_query))
 
         # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
         # resulting from different nodes having different evaluations (due to different models)
@@ -182,7 +183,7 @@ class CommScenario:
         a single copy of the policy graph for each policy state. A new policy calculation is needed
         for each step of the communicative search model anyway.
         """
-        # If we have already calculated this new policy graph, return the cached version.
+        # Early exit: If we have already calculated this new policy graph, return the cached version.
         if policy_state in self._policy_graph_cache:
             return self._policy_graph_cache[policy_state]
 
@@ -195,21 +196,19 @@ class CommScenario:
         keys_diff = policy_state['Queries'].keys() - old_policy_state['Queries'].keys()
         assert len(keys_diff) <= 1, 'Incorrect number of keys in keys_diff between successive policy states.'
 
-        # If no difference in keys, the scenario action ending the comm sequence was selected. Use the existing graph.
+        # Eary exit: If no difference in keys, the scenario action ending the comm sequence was selected.
         if not keys_diff:
             self._policy_graph_cache[policy_state] = self._policy_graph_cache[old_policy_state]
             return self._policy_graph_cache[policy_state]
-
-        # Otherwise update graph and store difference.
-        query = keys_diff.pop()
-        response = policy_state['Queries'][query]
 
         # First, update each node (order does not matter).
         depth_map = map_graph_by_depth(new_root)
         for node in depth_map:
             # Update just the model corresponding to the query.
             model_state = node.state['Models']
-            model_state = model_state.update({query.agent: model_state[query.agent].update(query.state, response)})
+            for query in keys_diff:
+                response = policy_state['Queries'][query]
+                model_state = model_state.update({query.agent: model_state[query.agent].update(query.state, response)})
             node.state = node.state.update({'Models': model_state})
 
         # With new models set, recalculate the policy. This must be done bottom-up.

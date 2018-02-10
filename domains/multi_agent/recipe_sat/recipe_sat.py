@@ -14,7 +14,7 @@ def centralized_recipe_sat():
     node = None
     while not scenario.end(state):
         # Plan
-        node = search(state, scenario, 10000, root_node=node, heuristic=lambda state: 0)
+        node = search(state, scenario, 1000, root_node=node, heuristic=lambda state: 0)
         action = greedy_action(node)
         print('Subgraph size: ', node.reachable_subgraph_size())
 

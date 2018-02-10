@@ -39,7 +39,8 @@ if __name__ == "__main__":
     # Run code
     profiler.enable()
 
-    centralized_recipe_sat()
+    for _ in range(5):
+        centralized_recipe_sat()
 
     profiler.disable()
 

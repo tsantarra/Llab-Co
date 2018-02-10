@@ -34,6 +34,10 @@ class ExpertsModel:
         Updates the probability according to Bayes' Rule.
 
         P(expert | action) = P(action | expert) * P(expert) / P(action)
+
+        Edit: actually updates according to the mixture of past posteriors (specifically with uniform start):
+            P_{t+1}(expert | action) = [B * P_t(action | expert) P_t(expert) + (1-B) P_0(expert) ]/ P(action)
+        where B = 0.9.
         """
         logging.debug('Model update:')
         logging.debug('State:' + str(old_state))

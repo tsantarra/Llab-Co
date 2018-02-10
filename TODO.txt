@@ -1,34 +1,19 @@
 BY PRIORITY (ISH)
 
-    Need to trim down communication scenario to just the required cached information. I believe I was caching more independent parts
-    (models, policies, evs, etc) than needed, but now we're recalculating entire policy graphs, which contain that information. No need
-    to have all of the separate parts.
-        _get_policy_graph(policy_state, old_policy_state=None)
-            - used by: nothing yet, but I believe this should be the main access function
-        _get_model_state(policy_state)
-            - used in _get_policy(below), _get_policy_ev (below), actions, end, transition
+    TODO
+        Code heuristics
+        Make sure test runs work
 
-        _get_policy(policy_state)
-            - used in utility
-        _get_policy_ev(policy_state, policy)
-            - used in utility (compare new policy ev with 'actual' ev under old policy)
+        Set up logging and test
+        Set up experiments
 
+        Set up virtual env code for cluster
+        Submit jobs
 
-    From a python implementation of pomcp:
-        # Pre-calculate UCB values for a speed-up
-        self.fast_UCB = [[None for _ in range(POMCP.UCB_n)] for _ in range(POMCP.UCB_N)]
-
-        for N in range(POMCP.UCB_N):
-            for n in range(POMCP.UCB_n):
-                if n is 0:
-                    self.fast_UCB[N][n] = np.inf
-                else:
-                    self.fast_UCB[N][n] = agent.model.ucb_coefficient * np.sqrt(old_div(np.log(N + 1), n))
-
-        # Trevor note: can just use a finite-sized cache of UCB values, initially seeded like ^^.
-        # Can also just decorate a ucb func call with lru_cache. Smart!
-
-    Got graph traveral working. Updated models are now good.
+        While experiments are running,
+            Work on other learning algs
+            Develop other test domains
+            Begin paper
 
     On-policy vs off-policy
         Same if policy is greedy (argmax a) and updated each cycle, so there really isn't a distinction here.
@@ -49,6 +34,20 @@ BY PRIORITY (ISH)
             - local expected quadratic loss - linear loss is 0, no? [sum p(a) V(actual)] - V(expected) = V(expected) - V(expected)
                 p(s_t) sum p(a) (V(actual) - V(expected))^2   # p(s_t) or (p(s_t) - 0) is an upper bound on the potential change in prob of bad prediction (emphasizes on-policy, minimizes off-policy)
             - global expected quadratic loss - query then update entire policy, calculate weighted sum of quadratic loss across entire graph
+
+            - could use a linear loss if it is an absolute loss, ie p * | V' - V |
+
+            - consider: what about asymmetric loss functions? We use quadratic instead of linear (because expected linear loss = 0), but what about losses that weight underestimations and
+            overestimations differently? In our case, underestimating the chance of a teammate doing something unexpected or against our policy can be far worse than underestimating that
+            they WILL do what we want (in which case, communication could be skipped in certain circumstances).
+
+            - could also consider losses/metrics based on distributions (e.g. KL-divergence) over local state transitions, local action probs,
+            global teammate policy likelihoods, global state likelihoods, global outcome likelihoods, etc
+            - in this thinking, cross entropy seems like a great candidate, as it is used when predicting a prob dist but truth is all 0/1
+                -> in general, cross entropy is preferred for classification problems (we're classifying policies!) while MSE is better for regression (we're also learning distributions over policies!)
+
+
+
 
     Each heuristic should be given the model state (in comm planner, not in node) and world state to predict on
         things got crossed when using "node" as parameter

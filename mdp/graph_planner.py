@@ -34,6 +34,7 @@ from heapq import heappop, heappush
 from math import sqrt, log, inf
 from random import choice
 from itertools import count
+from functools import lru_cache
 from collections import defaultdict
 from copy import deepcopy
 
@@ -45,16 +46,18 @@ def greedy_action(node, tie_selector=choice):
     Returns the action with the largest expected payoff, breaking ties randomly.
     """
     action_values = node.action_values()
-    if not action_values:
-        print(action_values)
-        print(node)
-        print(node.state)
-        print(node.action_space)
-
     max_action, max_val = max(action_values.items(), key=lambda pair: pair[1])
 
     ties = [action for action in action_values if action_values[action] == max_val]
     return tie_selector(ties)
+
+
+@lru_cache(maxsize=32768)
+def _ucb_explore_factor(parent_visits, action_count):
+    """
+    Calculates the exploration term for UCT search.
+    """
+    return sqrt(log(parent_visits) / action_count)
 
 
 def _traverse_nodes(node, scenario, tie_selector=choice):
@@ -66,10 +69,8 @@ def _traverse_nodes(node, scenario, tie_selector=choice):
         action_values = {act: val for act, val in node.action_values().items()
                          if act in node.incomplete_action_nodes}
 
-        best_action, best_value = max(action_values.items(),
-                                      key=lambda av: av[1] +
-                                                     (node.future_value + 1) * sqrt(
-                                                         log(node.visits) / node.action_counts[av[0]]))
+        best_action, best_value = max(action_values.items(), key=lambda av:
+            av[1] + (node.future_value + 1) * _ucb_explore_factor(node.visits, node.action_counts[av[0]]))
 
         tied_actions = [a for a in action_values if action_values[a] == best_value]
         selected_action = tie_selector(tied_actions)

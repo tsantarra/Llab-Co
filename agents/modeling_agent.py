@@ -4,14 +4,11 @@ implementation will use 'Trial-based Heuristic Tree Search for Finite Horizon MD
 a future version may accept any solver with a custom backup function (required for predicting the actions
 of the teammate via the model).
 """
-from functools import partial
-
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import search
-from mdp.action import Action
 
-from functools import reduce
+from functools import reduce, partial
 from operator import mul
 from copy import copy
 
@@ -46,6 +43,7 @@ class ModelingAgent:
                       backup_op=self.policy_backup,
                       heuristic=self.heuristic,
                       root_node=self.policy_graph_root)
+
         self.policy_graph_root = node
         return get_max_action(node, self.identity)
 
@@ -128,14 +126,13 @@ Helper functions for calculating the individual agent policy.
 """
 
 
-def individual_agent_action_values(agent_name, state, joint_action_space, joint_action_values):
+def individual_agent_action_values(agent_name, world_state, model_state, joint_action_space, joint_action_values):
     """
     Given an association of values with all joint actions available, return the expectation over each individual agent
     action.
     """
-
-    other_agent_predictions = {other_agent: other_agent_model.predict(state['World State'])
-                               for other_agent, other_agent_model in state['Models'].items()}
+    other_agent_predictions = {other_agent: other_agent_model.predict(world_state)
+                               for other_agent, other_agent_model in model_state.items()}
 
     agent_actions = joint_action_space.individual_actions(agent_name)
     agent_action_values = {action: 0 for action in agent_actions}
@@ -156,15 +153,15 @@ def single_agent_policy_backup(node, agent):
         - the agent's expectations of teammates' policies
     """
     if node.successors:
-        agent_action_values = individual_agent_action_values(agent, node.state, node.action_space,
-                                                             node.calculate_action_values())
+        agent_action_values = individual_agent_action_values(agent, node.state['World State'], node.state['Models'],
+                                                             node.action_space, node.calculate_action_values())
         node.future_value = max(agent_action_values.values())
 
 
 def get_max_action(node, agent):
     """ Gets the action maximizing the expected payoff for a given node. """
-    agent_action_values = individual_agent_action_values(agent, node.state, node.action_space,
-                                                         node.action_values())
+    agent_action_values = individual_agent_action_values(agent, node.state['World State'], node.state['Models'],
+                                                         node.action_space, node.action_values())
     return max(agent_action_values, key=lambda action: agent_action_values[action])
 
 
