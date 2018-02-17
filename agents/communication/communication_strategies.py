@@ -20,7 +20,7 @@ from agents.modeling_agent import individual_agent_action_values
             ΔV is related to the change in policy prediction (p(a|s)) and trajectory (p(s)), as weighted by the 
             discounted expected immediate reward. 
         Observations:
-            p(a|s) is dependent on V(s') and, as such, all of the subgraph for t = [t+1, ].
+            p(a|s) is dependent on V(s') and, as such, all of the subgraph for t = [t+1, t+2, ... ].
             p(s) is dependent on all of the policy decisions (p(a|s)) in t = [0, t-1]
         Conclusion:
             In order for a local estimate to be made, either or both of these components must have estimated changes,
@@ -63,23 +63,27 @@ def example_heuristic(policy_root, agent_name, prune_fn):
     """
     Args:
         policy_root:            A pointer to the root node for the policy graph paired with the target_agent_model
-        target_agent_model:     The model against which the communicating agent would be querying.
+        target_agent_model:     The model against which the communicating agent would be querying*.
         prune_fn:               A function that determines if a node would be ruled out from communication.
+
+        *Note: The target agent model is the model of the agent at the root of the policy graph, i.e. is the set of
+               probabilities associates with the agent's policy at the given time, not at the project state time, which
+               may have refined its policy predictions by observing behavior along the state trajectory between now and
+               then. As we have not yet observed that trajectory, we cannot be certain that an accurate information
+               state. All we can be sure of is (1) what we have observed until now and (2) what we have communicated
+               thus far.
 
     Returns:
         A list of query, heuristic value pairs to be used in choosing policy query actions. (higher value => better)
-
-    Note: The target agent model corresponds to that model at the root of the policy graph, given previous comms.
-    We do not query against the model at each node, as those models depend on potential observations that may not
-    occur.
     """
     # Calculate aggregate info (graph traversals, etc)
 
     # Create set of candidate nodes, calling the prune_fn to initially cut down the set
 
-    # Evaluate each remaining node/state. Keep state and value in a non-destructive manner,
-    # as different nodes can refer to the same state (resulting in different evaluations; should we
-    # combine them? No. Then, the most common state may trump more informative state. Right?)
+    # Evaluate each remaining node/state. Note that states are not necessarily unique (trajectories are unique), but
+    # nodes containing matching states may have varying local heuristic values. As we are interested in keeping
+    # only a set of n states with maximal heuristic values, simply keep the maximal value encountered per unique
+    # state. 
 
     # Return query evaluations.
     pass
@@ -87,11 +91,14 @@ def example_heuristic(policy_root, agent_name, prune_fn):
 
 def local_information_entropy(policy_root, target_agent, prune_fn):
     """
-            Information Entropy             sum_{p(a)} [ p(a) log p(a) ]
+    Information Entropy             sum_{p(a)} [ p(a) log p(a) ]
     """
     eval_list = []
 
     def evaluate(node):
+        """
+
+        """
         if prune_fn(node):
             return
 
@@ -107,14 +114,14 @@ def local_information_entropy(policy_root, target_agent, prune_fn):
 def weighted_local_info_entropy(policy_root, target_agent, prune_fn):
     """
     Weight by lambda^t until we can figure out a better estimate of the probabilities involved in:
-            Information Entropy           λ^t sum_{p(a)} [ p(a) log p(a) ]
+        Information Entropy           λ^t sum_{p(a)} [ p(a) log p(a) ]
     """
     pass
 
 
 def local_value_of_information(policy_root, target_agent, prune_fn):
     """
-            Value of Information            sum_{p(a)} [ V(s | a, π') - V(s | a, π)]
+    Value of Information            sum_{p(a)} [ V(s | a, π') - V(s | a, π)]
     """
     eval_list = []
 
@@ -151,7 +158,7 @@ def local_value_of_information(policy_root, target_agent, prune_fn):
 def weighted_val_of_information(policy_root, target_agent, prune_fn):
     """
     Weight by lambda^t until we can figure out a better estimate of the probabilities involved in:
-            Value of Information            λ^t sum_{p(a)} [ V(s | a, π') - V(s | a, π)]
+        Value of Information            λ^t sum_{p(a)} [ V(s | a, π') - V(s | a, π)]
     """
 
     pass
@@ -159,7 +166,7 @@ def weighted_val_of_information(policy_root, target_agent, prune_fn):
 
 def local_absolute_error(policy_root, target_agent, prune_fn):
     """
-            Absolute Error                  sum_{p(a)} [ V(s | a) - V(s)]
+    Absolute Error                  sum_{p(a)} [ V(s | a) - V(s)]
     """
     pass
 
@@ -167,14 +174,14 @@ def local_absolute_error(policy_root, target_agent, prune_fn):
 def weighted_absolute_error(policy_root, target_agent, prune_fn):
     """
     Weight by lambda^t until we can figure out a better estimate of the probabilities involved in:
-            Absolute Error                  sum_{p(a)} [ V(s | a) - V(s)]
+        Absolute Error                  sum_{p(a)} [ V(s | a) - V(s)]
     """
     pass
 
 
 def local_utility_variance(policy_root, target_agent, prune_fn):
     """
-            Utility Variance                sum_{p(a)} [ V(s | a) - V(s)]^2
+    Utility Variance                sum_{p(a)} [ V(s | a) - V(s)]^2
     """
     def variance_in_util(node, target_agent_model, node_probability):
         """
@@ -203,7 +210,7 @@ def local_utility_variance(policy_root, target_agent, prune_fn):
 def weighted_utility_variance(policy_root, target_agent, prune_fn):
     """
     Weight by lambda^t until we can figure out a better estimate of the probabilities involved in:
-            Utility Variance                sum_{p(a)} [ V(s | a) - V(s)]^2
+        Utility Variance                sum_{p(a)} [ V(s | a) - V(s)]^2
     """
     pass
 
@@ -217,7 +224,7 @@ def random(root, agent_identity):
 
 def most_likely_next_state(root, agent_identity):
     """
-        Order states by most likely - p(s | π)
+    Order states by most likely - p(s | π)
     """
     pass
 

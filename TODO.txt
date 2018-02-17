@@ -1,5 +1,89 @@
 BY PRIORITY (ISH)
 
+    Thoughts on trajectories
+        It is likely improper to model teammates as having no consideration of policy trajectory when selecting
+        sub-policies, i.e. teammates likely consider other agents acting within the scene just as we are modeling
+        them. That assumption only works in a very strict case: in a fully-observable multiagent MDP where all agents
+        select policies identically.
+
+        So where are we, then? An initial policy graph (tree, really) where every trajectory is represented.
+            ~|A_j|^h            possible trajectories
+            ~|A_j|^(h+1)        possible queries
+            ~|A_m||A_j|^(h+1)   possible query-reply pairs at the communication policy root, |A_m| = teammate actions
+
+        One benefit: each query response prunes |A_m|-1 subtrees from the policy graph. This benefit is great the closer
+        to the current state the query trajectory state occurs. For example, querying the current state can effectively
+        reduce the space of trajectories as well as the space of possible queries by a factor of |A_j|. In general,
+        querying a trajectory state at time t < h reduces the space of trajectories to
+            |A_j|^h - (|A_j| - 1) * |A_j|^(h-t-1)
+        and the space of queries to
+            |A_j|^(h+1) - (|A_j| - 1) * |A_j|^(h-t).    # check this
+
+        Can we then reason about the space of query/information states? Pruning was not considered substation before,
+        as we allowed for multiple trajectories to arrive at the same state, which meant pruning in an abstract sense
+        was specific to the domain and never guaranteed. In this new perspective, pruning IS guaranteed, and should be
+        considered. Take, for example, a top-down communication strategy. It can be clearly shown that it requires
+        no more than h queries to reach a complete plan (assuming no stochasticity). From a bottom-up approach, the
+        query space required is exhaustive (assuming no model update). The real savings, then, can come from model
+        updates, as they have the potential to prune branches of possibility anywhere within the policy graph. But
+        calculating this potential for pruning would require a global policy analysis, which again is computationally
+        taxing. Active learning may have some method of predicting changes in global prediction variance which may be
+        useful here. Otherwise, we are at best estimating that heuristics like local information entroyp can have
+        large impacts across the model's ability to predict the teammate policy accurately.
+
+        So, in summary, we should select heuristics that
+            (1) prune as much of the trajectory state space as possible
+                - bias heuristics toward short term trajectories or at least trajectory states with large subtrees
+                - consider a heuristic measure of expected pruning (we can do that now!)
+            (2) affect the global potential for pruning by having large information changes within the predictive model
+                - this is where heuristics like information entropy are relevant
+            (3) consider the effect on expected utility
+                - relevant for in highly stochastic environments, as pruning is less likely
+
+        Variance in utility addresses (2) and (3) to some degree. λ^t can help with (1), though not in cases where λ=1.
+        This may be an argument for including p(s|π), as it further narrows the search space and biases heuristic values
+        to trajectory states in the near future. Of course, it ignores off-policy trajectories, but given a response
+        that lowers the expected utility of a trajectory sufficiently, our policy would change, resulting in a new
+        set of trajectory states.
+
+        Does it make sense to consider a policy response to a trajectory that violates my personal policy, e.g. "what
+        will you do if we do A->B->C?" when I don't plan to do B? Probably not, if my policy is fixed. Can we process
+        a noop ("not in policy") response to our benefit? Yes. We can prune the entire policy subgraph from
+        consideration, as we know that any fixed policy that leads to that trajectory state is invalid (drop those
+        models). Model update: all policies leading to trajectory state are dropped (p(r|q)=0); all other policies are
+        equally likely to have made that response (p(r|q)=1).
+
+        Conversely, what happens if we query a trajectory and get a valid response? Does that confirm the current
+        trajectory for the teammate policy? Do we set the probabilities of all models of opposing trajectories to 0?
+        I'd think so, yes. And the remaining policies are all equally likely to generate the trajectory but not equally
+        likely to generate the response.
+
+        Given these two model update considerations, You could imagine a heuristic that selected trajectory states that
+        most closely bisected the set/probabilities of the remaining teammate policies. Ex:
+            Model   Expected Trajectory
+            1       A-B-C
+            2       A-B-C'
+            3       A-B-C''
+            4       A'-B-C
+            5       A'-B'-C
+            6       A''-B-C
+                                Eliminations
+            Possible queries    (in policy & r)  (not in policy)     E[elim]     p(r) log p(r)
+            A                   3/6 (B,B,B)      3/6 (3/6)           18/36       3*1/6 log 1/6 + 3/6 log 3/6 = 1.2424533248940002*
+            A'                  5/6 (B,B')       2/6 (4/6)           18/36       2*1/6 log 1/6 + 4/6 log 4/6 = 0.8675632284814612
+            A-B                 5/6 (C,C',C'')   3/6 (3/6)           24/36*      3*1/6 log 1/6 + 3/6 log 3/6 = 1.2424533248940002*
+            A'-B                5/6 (C)          1/6 (5/6)           10/36       1/6 log 1/6 + 5/6 log 5/6   = 0.45056120886630463
+            A'-B'               5/6 (C)          1/6 (5/6)           10/36       1/6 log 1/6 + 5/6 log 5/6   = 0.45056120886630463
+
+            for policy in policies:
+                response = get_response(policy)
+                probs[response] += pr(policy)       # response = (Yes, action) or (No)
+
+            Exp[elim] = sum(prob * (1-prob) for prob in probs.values)
+
+
+
+
     TODO
         Code heuristics
         Make sure test runs work
@@ -23,7 +107,7 @@ BY PRIORITY (ISH)
     Variance in util not straightforward without MY policy probs
         New heuristics!
             - local entropy minimization - minimize p log p   (can be weighted by p(s))
-            - globabl entropy minimization - pick query to minimize p log p across entire graph (weighted by p(s)); needs to update entire policy graph
+            - global entropy minimization - pick query to minimize p log p across entire graph (weighted by p(s)); needs to update entire policy graph
 
             - local value of information - consider value increase at the state
                 sum p(a) (p'(s_t|a)V'(s_t|a) - p(s_t|a)V(s_t|a))   # p'(s_t) is dependent on policy from 0 to t-1 (not markovian), but V'(s_t)|a isn't. Two options:
