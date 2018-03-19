@@ -126,13 +126,11 @@ Helper functions for calculating the individual agent policy.
 """
 
 
-def individual_agent_action_values(agent_name, world_state, model_state, joint_action_space, joint_action_values):
+def individual_agent_action_values(agent_name, world_state, other_agent_predictions, joint_action_space, joint_action_values):
     """
     Given an association of values with all joint actions available, return the expectation over each individual agent
     action.
     """
-    other_agent_predictions = {other_agent: other_agent_model.predict(world_state)
-                               for other_agent, other_agent_model in model_state.items()}
 
     agent_actions = joint_action_space.individual_actions(agent_name)
     agent_action_values = {action: 0 for action in agent_actions}
@@ -153,14 +151,19 @@ def single_agent_policy_backup(node, agent):
         - the agent's expectations of teammates' policies
     """
     if node.successors:
-        agent_action_values = individual_agent_action_values(agent, node.state['World State'], node.state['Models'],
+        other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
+                                   for other_agent, other_agent_model in node.state['Models'].items()}
+        agent_action_values = individual_agent_action_values(agent, node.state['World State'], other_agent_predictions,
                                                              node.action_space, node.calculate_action_values())
         node.future_value = max(agent_action_values.values())
 
 
 def get_max_action(node, agent):
     """ Gets the action maximizing the expected payoff for a given node. """
-    agent_action_values = individual_agent_action_values(agent, node.state['World State'], node.state['Models'],
+
+    other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
+                               for other_agent, other_agent_model in node.state['Models'].items()}
+    agent_action_values = individual_agent_action_values(agent, node.state['World State'], other_agent_predictions,
                                                          node.action_space, node.action_values())
     return max(agent_action_values, key=lambda action: agent_action_values[action])
 
