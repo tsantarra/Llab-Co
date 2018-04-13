@@ -30,7 +30,7 @@ def get_node_set(root):
 
 def check_graph_sizes():
     # Local imports
-    from mdp.graph_planner import search, greedy_action
+    from mdp.graph_planner import search
     from itertools import product
     import time
 

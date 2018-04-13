@@ -9,7 +9,7 @@ class Distribution(dict):
         Initializes state distribution from list or given distributions.
         """
         if type(args) is list:
-            dict.__init__(self, {item: prob for item, prob in args})
+            super(Distribution, self).__init__({item: prob for item, prob in args})
         elif args:
             super(Distribution, self).__init__(args)
         else:
@@ -40,29 +40,31 @@ class Distribution(dict):
         for key in conditional_probs:
             new_dist[key] *= conditional_probs[key]
 
-        return new_dist.normalize()
+        new_dist.normalize()
+        return new_dist
 
     def normalize(self):
         """
         Normalizes the distribution such that all probabilities sum to 1.
         """
         total = sum(self.values())
-
-        assert total > 0, 'State distribution probability total = 0. \n' + str(self)
+        assert total > 0, 'Distribution probability total = 0. \n' + str(self)
 
         for item in self.keys():
             self[item] /= total
-
-        return self
 
     def sample(self):
         """
         Returns a state probabilistically selected from the distribution.
         """
+        if not self.__len__():
+            raise Exception('Cannot sample from empty distribution.')
+
         target = uniform(0, sum(self.values()))  # Corrected to sum of probabilities for non-normalized distributions.
         cumulative = 0
 
         # Accumulate probability until target is reached, returning state.
+        item = None
         for item, probability in self.items():
             cumulative += probability
             if cumulative > target:
@@ -79,8 +81,10 @@ class Distribution(dict):
                                                 for key, val in self.items()) + '} /Distribution\n'
 
     def __eq__(self, other):
-        keys = self.keys() | other.keys()
-        return all(key in self and key in other for key in keys) and all(self[key] == other[key] for key in keys)
+        if len(self) != len(other):
+            return False
+
+        return dict.__eq__(self, other)
 
     def __key(self):
         return tuple(self.items())

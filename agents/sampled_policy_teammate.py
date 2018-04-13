@@ -1,14 +1,92 @@
-from mdp.graph_planner import search, map_graph
+from mdp.graph_planner import search
 from mdp.distribution import Distribution
+from mdp.graph_utilities import map_graph_by_depth, map_graph, traverse_graph_topologically
+from mdp.state import State
 
 from math import exp, inf
-from collections import defaultdict
+from random import choice
 
 
-class SampledPolicyTeammate:
+class SampledTeammateGenerator:
+
+    def __init__(self, scenario, identity, min_graph_iterations=inf):
+        self.identity = identity
+        self.scenario = scenario
+        self.min_graph_iterations = min_graph_iterations
+        self.internal_root = search(self.scenario.initial_state(), self.scenario, min_graph_iterations)
+        self.internal_policy = State({state: None for state in map_graph(self.internal_root)})
+
+    def sample_policy(self):
+        """
+        Returns a teammate sampled from the stored policy graph.
+        Process:
+            1. Map the graph by depth.
+            2. Traverse the graph bottom-up. (Policy choices typically depend on future actions.)
+            3. At each node, choose an action.
+            4. Construct and return teammate.
+        """
+        policy = {}
+        hash_value = [0]
+
+        def policy_cal(node, _):
+            if not node.action_space:
+                return
+
+            joint_action_values = node.action_values()
+            max_action_value = max(joint_action_values.values())
+            actions = list((index, action_value[0]) for index, action_value in enumerate(joint_action_values.items())
+                           if abs(action_value[1]-max_action_value) < 10e-5)
+            pick_index, action = choice(actions)
+            hash_value[0] = hash_value[0] * 10 + pick_index
+            policy[node.state] = action[self.identity]
+
+        depth_map = map_graph_by_depth(self.internal_root)
+        traverse_graph_topologically(depth_map, policy_cal, top_down=False)
+
+        new_policy = self.internal_policy.update(policy)
+        new_policy.__hash = hash_value[0]
+        return new_policy
+
+    def sample_teammate(self):
+        return OfflineSampledPolicyTeammate(self.identity, self.sample_policy(), self.scenario)
+
+
+class OfflineSampledPolicyTeammate:
+
+    def __init__(self, identity, policy, scenario):
+        self.identity = identity
+        self.policy = policy
+        self.scenario = scenario
+        self.__hash = None
+
+    def copy(self):
+        return OfflineSampledPolicyTeammate(self.identity, self.policy.copy(), self.scenario)
+
+    def get_action(self, state):
+        return self.policy[state]
+
+    def predict(self, state):
+        return Distribution({action: 1.0 if action == self.policy[state] else 0
+                             for action in self.scenario.actions(state).individual_actions(self.identity)})
+
+    def update(self, old_state, observation):
+        pass  # does not update
+
+    def __eq__(self, other):
+        if self.__hash__() != other.__hash__():
+            return False
+        return self.identity == other.identity and self.policy == other.policy
+
+    def __hash__(self):
+        if not self.__hash:
+            self.__hash = hash(self.policy)
+
+        return self.__hash
+
+
+class OnlineSampledPolicyTeammate:
 
     def __init__(self, identity, scenario, rationality=1.0, min_graph_iterations=inf):
-        """ """
         self.identity = identity
         self.scenario = scenario
         self.rationality = rationality
@@ -16,14 +94,17 @@ class SampledPolicyTeammate:
 
         # Variables for calculating the policy and storing results
         self.internal_root = search(self.scenario.initial_state(), self.scenario)
-        self.internal_graph = defaultdict(lambda: None)
+        self.internal_graph = {}
         self.internal_graph.update(map_graph(self.internal_root))
         self.fixed_policy = {node.state: self.action_probabilities(node).sample()
-                                for node in self.internal_graph.values()
-                                if node.visits >= self.min_graph_iterations}
+                             for node in self.internal_graph.values()
+                             if node.visits >= self.min_graph_iterations}
 
     def copy(self):
-        new_teammate = SampledPolicyTeammate(self.identity, self.scenario, self.rationality, self.min_graph_iterations)
+        new_teammate = OnlineSampledPolicyTeammate(self.identity,
+                                                   self.scenario,
+                                                   self.rationality,
+                                                   self.min_graph_iterations)
         new_teammate.fixed_policy = self.fixed_policy.copy()
         return new_teammate
 
@@ -84,3 +165,22 @@ class SampledPolicyTeammate:
 
     def __hash__(self):
         return hash(id(self))
+
+
+if __name__ == '__main__':
+    from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
+    from agents.models.chinese_restaurant_process_model import ChineseRestaurantProcessModel
+
+    recipe_scenario = RecipeScenario(num_conditions=3, num_agents=2, num_valid_recipes=1, recipe_size=3)
+    generator = SampledTeammateGenerator(recipe_scenario, 'Agent1')
+    for recipe in recipe_scenario.recipes:
+        print(recipe)
+
+    agg = ChineseRestaurantProcessModel('Agent1', recipe_scenario)
+
+    for i in range(10_000):
+        pol = generator.sample_policy()
+        agg.add_teammate_model(pol)
+
+    print(', '.join(str(count) for count in agg.observations.values()))
+    print(len(agg.observations))

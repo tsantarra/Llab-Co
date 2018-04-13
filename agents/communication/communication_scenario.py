@@ -8,7 +8,7 @@ from mdp.state import State
 from mdp.graph_planner import map_graph, search, greedy_action
 from mdp.action import Action
 from agents.modeling_agent import get_max_action, single_agent_policy_backup
-from agents.communication.graph_utilities import map_graph_by_depth, traverse_graph_topologically, \
+from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically, \
     compute_reachable_nodes, recursive_traverse_policy_graph
 
 from collections import namedtuple

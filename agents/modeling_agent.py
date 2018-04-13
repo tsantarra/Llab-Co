@@ -7,6 +7,7 @@ of the teammate via the model).
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import search
+from mdp.scenario import Scenario
 
 from functools import reduce, partial
 from operator import mul
@@ -37,15 +38,14 @@ class ModelingAgent:
         self._update_graph(state)
         local_state = State({'World State': state, 'Models': self.model_state})
 
-        node = search(state=local_state,
-                      scenario=self.scenario,
-                      iterations=self.iterations,
-                      backup_op=self.policy_backup,
-                      heuristic=self.heuristic,
-                      root_node=self.policy_graph_root)
+        self.policy_graph_root = search(state=local_state,
+                                        scenario=self.scenario,
+                                        iterations=self.iterations,
+                                        backup_op=self.policy_backup,
+                                        heuristic=self.heuristic,
+                                        root_node=self.policy_graph_root)
 
-        self.policy_graph_root = node
-        return get_max_action(node, self.identity)
+        return get_max_action(self.policy_graph_root, self.identity)
 
     def update_policy_graph(self, node, new_information_state):
         """
@@ -107,12 +107,11 @@ class ModelingAgent:
 
     def _set_scenario(self, scenario):
         # Modify scenario with agent-specific adjustments (via function wrappers).
-        if isinstance(scenario, tuple):  # is a namedtuple
+        if isinstance(scenario, Scenario):
             self.scenario = scenario._replace(transition=modeler_transition(scenario.transition),
                                               actions=modeler_actions(scenario.actions),
                                               end=modeler_end(scenario.end),
-                                              utility=modeler_utility(scenario.utility)
-                                              )
+                                              utility=modeler_utility(scenario.utility))
         else:  # is a class
             self.scenario = copy(scenario)
             self.scenario.transition = modeler_transition(self.scenario.transition)
@@ -126,7 +125,7 @@ Helper functions for calculating the individual agent policy.
 """
 
 
-def individual_agent_action_values(agent_name, world_state, other_agent_predictions, joint_action_space, joint_action_values):
+def individual_agent_action_values(agent_name, other_agent_predictions, joint_action_space, joint_action_values):
     """
     Given an association of values with all joint actions available, return the expectation over each individual agent
     action.
@@ -153,7 +152,7 @@ def single_agent_policy_backup(node, agent):
     if node.successors:
         other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                    for other_agent, other_agent_model in node.state['Models'].items()}
-        agent_action_values = individual_agent_action_values(agent, node.state['World State'], other_agent_predictions,
+        agent_action_values = individual_agent_action_values(agent, other_agent_predictions,
                                                              node.action_space, node.calculate_action_values())
         node.future_value = max(agent_action_values.values())
 
@@ -163,7 +162,7 @@ def get_max_action(node, agent):
 
     other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                for other_agent, other_agent_model in node.state['Models'].items()}
-    agent_action_values = individual_agent_action_values(agent, node.state['World State'], other_agent_predictions,
+    agent_action_values = individual_agent_action_values(agent, other_agent_predictions,
                                                          node.action_space, node.action_values())
     return max(agent_action_values, key=lambda action: agent_action_values[action])
 
@@ -186,8 +185,8 @@ def modeler_transition(transition_fn):
         for new_world_state, probability in resulting_states.items():
             # Update all models with individual actions from joint_action
             new_model_state = old_model_state.update({agent_name:
-                                                          old_model_state[agent_name].update(old_world_state,
-                                                                                             joint_action[agent_name])
+                                                      old_model_state[agent_name].update(old_world_state,
+                                                                                         joint_action[agent_name])
                                                       for agent_name in old_model_state})
 
             resulting_combined_state = State({'World State': new_world_state, 'Models': new_model_state})

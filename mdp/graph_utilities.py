@@ -22,9 +22,8 @@ def recursive_traverse_policy_graph(node, node_values, model_state, policy, poli
     # Update all individual agent models
     individual_agent_actions = node.action_space.individual_actions()
     world_state = node.state['World State']
-    resulting_models = {agent_name:
-                            {action: model_state[agent_name].update(world_state, action) for action in
-                             agent_actions}
+    resulting_models = {agent_name: {action: model_state[agent_name].update(world_state, action) for action in
+                                     agent_actions}
                         for agent_name, agent_actions in individual_agent_actions.items()
                         if agent_name in model_state}
 
@@ -39,12 +38,12 @@ def recursive_traverse_policy_graph(node, node_values, model_state, policy, poli
 
         # Traverse to successor nodes
         for resulting_state_node, result_probability in result_distribution.items():
-            resulting_node_value = recursive_traverse_policy_graph(resulting_state_node, node_values, new_model_state, policy,
-                                                                   policy_fn, agent_identity)
+            resulting_node_value = recursive_traverse_policy_graph(resulting_state_node, node_values, new_model_state,
+                                                                   policy, policy_fn, agent_identity)
 
-            joint_action_values[joint_action] += result_probability * \
-                                                 (node.successor_transition_values[(
-                                                     resulting_state_node.state, joint_action)] + resulting_node_value)
+            joint_action_values[joint_action] += result_probability * (node.successor_transition_values[
+                                                                           (resulting_state_node.state, joint_action)] +
+                                                                       resulting_node_value)
 
     # Now breakdown joint actions so we can calculate the primary agent's action values
     agent_individual_actions = node.action_space.individual_actions()
@@ -87,6 +86,68 @@ def map_graph_by_depth(root):
     return depth_map
 
 
+def create_node_set(node, node_set=None):
+    if node_set is None:
+        node_set = set()
+
+    open_set = {node}
+    while open_set:
+        node = open_set.pop()
+        node_set.add(node)
+        open_set |= node.successor_set() - node_set
+
+    return node_set
+
+
+def detect_cycle(node):
+    """
+    Uses DFS to detect if there exist any cycles in the directed graph.
+    """
+
+    # Define recursive depth-first search function
+    def dfs(current, unvisited, incomplete, complete):
+        unvisited.remove(current)
+        incomplete.add(current)
+
+        for successor in current.successor_set():
+            if successor in complete:
+                continue
+            elif successor in incomplete:
+                return True
+            elif dfs(successor, unvisited, incomplete, complete):
+                return True
+
+        incomplete.remove(current)
+        complete.add(current)
+        return False
+
+    # Return result (all nodes are reachable from the node, so only one call is necessary)
+    return dfs(node, create_node_set(node), set(), set())
+
+
+def map_graph(node):
+    """
+    Builds a dict mapping of states to corresponding nodes in the graph.
+    """
+    return {n.state: n for n in create_node_set(node)}
+
+
+def prune_unreachable(node, node_map, checked):
+    """
+    Prunes currently unreachable nodes from the graph, which cuts down on policy computation time for
+    irrelevant areas of the state space.
+    """
+    checked.add(node)
+    prune_set = set(pred for pred in node.predecessors if pred.state not in node_map)
+    node.predecessors -= prune_set
+
+    for pruned_node in prune_set:
+        pruned_node.successors = {}
+
+    for successor in [succ for succ in node.successor_set() if succ not in checked]:
+        prune_unreachable(successor, node_map, checked)
+
+
 def traverse_graph_topologically(depth_map, node_fn, top_down=True):
     """ Traverses the graph either top-down or bottom-up. """
     factor = 1 if top_down else -1
@@ -127,15 +188,16 @@ def node_likelihoods(root):
 
         joint_action_space = node.action_space
         joint_action_probs = Distribution({joint_action: reduce(mul, [model_predictions[agent][joint_action[agent]]
-                                                         for agent in model_predictions])
-                                            for joint_action in joint_action_space})
+                                                                      for agent in model_predictions])
+                                           for joint_action in joint_action_space})
         joint_action_probs.normalize()
 
         # pass probs onto successor nodes and add them to processing queue
         for joint_action, successor_distribution in node.successors.items():
             for successor, successor_probability in successor_distribution.items():
                 # Add action-specific chance of arriving at the child node
-                node_probabilities[successor] += node_probability * joint_action_probs[joint_action] * successor_probability
+                node_probabilities[successor] += \
+                    node_probability * joint_action_probs[joint_action] * successor_probability
 
                 # Add new layer of nodes to process only if all predecessors have been processed.
                 if node not in preds_left_to_process:
@@ -169,9 +231,8 @@ def compute_reachable_nodes(node, visited_set, model_state):
                                           if prob > 0)
                          for other_agent, other_agent_model in model_state.items()}
 
-    resulting_models = {agent_name:
-                            {action: model_state[agent_name].update(world_state, action) for action in
-                             agent_actions}
+    resulting_models = {agent_name: {action: model_state[agent_name].update(world_state, action) for action in
+                                     agent_actions}
                         for agent_name, agent_actions in predicted_actions.items()
                         if agent_name in model_state}
 
@@ -246,10 +307,9 @@ def max_exp_util_free_policy(node, node_values, policy_commitments):
         max_exp_util_free_policy(successor, node_values, policy_commitments)
 
     # Construct new joint action space given constraints. Calculate new expected utils for each joint action.
-    action_values = {
-        action: sum(probability * (node.successor_transition_values[(successor.state, action)] + node_values[successor])
-                    for successor, probability in node.successors[action].items())
-        for action in action_space}
+    action_values = {action: sum(probability * (node.successor_transition_values[(successor.state, action)] +
+                                                node_values[successor])
+                                 for successor, probability in node.successors[action].items())
+                     for action in action_space}
 
     node_values[node] = max(action_values.values())
-

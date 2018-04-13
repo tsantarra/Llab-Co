@@ -2,11 +2,10 @@ from math import log
 from collections import defaultdict
 from random import randint
 from operator import mul
-from functools import reduce, partial
+from functools import reduce
 
-from mdp.distribution import Distribution
 from agents.communication.communication_scenario import Query
-from agents.communication.graph_utilities import recursive_traverse_policy_graph, traverse_graph_topologically, map_graph_by_depth
+from mdp.graph_utilities import recursive_traverse_policy_graph, traverse_graph_topologically, map_graph_by_depth
 from agents.modeling_agent import individual_agent_action_values
 
 
@@ -130,8 +129,8 @@ def local_value_of_information(policy_root, target_agent_name, prune_fn, agent_n
                                    for other_agent, other_agent_model in node.state['Models'].items()}
 
         # needs identity
-        old_action_values = individual_agent_action_values(agent_name, node.state['World State'],
-                                                           other_agent_predictions, node.action_space, node.action_values())
+        old_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
+                                                           node.action_values())
         old_policy_action, old_policy_old_val = max(old_action_values.items(), key=lambda pair: pair[1])
 
         calc_value = 0
@@ -140,8 +139,8 @@ def local_value_of_information(policy_root, target_agent_name, prune_fn, agent_n
             other_agent_predictions[target_agent_name] = defaultdict(float)
             other_agent_predictions[target_agent_name][teammate_action] = 1.0
 
-            new_action_values = individual_agent_action_values(agent_name, node.state['World State'],
-                                                    other_agent_predictions, node.action_space, node.action_values())
+            new_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
+                                                               node.action_values())
 
             # sum_{responses} P(response) [V(new policy action, new knowledge) - V(old policy action, new knowledge)]
             calc_value += probability * (max(new_action_values.values()) - new_action_values[old_policy_action])
@@ -167,8 +166,8 @@ def local_absolute_error(policy_root, target_agent_name, prune_fn, agent_name, g
                                    for other_agent, other_agent_model in node.state['Models'].items()}
 
         # needs identity
-        old_action_values = individual_agent_action_values(agent_name, node.state['World State'],
-                                                           other_agent_predictions, node.action_space, node.action_values())
+        old_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
+                                                           node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 
         # We need the expected value conditioned on the teammate's action, so we use individual_agent_action_values,
@@ -178,8 +177,9 @@ def local_absolute_error(policy_root, target_agent_name, prune_fn, agent_name, g
         teammate_predictions = other_agent_predictions[target_agent_name]
         del other_agent_predictions[target_agent_name]
 
-        teammate_action_values = individual_agent_action_values(target_agent_name, node.state['World State'],
-                                                                other_agent_predictions, node.action_space,
+        teammate_action_values = individual_agent_action_values(target_agent_name,
+                                                                other_agent_predictions,
+                                                                node.action_space,
                                                                 node.action_values())
 
         expected_absolute_error = sum(prob * abs(teammate_action_values[action] - node.future_value)
@@ -206,8 +206,10 @@ def local_utility_variance(policy_root, target_agent_name, prune_fn, agent_name,
                                    for other_agent, other_agent_model in node.state['Models'].items()}
 
         # needs identity
-        old_action_values = individual_agent_action_values(agent_name, node.state['World State'],
-                                                           other_agent_predictions, node.action_space, node.action_values())
+        old_action_values = individual_agent_action_values(agent_name,
+                                                           other_agent_predictions,
+                                                           node.action_space,
+                                                           node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 
         # We need the expected value conditioned on the teammate's action, so we use individual_agent_action_values,
@@ -217,8 +219,9 @@ def local_utility_variance(policy_root, target_agent_name, prune_fn, agent_name,
         teammate_predictions = other_agent_predictions[target_agent_name]
         del other_agent_predictions[target_agent_name]
 
-        teammate_action_values = individual_agent_action_values(target_agent_name, node.state['World State'],
-                                                                other_agent_predictions, node.action_space,
+        teammate_action_values = individual_agent_action_values(target_agent_name,
+                                                                other_agent_predictions,
+                                                                node.action_space,
                                                                 node.action_values())
 
         expected_absolute_error = sum(prob * pow(teammate_action_values[action] - node.future_value, 2)
@@ -247,8 +250,8 @@ def most_likely_next_state(policy_root, agent_name):
     def evaluate(node, horizon):
         other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                    for other_agent, other_agent_model in node.state['Models'].items()}
-        old_action_values = individual_agent_action_values(agent_name, node.state['World State'],
-                                                           other_agent_predictions, node.action_space, node.action_values())
+        old_action_values = individual_agent_action_values(agent_name,other_agent_predictions, node.action_space,
+                                                           node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 
         for joint_action in node.action_space.fix_actions({agent_name: [policy_action]}):

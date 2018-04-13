@@ -13,8 +13,7 @@ class RecipeScenario:
         self.num_conditions = num_conditions
         self.all_conditions = frozenset(range(num_conditions))
         self.agents = ['Agent' + str(i) for i in range(1, num_agents+1)]
-        self.recipes = [set(recipe) for recipe in
-                        self.__make_recipes(num_valid_recipes, self.all_conditions, recipe_size)]
+        self.recipes = [set(recipe) for recipe in self.__make_recipes(num_valid_recipes, self.all_conditions, recipe_size)]
         self.success_util = 10
         self.conflict_penalty = 1
         self.extra_cond_penalty = 2

@@ -29,7 +29,6 @@
         - Transpositions and Move Groups in Monte Carlo Tree Search
 
 """
-
 from heapq import heappop, heappush
 from math import sqrt, log, inf
 from random import choice
@@ -39,6 +38,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 from mdp.distribution import Distribution
+from mdp.graph_utilities import map_graph, prune_unreachable, create_node_set
 
 
 def greedy_action(node, tie_selector=choice):
@@ -60,7 +60,7 @@ def _ucb_explore_factor(parent_visits, action_count):
     return sqrt(log(parent_visits) / action_count)
 
 
-def _traverse_nodes(node, scenario, tie_selector=choice):
+def _traverse_nodes(node, tie_selector=choice):
     """
     UCT down to leaf node.
     """
@@ -69,8 +69,9 @@ def _traverse_nodes(node, scenario, tie_selector=choice):
         action_values = {act: val for act, val in node.action_values().items()
                          if act in node.incomplete_action_nodes}
 
-        best_action, best_value = max(action_values.items(), key=lambda av:
-            av[1] + (node.future_value + 1) * _ucb_explore_factor(node.visits, node.action_counts[av[0]]))
+        best_action, best_value = max(action_values.items(),
+                                      key=lambda av: av[1] + (node.future_value + 1) *
+                                      _ucb_explore_factor(node.visits, node.action_counts[av[0]]))
 
         tied_actions = [a for a in action_values if action_values[a] == best_value]
         selected_action = tie_selector(tied_actions)
@@ -158,7 +159,7 @@ def _expectation_max(node):
         node.future_value = max(action_values.values())
 
 
-def _backup(node, scenario, backup_op):
+def _backup(node, backup_op):
     """
     Updates tree along simulated path.
     """
@@ -181,7 +182,6 @@ def _backup(node, scenario, backup_op):
         node._has_changed = (node.future_value != node._old_future_value)
 
         # Update node's incomplete actions/child nodes
-        # testing new optimization feature
         for action, child_set in list(node.incomplete_action_nodes.items()):
             child_set = set(child for child in child_set if not child.complete)
             if len(child_set) == 0:
@@ -205,68 +205,6 @@ def _backup(node, scenario, backup_op):
         node._has_changed = False
 
 
-def create_node_set(node, node_set=None):
-    if node_set is None:
-        node_set = set()
-
-    open_set = {node}
-    while open_set:
-        node = open_set.pop()
-        node_set.add(node)
-        open_set |= node.successor_set() - node_set
-
-    return node_set
-
-
-def detect_cycle(node):
-    """
-    Uses DFS to detect if there exist any cycles in the directed graph.
-    """
-
-    # Define recursive depth-first search function
-    def dfs(current, unvisited, incomplete, complete):
-        unvisited.remove(current)
-        incomplete.add(current)
-
-        for successor in current.successor_set():
-            if successor in complete:
-                continue
-            elif successor in incomplete:
-                return True
-            elif dfs(successor, unvisited, incomplete, complete):
-                return True
-
-        incomplete.remove(current)
-        complete.add(current)
-        return False
-
-    # Return result (all nodes are reachable from the node, so only one call is necessary)
-    return dfs(node, create_node_set(node), set(), set())
-
-
-def map_graph(node):
-    """
-    Builds a dict mapping of states to corresponding nodes in the graph.
-    """
-    return {n.state: n for n in create_node_set(node)}
-
-
-def _prune(node, node_map, checked):
-    """
-    Prunes currently unreachable nodes from the graph, which cuts down on policy computation time for
-    irrelevant areas of the state space.
-    """
-    checked.add(node)
-    prune_set = set(pred for pred in node.predecessors if pred.state not in node_map)
-    node.predecessors -= prune_set
-
-    for pruned_node in prune_set:
-        pruned_node.successors = {}
-
-    for successor in [succ for succ in node.successor_set() if succ not in checked]:
-        _prune(successor, node_map, checked)
-
-
 def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristic=None, tie_selector=choice,
            root_node=None, prune=True):
     """
@@ -283,11 +221,11 @@ def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristi
     node_map = map_graph(root_node)
 
     if prune:
-        _prune(root_node, node_map, set())
+        prune_unreachable(root_node, node_map, set())
 
     passes = iterations - root_node.visits + 1
-    for step in count(1):
-        # If entire tree has been searched, halt iteration. Also, halt if max passes has been reached.
+    for step in count():
+        # If entire tree has been searched, halt iteration.
         if root_node.complete or step > passes:
             break
 
@@ -295,13 +233,13 @@ def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristi
         node = root_node
 
         # UCT through existing nodes.
-        node = _traverse_nodes(node, scenario, tie_selector)
+        node = _traverse_nodes(node, tie_selector)
 
         # Expand a new node from leaf.
         node = _expand_leaf(node, scenario, heuristic, node_map)
 
         # Recalculate state values
-        _backup(node, scenario, backup_op=backup_op)
+        _backup(node, backup_op=backup_op)
 
     return root_node
 
@@ -450,4 +388,3 @@ class GraphNode:
         for k, v in self.__dict__.items():
             setattr(result, k, deepcopy(v, memo))
         return result
-
