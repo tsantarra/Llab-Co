@@ -94,3 +94,132 @@ class Distribution(dict):
 
     def __lt__(self, other):
         return self.__key() < other.__key()
+
+
+class ListDistribution:
+    """ A distribution of items and their associated probabilities. """
+
+    def __init__(self, args=None):
+        """
+        Initializes state distribution from list or given distributions.
+        """
+        if type(args) is list:
+            self.__keys, self.__probabilities = zip(*args)
+        elif type(args) is dict:
+            self.__keys, self.__probabilities = zip(*list(args.items()))
+
+    def expectation(self, value_distribution):
+        """
+        Returns an expectation over values using the probabilities in this distribution.
+        """
+        assert len(self) == len(value_distribution), f'Improper expectation call: \n{self}\n{value_distribution}'
+
+        if type(value_distribution) is ListDistribution:
+            assert self.__keys == value_distribution.__keys, \
+                f'Keys do not align between distributions: \n{self}\n{value_distribution}'
+            return sum(prob * value for prob, value in zip(self.__probabilities, value_distribution.values()))
+
+        elif type(value_distribution) is Distribution:
+            assert all(key in value_distribution for key in self.__keys), \
+                f'Keys do not align between distributions: \n{self}\n{value_distribution}'
+            return sum(prob * value_distribution[key] for key, prob in zip(self.__keys, self.__probabilities))
+
+        else:
+            raise TypeError(f'Value distribution has incorrect type ({0}).'.format(type(value_distribution)))
+
+    def conditional_update(self, conditional_probs):
+        """
+        Given a set of conditional probabilities, the distribution updates itself via Bayes' rule.
+        """
+        assert len(self) == len(conditional_probs), f'Improper expectation call: \n{self}\n{conditional_probs}'
+
+        if type(conditional_probs) is ListDistribution:
+            assert self.__keys == conditional_probs.__keys, \
+                f'Keys do not align between distributions: \n{self}\n{conditional_probs}'
+            new_list_dist = ListDistribution([(key, prob * prob2) for key, prob, prob2 in
+                                              zip(self.__keys,
+                                                  self.__probabilities,
+                                                  conditional_probs.values())])
+
+        elif type(conditional_probs) is Distribution:
+            assert self.__keys == conditional_probs.__keys, \
+                f'Keys do not align between distributions: \n{self}\n{conditional_probs}'
+
+            new_list_dist = ListDistribution([(key, self.__probabilities[index] * conditional_probs[key])
+                                              for index, key in enumerate(self.__keys)])
+        else:
+            raise TypeError(f'Conditional distribution has incorrect type ({0}).'.format(type(conditional_probs)))
+
+        new_list_dist.normalize()
+        return new_list_dist
+
+    def normalize(self):
+        """
+        Normalizes the distribution such that all probabilities sum to 1.
+        """
+        total = sum(self.__probabilities)
+        assert total > 0, 'Distribution probability total = 0. \n' + str(self)
+
+        self.__probabilities = [prob/total for prob in self.__probabilities]
+
+    def sample(self):
+        """
+        Returns a state probabilistically selected from the distribution.
+        """
+        if not self.__len__():
+            raise Exception('Cannot sample from empty distribution.')
+
+        target = uniform(0, sum(self.__probabilities))  # Corrected to sum of probabilities for non-normalized distributions.
+        cumulative = 0
+
+        # Accumulate probability until target is reached, returning state.
+        for index, probability in enumerate(self.__probabilities):
+            cumulative += probability
+            if cumulative > target:
+                return self.__keys[index]
+
+        # Small rounding errors may cause probability to not reach target for last state.
+        return self.__keys[-1]
+
+    def sort(self):
+        self.__keys, self.__probabilities = zip(*sorted(self.items()))
+
+    def keys(self):
+        return self.__keys
+
+    def values(self):
+        return self.__probabilities
+
+    def items(self):
+        return zip(self.__keys, self.__probabilities)
+
+    def copy(self):
+        return ListDistribution(self.items())
+
+    def __repr__(self):
+        return '\nListDistribution {\n' + '\n'.join(str(key) + ' P=' + str(val)
+                                                    for key, val in self.items()) + '} /Distribution\n'
+
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+
+        return self.keys() == other.keys() and self.values() == other.values()
+
+    def __len__(self):
+        return len(self.__keys)
+
+    def __key(self):
+        return tuple(self.items())
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __lt__(self, other):
+        return self.__key() < other.__key()
+
+    def __setitem__(self, item):
+        raise NotImplementedError
+
+    def __getitem__(self, item):
+        return self.__probabilities[self.__keys.index(item)]

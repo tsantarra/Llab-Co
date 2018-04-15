@@ -1,22 +1,23 @@
-from mdp.distribution import Distribution
+from mdp.distribution import ListDistribution, Distribution
 from agents.sampled_policy_teammate import OfflineSampledPolicyTeammate
 
 
-class TeammateDistributionModel:
+class PolicyDistributionModel:
 
     def __init__(self, scenario, identity, teammate_distribution):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
-            prior - previous counts from before this initialization
-            default - the default factory for the default dict
+            identity - the name of the agent this object models
+            teammate_distribution - a dictionary of teammate models and corresponding probabilities
         """
         self.scenario = scenario
         self.identity = identity
         self.__hash = None
 
-        assert isinstance(teammate_distribution, dict)
-        self.teammate_distribution = Distribution(teammate_distribution)
+        assert isinstance(teammate_distribution, ListDistribution), \
+            'Argument teammate_distribution must be a ListDistribution.'
+        self.teammate_distribution = teammate_distribution
 
     def predict(self, current_state):
         """
@@ -25,7 +26,7 @@ class TeammateDistributionModel:
         joint_actions = self.scenario.actions(current_state)
         action_distribution = {indiv_action: 0.0 for indiv_action in joint_actions.individual_actions(self.identity)}
         for model, prob in self.teammate_distribution.items():
-            if prob < 10e-5:
+            if prob < 10e-6:
                 continue
             if isinstance(model, OfflineSampledPolicyTeammate):
                 action_distribution[model.get_action(current_state)] += prob
@@ -41,26 +42,24 @@ class TeammateDistributionModel:
 
         P(teammate | action) = P(action | teammate) * P(teammate) / P(action)
         """
-        resulting_model = self.copy()
-        for model, prob in resulting_model.teammate_distribution.items():
-            if prob < 10e-6:
-                continue
-
+        resulting_probs = []
+        for model, prob in self.teammate_distribution.items():
             if isinstance(model, OfflineSampledPolicyTeammate):
-                resulting_model.teammate_distribution[model] *= int(observed_action == model.get_action(old_state))
+                resulting_probs.append((model, prob * float(observed_action == model.get_action(old_state))))
             else:
                 prediction = model.predict(old_state)
-                resulting_model.teammate_distribution[model] *= prediction[observed_action]
+                resulting_probs.append((model, prob * prediction[observed_action]))
 
-        resulting_model.teammate_distribution.normalize()
-        return resulting_model
+        resulting_model_distribution = ListDistribution(resulting_probs)
+        resulting_model_distribution.normalize()
+        return PolicyDistributionModel(self.scenario, self.identity, resulting_model_distribution)
 
     def copy(self):
         """
         Creates a new instance of this model.
         """
-        return TeammateDistributionModel(self.scenario, self.identity,
-                                         self.teammate_distribution.copy())
+        return PolicyDistributionModel(self.scenario, self.identity,
+                                       self.teammate_distribution.copy())
 
     def __str__(self):
         return '\t'.join('TeammateDistributionModel({teammate}) Prob={prob}'.format(teammate=model, prob=prob)
@@ -91,7 +90,7 @@ if __name__ == '__main__':
 
     print(', '.join(str(count) for count in crp.observations.values()))
 
-    trial_model = TeammateDistributionModel(recipe_scenario, 'Agent1', crp.prior())
+    trial_model = PolicyDistributionModel(recipe_scenario, 'Agent1', crp.prior())
 
     state = recipe_scenario.initial_state()
     action = trial_model.predict(state).sample()

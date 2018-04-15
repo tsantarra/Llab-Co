@@ -2,7 +2,7 @@ from agents.modeling_agent import ModelingAgent
 from agents.models.chinese_restaurant_process_model import ChineseRestaurantProcessModel
 from agents.sampled_policy_teammate import SampledTeammateGenerator
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
-from agents.models.policy_distribution import TeammateDistributionModel
+from agents.models.policy_distribution import PolicyDistributionModel
 
 from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
 
@@ -28,7 +28,7 @@ def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
     for _ in range(num_initial_models):
         chinese_restaurant_process.add_teammate_model(teammate_generator.sample_teammate())
 
-    teammate_model = TeammateDistributionModel(scenario, 'Agent2', chinese_restaurant_process.prior())
+    teammate_model = PolicyDistributionModel(scenario, 'Agent2', chinese_restaurant_process.prior())
     comm_model = CommunicatingTeammateModel(teammate_model, scenario)
 
     return ModelingAgent(scenario, 'Agent1', {'Agent2': comm_model}, iterations=10000), teammate_generator

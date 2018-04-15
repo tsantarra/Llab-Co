@@ -1,4 +1,5 @@
 from agents.models.uniform_policy_teammate import UniformPolicyTeammate
+from mdp.distribution import ListDistribution
 
 from collections import defaultdict
 
@@ -23,8 +24,7 @@ class ChineseRestaurantProcessModel:
         self.total_obvs += 1
 
     def prior(self):
-        dist = {expert: obvs/(self.total_obvs + self.alpha) for expert, obvs in self.observations.items()}
-        dist[UniformPolicyTeammate(self.identity, self.scenario)] = self.alpha / (self.total_obvs + self.alpha)
-        return dist
-
+        items = [(expert, obvs/(self.total_obvs + self.alpha)) for expert, obvs in self.observations.items()]
+        items.append((UniformPolicyTeammate(self.identity, self.scenario), self.alpha / (self.total_obvs + self.alpha)))
+        return ListDistribution(items)
 
