@@ -13,8 +13,19 @@ class SampledTeammateGenerator:
         self.identity = identity
         self.scenario = scenario
         self.min_graph_iterations = min_graph_iterations
-        self.internal_root = search(self.scenario.initial_state(), self.scenario, min_graph_iterations)
-        self.internal_policy = State({state: None for state in map_graph(self.internal_root)})
+        self.__internal_root = search(self.scenario.initial_state(), self.scenario, min_graph_iterations)
+        self.__depth_map = map_graph_by_depth(self.__internal_root)
+
+        self.policy_state_order = []
+        self.all_policy_actions = []
+
+        def gather_policy_info(node, _):
+            if not node.action_space:
+                return
+            self.policy_state_order.append(node.state)
+            self.all_policy_actions.append(set(action[identity] for action in node.action_values()))
+
+        traverse_graph_topologically(self.__depth_map, gather_policy_info, top_down=False)
 
     def sample_policy(self):
         """
@@ -25,7 +36,7 @@ class SampledTeammateGenerator:
             3. At each node, choose an action.
             4. Construct and return teammate.
         """
-        policy = {}
+        policy = []
         hash_value = [0]
 
         def policy_cal(node, _):
@@ -38,17 +49,15 @@ class SampledTeammateGenerator:
                            if abs(action_value[1]-max_action_value) < 10e-5)
             pick_index, action = choice(actions)
             hash_value[0] = hash_value[0] * 10 + pick_index
-            policy[node.state] = action[self.identity]
+            policy.append(action[self.identity])
 
-        depth_map = map_graph_by_depth(self.internal_root)
-        traverse_graph_topologically(depth_map, policy_cal, top_down=False)
+        traverse_graph_topologically(self.__depth_map, policy_cal, top_down=False)
 
-        new_policy = self.internal_policy.update(policy)
-        new_policy.__hash = hash_value[0]
-        return new_policy
+        return policy
 
     def sample_teammate(self):
-        return OfflineSampledPolicyTeammate(self.identity, self.sample_policy(), self.scenario)
+        policy_dict = dict(zip(self.policy_state_order, self.sample_policy()))
+        return OfflineSampledPolicyTeammate(self.identity, policy_dict, self.scenario)
 
 
 class OfflineSampledPolicyTeammate:

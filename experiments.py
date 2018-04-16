@@ -24,11 +24,14 @@ def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
                 - One UniformPolicyTeammate model
     """
     teammate_generator = SampledTeammateGenerator(scenario, 'Agent2')
-    chinese_restaurant_process = ChineseRestaurantProcessModel('Agent2', scenario, 1)
+    chinese_restaurant_process = ChineseRestaurantProcessModel('Agent2', scenario,
+                                                               teammate_generator.policy_state_order,
+                                                               teammate_generator.all_policy_actions)
     for _ in range(num_initial_models):
-        chinese_restaurant_process.add_teammate_model(teammate_generator.sample_teammate())
+        chinese_restaurant_process.add_teammate_model(teammate_generator.sample_policy())
 
-    teammate_model = PolicyDistributionModel(scenario, 'Agent2', chinese_restaurant_process.prior())
+    teammate_model = PolicyDistributionModel(scenario, 'Agent2', chinese_restaurant_process.prior(),
+                                             chinese_restaurant_process)
     comm_model = CommunicatingTeammateModel(teammate_model, scenario)
 
     return ModelingAgent(scenario, 'Agent1', {'Agent2': comm_model}, iterations=10000), teammate_generator
@@ -129,8 +132,8 @@ def run_no_comm(scenario, agent, teammate):
         state = scenario.transition(state, action).sample()
 
         # Output
-        print('\t'.join('{:4.4f}'.format(i) for i in agent.model_state['Agent2'].model.teammate_distribution.values()
-                        if i > 10e-5))
+        print('\t'.join('{:4.4f}'.format(prob) for index, prob in agent.model_state['Agent2'].model.policy_distribution
+                        if prob > 10e-5))
         """
         print('Action:', action)
         print('New State')

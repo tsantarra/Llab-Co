@@ -1,5 +1,22 @@
 BY PRIORITY (ISH)
 
+    CRP Policy
+        Shared reference to policy matrix (saves a bunch of space)
+        Individual models are then a probability distribution over indices of policies
+
+        constructor -> takes reference to matrix as well as prob for uniform model
+        predict(state) -> lookup dict (index -> action) for all indices; return distribution over actions
+        update(state, action) -> go to state row; iterate over indices; delete 0 prob keys
+
+    Model distribution functionality
+        Keep probability vector, aligned with policy (is this necessary if policy is encoded in rows?)
+        Keep state-wise action vector, also aligned with policy
+
+        constructor ->
+        predict(state) -> find state row; iterate over probs, actions; return distribution
+        update(state, action) -> go to state row; iterate over, setting relevant probs to 0; delete 0 prob rows
+
+
     Models
         Recently I switched the project over to using Chinese Restaurant Processes for lifetime, population modeling,
         where the model keeps track of all observed policies seen so far and provides priors to the agent for individual
