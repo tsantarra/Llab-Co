@@ -1,3 +1,5 @@
+from agents.communication.communication_scenario import communicate
+from agents.communication.communication_strategies import *
 from agents.modeling_agent import ModelingAgent
 from agents.models.chinese_restaurant_process_model import ChineseRestaurantProcessModel
 from agents.sampled_policy_teammate import SampledTeammateGenerator
@@ -10,8 +12,8 @@ from mdp.graph_utilities import get_active_node_set
 from mdp.state import State
 from mdp.action import Action
 
+
 import sys
-import csv
 
 
 def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
@@ -32,9 +34,9 @@ def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
 
     teammate_model = PolicyDistributionModel(scenario, 'Agent2', chinese_restaurant_process.prior(),
                                              chinese_restaurant_process)
-    comm_model = CommunicatingTeammateModel(teammate_model, scenario)
+    #comm_model = CommunicatingTeammateModel(teammate_model, scenario)
 
-    return ModelingAgent(scenario, 'Agent1', {'Agent2': comm_model}, iterations=10000), teammate_generator
+    return ModelingAgent(scenario, 'Agent1', {'Agent2': teammate_model}, iterations=10000), teammate_generator
 
 
 def run_comm_attempt(agent, teammate, comm_method, max_queries=50):
@@ -117,12 +119,16 @@ def run_no_comm(scenario, agent, teammate):
     agent_dict = {'Agent1': agent, 'Agent2': teammate}
 
     # Main loop
+    print('Begin main loop')
     while not scenario.end(state):
         # Have the agents select actions
         action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
+        print('Action:', action)
 
         # Communicate
-        # action = communicate(state, agent, agent_dict, 200)
+        action = communicate(agent, agent_dict, 1, local_information_entropy,
+                             branching_factor=3,
+                             domain_heuristic=lambda s: 0)
 
         # Observe
         for participating_agent in agent_dict.values():
@@ -155,7 +161,7 @@ if __name__ == '__main__':
 
         try:
             # Initialize scenario and agents. These will be kept constant across comm methods.
-            recipe_scenario = RecipeScenario(num_conditions=5, num_agents=2, num_valid_recipes=1, recipe_size=5)
+            recipe_scenario = RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=3, recipe_size=5)
             ad_hoc_agent, generator = initialize_agents(recipe_scenario, num_models)
 
             ad_hoc_agent.policy_graph_root = None

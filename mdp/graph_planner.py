@@ -35,10 +35,11 @@ from random import choice
 from itertools import count
 from functools import lru_cache
 from collections import defaultdict
-from copy import deepcopy
+from copy import deepcopy, copy
 
 from mdp.distribution import Distribution
-from mdp.graph_utilities import map_graph, prune_unreachable, create_node_set
+from mdp.graph_utilities import map_graph, prune_unreachable, create_node_set, map_graph_by_depth, \
+    traverse_graph_topologically
 
 
 def greedy_action(node, tie_selector=choice):
@@ -64,7 +65,7 @@ def _traverse_nodes(node, tie_selector=choice):
     """
     UCT down to leaf node.
     """
-    while node.untried_actions == [] and len(node.successors) != 0:  # and not scenario.end(node.state):
+    while len(node.successors) != 0:  # and not scenario.end(node.state):
         # UCT criteria with exploration factor = node value (from THTS paper)
         action_values = {act: val for act, val in node.action_values().items()
                          if act in node.incomplete_action_nodes}
@@ -104,47 +105,46 @@ def _expand_leaf(node, scenario, heuristic, node_map):
     """
     Expands one or more new nodes from current leaf node.
     """
+    assert not node.complete, 'ERROR. SHOULD NOT EXPAND COMPLETE NODE.'
 
-    # If conditions are met, add one or more leaf nodes.
-    if node.untried_actions != [] and not node.complete:
-        # Expand all actions (rather than selecting one randomly)
-        expand_actions = node.untried_actions
-        node.untried_actions = []
+    # node.set_actions(scenario.actions(node.state))  # save computation of actions for fringe nodes
 
-        for action in expand_actions:
-            transitions = scenario.transition(node.state, action)
-            new_successors = Distribution()
+    # Expand all actions (rather than selecting one randomly)
+    for action in list(node.action_space):
+        transitions = scenario.transition(node.state, action)
+        new_successors = Distribution()
 
-            for new_state, prob in transitions.items():
-                # Update transition utils
-                node.successor_transition_values[(new_state, action)] = scenario.utility(node.state, action, new_state)
+        for new_state, prob in transitions.items():
+            # Update transition utils
+            node.successor_transition_values[(new_state, action)] = scenario.utility(node.state, action, new_state)
 
-                if new_state in node_map:
-                    new_node = node_map[new_state]
-                    new_node.predecessors.add(node)
-                else:
-                    new_node = GraphNode(state=new_state, scenario=scenario, predecessor=node)
+            if new_state in node_map:
+                new_node = node_map[new_state]
+                new_node.predecessors.add(node)
+            else:
+                new_node = GraphNode(state=new_state, terminal=scenario.end(new_state),
+                                     actions=scenario.actions(new_state), predecessor=node)
 
-                    # Provide initial evaluation of new leaf node
-                    if not new_node.complete:  # not scenario.end(new_node.state):
-                        new_node.future_value = heuristic(new_node.state)
+                # Provide initial evaluation of new leaf node
+                if not new_node.complete:
+                    new_node.future_value = heuristic(new_node.state)
 
-                    # Add to node map, so we can find it later.
-                    node_map[new_state] = new_node
+                # Add to node map, so we can find it later.
+                node_map[new_state] = new_node
 
-                new_successors[new_node] = prob
+            new_successors[new_node] = prob
 
-            # added new function call to adjust property (see GraphNode)
-            node.add_new_successors(action, new_successors)
+        # added new function call to adjust property (see GraphNode)
+        node.add_new_successors(action, new_successors)
 
-            # testing new optimization feature
-            node.incomplete_action_nodes[action] = set(child for child in new_successors if not child.complete)
+        # testing new optimization feature
+        node.incomplete_action_nodes[action] = set(child for child in new_successors if not child.complete)
 
-            # set initial action count to 1
-            node.action_counts[action] = 1
+        # set initial action count to 1
+        node.action_counts[action] = 1
 
-        # Calculate initial action values
-        node.calculate_action_values(force_recalculate=True)
+    # Calculate initial action values
+    node.calculate_action_values(force_recalculate=True)
 
     return node
 
@@ -187,9 +187,8 @@ def _backup(node, backup_op):
             if len(child_set) == 0:
                 del node.incomplete_action_nodes[action]
 
-        # Labeling -> if all actions expanded and all child nodes complete, this node is complete
-        if not node.complete and node.untried_actions == [] and \
-                all(child.complete for child in node.successor_set()):
+        # Labeling -> if all child nodes complete, this node is complete
+        if not node.complete and all(child.complete for child in node.successor_set()):
             node.complete = True
             node._has_changed = True
 
@@ -216,7 +215,7 @@ def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristi
 
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
-        root_node = GraphNode(state, scenario)
+        root_node = GraphNode(state, scenario.end(state), scenario.actions(state))
 
     node_map = map_graph(root_node)
 
@@ -249,16 +248,15 @@ class GraphNode:
     A node in the game tree.
     """
 
-    def __init__(self, state, scenario, predecessor=None):
+    def __init__(self, state, terminal, actions, predecessor=None):
         """
         Initializes tree node with relevant information.
         """
         # State and action
         self.state = state  # Current game state (clone of state instance).
-        self.scenario_end = scenario.end(state)
+        self.scenario_end = terminal  #scenario.end(state)
         self.complete = self.scenario_end  # A label to avoid sampling in complete subgraphs.
-        self.action_space = scenario.actions(state)
-        self.untried_actions = list(self.action_space)  # Yet unexplored actions
+        self.action_space = actions  # scenario.actions(state)
 
         # Due to the dynamic programming approach, allow multiple predecessors.
         self.predecessors = {predecessor} if predecessor else set()
@@ -276,6 +274,9 @@ class GraphNode:
         self.action_counts = defaultdict(int)
         self._has_changed = False
         self._old_future_value = self.future_value
+
+    def set_actions(self, action_space):
+        self.action_space = action_space
 
     def action_values(self):
         if not self.__action_values:
@@ -373,17 +374,52 @@ class GraphNode:
         return hash(self.state)
 
     def __eq__(self, other):
-        self_vars = vars(self)
-        other_vars = vars(other)
-        return (self_vars.keys() == other_vars.keys()) and all(self_vars[key] == other_vars[key] for key in self_vars)
+        if self.state != other.state:
+            return False
+
+        return vars(self) == vars(other)
 
     def reachable_subgraph_size(self):
         return len(create_node_set(self))
 
+    def copy_subgraph(self):
+        # two passes -> create new nodes, then replace links between nodes
+        cloned_nodes = {}
+
+        def clone_node(node, _):
+            cloned_nodes[node] = copy(node)
+
+        def update_links(node, _):
+            cloned = cloned_nodes[node]
+
+            cloned._succ_set = set(cloned_nodes[n] for n in node._succ_set)
+            cloned._successors = {action: Distribution({cloned_nodes[n]: p for n, p in dist.items()})
+                                  for action, dist in node._successors.items()}
+
+            cloned.incomplete_action_nodes = {action: set(cloned_nodes[n] for n in node_set)
+                                  for action, node_set in node.incomplete_action_nodes.items()}
+
+            cloned.predecessors = set(cloned_nodes[n] for n in node.predecessors)
+
+
+        depth_map = map_graph_by_depth(self)
+        traverse_graph_topologically(depth_map, clone_node)
+        traverse_graph_topologically(depth_map, update_links)  # does not need to be a traversal, technically
+
+        print('Depth Map:', len(depth_map))
+        print('Cloned:', len(cloned_nodes))
+        return cloned_nodes[self]
+
     def __deepcopy__(self, memo):
+        this_id = id(self)
+        if this_id in memo:
+            return memo[this_id]
+
         cls = self.__class__
         result = cls.__new__(cls)
-        memo[id(self)] = result
+        memo[this_id] = result
+
+
         result.state = self.state.copy()
         for k, v in self.__dict__.items():
             setattr(result, k, deepcopy(v, memo))

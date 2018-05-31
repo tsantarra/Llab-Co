@@ -43,6 +43,14 @@ class State(Mapping):
         new_copy.__dict.update(args)
         return new_copy
 
+    def update_item(self, key, value):
+        """
+        Returns a copy with updated item.
+        """
+        new_copy = self.copy()
+        new_copy.__dict[key] = value
+        return new_copy
+
     def remove(self, keys):
         """
         Returns a copy with the specified keys removed.

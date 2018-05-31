@@ -14,18 +14,20 @@ class SampledTeammateGenerator:
         self.scenario = scenario
         self.min_graph_iterations = min_graph_iterations
         self.__internal_root = search(self.scenario.initial_state(), self.scenario, min_graph_iterations)
-        self.__depth_map = map_graph_by_depth(self.__internal_root)
+
+        node_list = list((horizon, node) for node, horizon in map_graph_by_depth(self.__internal_root).items())
+        node_list.sort(reverse=True)
+        self.__node_order = [node for horizon, node in node_list]
 
         self.policy_state_order = []
         self.all_policy_actions = []
 
-        def gather_policy_info(node, _):
+        for node in self.__node_order:
             if not node.action_space:
-                return
+                # node.set_actions(scenario.actions(node.state))
+                continue
             self.policy_state_order.append(node.state)
             self.all_policy_actions.append(set(action[identity] for action in node.action_values()))
-
-        traverse_graph_topologically(self.__depth_map, gather_policy_info, top_down=False)
 
     def sample_policy(self):
         """
@@ -37,21 +39,17 @@ class SampledTeammateGenerator:
             4. Construct and return teammate.
         """
         policy = []
-        hash_value = [0]
 
-        def policy_cal(node, _):
+        for node in self.__node_order:
             if not node.action_space:
-                return
+                continue
 
             joint_action_values = node.action_values()
             max_action_value = max(joint_action_values.values())
             actions = list((index, action_value[0]) for index, action_value in enumerate(joint_action_values.items())
                            if abs(action_value[1]-max_action_value) < 10e-5)
             pick_index, action = choice(actions)
-            hash_value[0] = hash_value[0] * 10 + pick_index
             policy.append(action[self.identity])
-
-        traverse_graph_topologically(self.__depth_map, policy_cal, top_down=False)
 
         return policy
 
@@ -187,7 +185,7 @@ if __name__ == '__main__':
 
     agg = ChineseRestaurantProcessModel('Agent1', recipe_scenario)
 
-    for i in range(10_000):
+    for i in range(10000):
         pol = generator.sample_policy()
         agg.add_teammate_model(pol)
 

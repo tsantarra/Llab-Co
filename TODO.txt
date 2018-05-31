@@ -1,5 +1,13 @@
 BY PRIORITY (ISH)
 
+    Updates on debug/other
+        Information states are Markovian as we assume the teammate's policy does not change.
+        If information states are Markovian, so are policy updates and policy EVs.
+        Observation:
+            0 =  V(I2, π0) - V(I2, π1) + V(I1, π1) - V(I1, π0)  # in effect, going from policy A->B->A nets no value
+            V(I2, π1) - V(I2, π0) = V(I1, π1) - V(I1, π0)       #
+
+
     CRP Policy
         Shared reference to policy matrix (saves a bunch of space)
         Individual models are then a probability distribution over indices of policies
@@ -57,7 +65,7 @@ BY PRIORITY (ISH)
         updates, as they have the potential to prune branches of possibility anywhere within the policy graph. But
         calculating this potential for pruning would require a global policy analysis, which again is computationally
         taxing. Active learning may have some method of predicting changes in global prediction variance which may be
-        useful here. Otherwise, we are at best estimating that heuristics like local information entroyp can have
+        useful here. Otherwise, we are at best estimating that heuristics like local information entropy can have
         large impacts across the model's ability to predict the teammate policy accurately.
 
         So, in summary, we should select heuristics that

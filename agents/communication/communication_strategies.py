@@ -101,7 +101,7 @@ def local_information_entropy(policy_root, target_agent_name, prune_fn, gamma=1.
     eval_list = []
 
     def evaluate(node, horizon):
-        if prune_fn(node):
+        if prune_fn(node, target_agent_name):
             return
 
         # Calculate entropy
@@ -110,7 +110,9 @@ def local_information_entropy(policy_root, target_agent_name, prune_fn, gamma=1.
                          (gamma ** horizon) * sum(-1 * probability * log(probability)
                                                   for probability in predicted_actions.values() if probability > 0)))
 
-    traverse_graph_topologically(map_graph_by_depth(policy_root), evaluate)
+    depth_map = map_graph_by_depth(policy_root)
+    i = len(depth_map)
+    traverse_graph_topologically(depth_map, evaluate)
     return eval_list
 
 

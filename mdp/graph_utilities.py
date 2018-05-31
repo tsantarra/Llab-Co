@@ -1,7 +1,6 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 from operator import mul
 from functools import reduce
-from heapq import heappop, heappush, heapify
 
 from mdp.distribution import Distribution
 from mdp.state import State
@@ -69,19 +68,21 @@ def recursive_traverse_policy_graph(node, node_values, model_state, policy, poli
 
 def map_graph_by_depth(root):
     """ Traverse the graph. Return a mapping of node to horizon."""
-    horizon = 0
-    process_list = [(root, horizon)]
-    depth_map = {root: horizon}
+    process_list = deque([root])
+    depth_map = defaultdict(lambda: 0)
+    depth_map[root] = 0
 
     # Queue all nodes in tree according to depth
     while process_list:
-        node, horizon = process_list.pop()
+        node = process_list.pop()
+        horizon = depth_map[node]
 
         for joint_action, successor_distribution in node.successors.items():
-            for successor, successor_probability in successor_distribution.items():
-                if successor not in depth_map:
+            for successor in successor_distribution:
+                if horizon + 1 > depth_map[successor]:
+                    # The successor can be deeper in certain branches.
                     depth_map[successor] = horizon + 1
-                    process_list.append((successor, horizon + 1))
+                    process_list.append(successor)
 
     return depth_map
 
@@ -152,16 +153,10 @@ def traverse_graph_topologically(depth_map, node_fn, top_down=True):
     """ Traverses the graph either top-down or bottom-up. """
     factor = 1 if top_down else -1
     node_list = list((factor * horizon, node) for node, horizon in depth_map.items())
-    heapify(node_list)
+    node_list.sort()
 
-    while node_list:
-        priority, node = heappop(node_list)
-        horizon = priority / factor
-
-        # do something
-        node_fn(node, horizon)
-
-    return
+    for priority, node in node_list:
+        node_fn(node, priority * factor)
 
 
 def node_likelihoods(root):
