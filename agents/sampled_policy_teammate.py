@@ -24,7 +24,6 @@ class SampledTeammateGenerator:
 
         for node in self.__node_order:
             if not node.action_space:
-                # node.set_actions(scenario.actions(node.state))
                 continue
             self.policy_state_order.append(node.state)
             self.all_policy_actions.append(set(action[identity] for action in node.action_values()))

@@ -107,7 +107,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
     """
     assert not node.complete, 'ERROR. SHOULD NOT EXPAND COMPLETE NODE.'
 
-    # node.set_actions(scenario.actions(node.state))  # save computation of actions for fringe nodes
+    node.set_actions(scenario.actions(node.state))  # save computation of actions for fringe nodes
 
     # Expand all actions (rather than selecting one randomly)
     for action in list(node.action_space):
@@ -122,8 +122,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
                 new_node = node_map[new_state]
                 new_node.predecessors.add(node)
             else:
-                new_node = GraphNode(state=new_state, terminal=scenario.end(new_state),
-                                     actions=scenario.actions(new_state), predecessor=node)
+                new_node = GraphNode(state=new_state, terminal=scenario.end(new_state), predecessor=node)
 
                 # Provide initial evaluation of new leaf node
                 if not new_node.complete:
@@ -215,7 +214,7 @@ def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristi
 
     # If a rootNode is not specified, initialize a new one.
     if root_node is None:
-        root_node = GraphNode(state, scenario.end(state), scenario.actions(state))
+        root_node = GraphNode(state, scenario.end(state))
 
     node_map = map_graph(root_node)
 
@@ -248,7 +247,7 @@ class GraphNode:
     A node in the game tree.
     """
 
-    def __init__(self, state, terminal, actions, predecessor=None):
+    def __init__(self, state, terminal, predecessor=None):
         """
         Initializes tree node with relevant information.
         """
@@ -256,7 +255,7 @@ class GraphNode:
         self.state = state  # Current game state (clone of state instance).
         self.scenario_end = terminal  #scenario.end(state)
         self.complete = self.scenario_end  # A label to avoid sampling in complete subgraphs.
-        self.action_space = actions  # scenario.actions(state)
+        self.action_space = None  # scenario.actions(state)
 
         # Due to the dynamic programming approach, allow multiple predecessors.
         self.predecessors = {predecessor} if predecessor else set()

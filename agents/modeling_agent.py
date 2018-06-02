@@ -137,8 +137,8 @@ def individual_agent_action_values(agent_name, other_agent_predictions, joint_ac
         for joint_action in joint_action_space.fix_actions({agent_name: [agent_action]}):
             agent_action_values[agent_action] += joint_action_values[joint_action] * \
                                                  reduce(mul,
-                                                        [other_agent_predictions[other_agent][joint_action[other_agent]]
-                                                         for other_agent in other_agent_predictions])
+                                                        (other_agent_predictions[other_agent][joint_action[other_agent]]
+                                                         for other_agent in other_agent_predictions))
 
     return agent_action_values
 

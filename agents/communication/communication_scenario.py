@@ -460,7 +460,7 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
 
     # update model
     queries = comm_graph_node.state['Queries'].items()
-    for agent_name in [name for name in agent_dict if name != 'Agent']:
+    for agent_name in [name for name in agent_dict if name != 'Agent1']:
         query_state_action_pairs = [(query.state, response) for query, response in queries if query.agent == agent_name]
         new_model = agent.model_state[agent_name].communicated_policy_update(query_state_action_pairs)
         agent.model_state = agent.model_state.update({agent_name: new_model})
