@@ -68,7 +68,7 @@ def _traverse_nodes(node, tie_selector=choice):
     while len(node.successors) != 0:  # and not scenario.end(node.state):
         # UCT criteria with exploration factor = node value (from THTS paper)
         action_values = {act: val for act, val in node.action_values().items()
-                         if act in node.incomplete_action_nodes}
+                         if act in node._incomplete_action_nodes}
 
         best_action, best_value = max(action_values.items(),
                                       key=lambda av: av[1] + (node.future_value + 1) *
@@ -137,7 +137,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
         node.add_new_successors(action, new_successors)
 
         # testing new optimization feature
-        node.incomplete_action_nodes[action] = set(child for child in new_successors if not child.complete)
+        node._incomplete_action_nodes[action] = set(child for child in new_successors if not child.complete)
 
         # set initial action count to 1
         node.action_counts[action] = 1
@@ -154,8 +154,7 @@ def _expectation_max(node):
     available actions.
     """
     if node.successors:
-        action_values = node.calculate_action_values()
-        node.future_value = max(action_values.values())
+        node.optimal_action, node.future_value = max(node.calculate_action_values().items(), key=lambda p: p[1])
 
 
 def _backup(node, backup_op):
@@ -181,10 +180,10 @@ def _backup(node, backup_op):
         node._has_changed = (node.future_value != node._old_future_value)
 
         # Update node's incomplete actions/child nodes
-        for action, child_set in list(node.incomplete_action_nodes.items()):
+        for action, child_set in list(node._incomplete_action_nodes.items()):
             child_set = set(child for child in child_set if not child.complete)
             if len(child_set) == 0:
-                del node.incomplete_action_nodes[action]
+                del node._incomplete_action_nodes[action]
 
         # Labeling -> if all child nodes complete, this node is complete
         if not node.complete and all(child.complete for child in node.successor_set()):
@@ -263,14 +262,15 @@ class GraphNode:
         self._succ_set = set()
         self.successor_transition_values = {}
 
-        # visits of the node so far; count initialization as a visit
+        # Node info for search
         self.visits = 1
         self.future_value = 0
         self.__action_values = None
-        self.incomplete_action_nodes = {}
-
-        # new optimizations
+        self.optimal_action = None
         self.action_counts = defaultdict(int)
+
+        # New optimizations
+        self._incomplete_action_nodes = {}
         self._has_changed = False
         self._old_future_value = self.future_value
 
@@ -395,8 +395,8 @@ class GraphNode:
             cloned._successors = {action: Distribution({cloned_nodes[n]: p for n, p in dist.items()})
                                   for action, dist in node._successors.items()}
 
-            cloned.incomplete_action_nodes = {action: set(cloned_nodes[n] for n in node_set)
-                                  for action, node_set in node.incomplete_action_nodes.items()}
+            cloned._incomplete_action_nodes = {action: set(cloned_nodes[n] for n in node_set)
+                                  for action, node_set in node._incomplete_action_nodes.items()}
 
             cloned.predecessors = set(cloned_nodes[n] for n in node.predecessors)
 

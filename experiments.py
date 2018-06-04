@@ -34,7 +34,7 @@ def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
 
     teammate_model = PolicyDistributionModel(scenario, 'Agent2', chinese_restaurant_process.prior(),
                                              chinese_restaurant_process)
-    #comm_model = CommunicatingTeammateModel(teammate_model, scenario)
+    teammate_model = CommunicatingTeammateModel(teammate_model, scenario)
 
     return ModelingAgent(scenario, 'Agent1', {'Agent2': teammate_model}, iterations=10000), teammate_generator
 
@@ -122,20 +122,21 @@ def run_no_comm(scenario, agent, teammate):
     print('Begin main loop')
     while not scenario.end(state):
         # Have the agents select actions
-        action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
-        print('Action:', action)
+        joint_action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
+        print('Joint Action:', joint_action)
 
         # Communicate
         action = communicate(agent, agent_dict, 1, local_information_entropy,
                              branching_factor=3,
                              domain_heuristic=lambda s: 0)
 
+        new_joint_action = joint_action.update({'Agent1': action})
         # Observe
         for participating_agent in agent_dict.values():
-            participating_agent.update(state, action)
+            participating_agent.update(state, new_joint_action)
 
         # Update world
-        state = scenario.transition(state, action).sample()
+        state = scenario.transition(state, new_joint_action).sample()
 
         # Output
         print('\t'.join('{:4.4f}'.format(prob) for index, prob in agent.model_state['Agent2'].model.policy_distribution

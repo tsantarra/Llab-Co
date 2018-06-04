@@ -143,6 +143,13 @@ def individual_agent_action_values(agent_name, other_agent_predictions, joint_ac
     return agent_action_values
 
 
+def joint_action_likelihoods(agent_name, agent_action, other_agent_predictions, joint_action_space):
+    return {joint_action: reduce(mul,
+                                 (action_dist[joint_action[other_agent]]
+                                  for other_agent, action_dist in other_agent_predictions.items()))
+            for joint_action in joint_action_space.fix_actions({agent_name: [agent_action]})}
+
+
 def single_agent_policy_backup(node, agent):
     """
     Function given to graph search planner to backup mdp state values based on
@@ -154,7 +161,7 @@ def single_agent_policy_backup(node, agent):
                                    for other_agent, other_agent_model in node.state['Models'].items()}
         agent_action_values = individual_agent_action_values(agent, other_agent_predictions,
                                                              node.action_space, node.calculate_action_values())
-        node.future_value = max(agent_action_values.values())
+        node.optimal_action, node.future_value = max(agent_action_values.items(), key=lambda p: p[1])
 
 
 def get_max_action(node, agent):
@@ -185,8 +192,8 @@ def modeler_transition(transition_fn):
         for new_world_state, probability in resulting_states.items():
             # Update all models with individual actions from joint_action
             new_model_state = old_model_state.update({agent_name:
-                                                      old_model_state[agent_name].update(old_world_state,
-                                                                                         joint_action[agent_name])
+                                                          old_model_state[agent_name].update(old_world_state,
+                                                                                             joint_action[agent_name])
                                                       for agent_name in old_model_state})
 
             resulting_combined_state = State({'World State': new_world_state, 'Models': new_model_state})

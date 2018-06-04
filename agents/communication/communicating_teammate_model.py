@@ -2,16 +2,16 @@ from mdp.distribution import Distribution
 
 
 class CommunicatingTeammateModel:
+    """
+        This model serves as a wrapper for a purely behavioral model. We explicitely keep track of communicated policy
+        information, which overrides the sub-model's predictions in states covered by the queried policy information.
+    """
 
     def __init__(self, teammate_model, scenario, previous_comms=None):
-        if previous_comms:
-            self.previous_communications = previous_comms
-        else:
-            self.previous_communications = {}
-
-        self.identity = teammate_model.identity
         self.model = teammate_model
+        self.identity = teammate_model.identity
         self.scenario = scenario
+        self.previous_communications = previous_comms if previous_comms else {}
 
     def predict(self, state):
 
@@ -22,16 +22,17 @@ class CommunicatingTeammateModel:
 
         return self.model.predict(state)
 
-    def update(self, old_state, observation):
-        return CommunicatingTeammateModel(self.model.update(old_state, observation), self.scenario, self.previous_communications) #save memory by not copying prev?
+    def update(self, state, observed_action):
+        return CommunicatingTeammateModel(self.model.update(state, observed_action),
+                                          self.scenario, self.previous_communications.copy())
 
     def communicated_policy_update(self, state_action_pairs):
         new_comms = self.previous_communications.copy()
         new_comms.update(state_action_pairs)
-        return CommunicatingTeammateModel(self.model.copy(), self.scenario, new_comms)
+        return CommunicatingTeammateModel(self.model.batch_update(state_action_pairs), self.scenario, new_comms)
 
     def copy(self):
-        return CommunicatingTeammateModel(self.model.copy(), self.scenario, self.previous_communications) #save memory by not copying prev?
+        return CommunicatingTeammateModel(self.model.copy(), self.scenario, self.previous_communications.copy())
 
     def __copy__(self):
         return self.copy()

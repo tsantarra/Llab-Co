@@ -32,6 +32,10 @@ class PolicyDistributionModel:
                                        self.crp_history.posterior(self.policy_distribution, state, observed_action),
                                        self.crp_history)
 
+    def batch_update(self, state_action_pairs):
+        raise NotImplementedError('TODO')
+        # probably put a corresponding method in CRP to handle this and just call like above update method.
+
     def copy(self):
         """
         Creates a new instance of this model.

@@ -1,5 +1,13 @@
 BY PRIORITY (ISH)
 
+    New optimizations (before I forget):
+        Calculate new policy graph for s' in util(s,a,s') [IF VALUE OF INFO NOT IN CACHE]
+            Cache model predictions and mapping to original policy graph during this process
+            Cache depth map in root of graph
+            Cache value of information for s' here, as we'll need it for ALL (s,a,s') calls
+        Delete policy graph when actions(s') is called (upon expansion)
+
+
     Updates on debug/other
         Information states are Markovian as we assume the teammate's policy does not change.
         If information states are Markovian, so are policy updates and policy EVs.

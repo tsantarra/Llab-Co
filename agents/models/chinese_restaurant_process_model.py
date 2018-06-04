@@ -93,8 +93,8 @@ class ChineseRestaurantProcessModel:
         action_index_distribution = {action_index: 0.0 for action_index in self.possible_policy_actions[state_index]}
         uniform_prob = 1.0 / len(action_index_distribution)
 
-        assert abs(sum(val for pol, val in policy_distribution) - 1.0) < 10e-6, 'Policy distrubition not normalized: ' + \
-                                                                     str(sum(val for pol, val in policy_distribution))
+        assert abs(sum(val for pol, val in policy_distribution) - 1.0) < 10e-6, \
+            'Policy distrubition not normalized: ' + str(sum(val for pol, val in policy_distribution))
 
         for policy_index, policy_probability in policy_distribution:
             if policy_index == -1:

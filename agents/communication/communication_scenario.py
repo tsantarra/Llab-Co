@@ -3,14 +3,17 @@ The communication process for learning a teammate's intentions in an multiagent 
 just one that is exponentially larger than that of the original problem. The idea here is to construct a communication
 policy, that is, a series of teammate policy queries that will eventually shape the primary agent's own action policy.
 """
+from copy import copy
+
+from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import map_graph, search, greedy_action
-from mdp.action import Action
+from mdp.action import Action, JointActionSpace
 from agents.modeling_agent import get_max_action, single_agent_policy_backup, individual_agent_action_values
 from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically, compute_reachable_nodes
 
-from collections import namedtuple
+from collections import namedtuple, deque, defaultdict
 from math import inf as infinity
 from heapq import nlargest
 from functools import reduce
@@ -32,6 +35,7 @@ class CommScenario:
         # Save current policy graph for future reference
         self._agent_identity = identity
         self._policy_root = policy_graph.copy_subgraph()
+        self._policy_root.__depth_map = map_graph_by_depth(self._policy_root)
         self._teammates_models_state = initial_model_state  # Current model of teammate behavior
         self._evaluate_node_queries_fn = evaluate_query_fn  # Return [(state, score), (state, score), ...] list.
         self._max_branches = max_branching_factor
@@ -91,10 +95,14 @@ class CommScenario:
 
         # Need to consider all teammates involved.
         query_evaluations = []
-        policy_graph = self._get_policy_graph(policy_state)
+        assert policy_state in self._policy_graph_cache, 'Should have precomputed new policy graph in utility().'
+        policy_graph = self._policy_graph_cache[policy_state]
         for target_agent in self._teammates_models_state:
             query_evaluations.extend((Query(target_agent, state), value) for state, value in
                                      self._evaluate_node_queries_fn(policy_graph, target_agent, prune_query))
+
+        # No longer need the policy graph! Ever!
+        del self._policy_graph_cache[policy_state]
 
         # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
         # resulting from different nodes having different evaluations (due to different models)
@@ -183,144 +191,51 @@ class CommScenario:
         if action[self._agent_identity] == 'Halt':
             return 0
 
+        # Check if we have already calculated the value of information for this policy state.
         if new_policy_state in self._value_of_info:
             return self._value_of_info[new_policy_state] - self._value_of_info[old_policy_state]
 
-        new_policy_ev = {}
-        old_policy_ev = {}
+        # Generate new graph
+        new_policy_root = self._get_policy_graph(new_policy_state)
+        new_policy_root.__depth_map = map_graph_by_depth(new_policy_root)
 
         def compute_policy_ev_update(node, _):
             # leaf check
             if not node.successors:
-                new_policy_ev[node] = node.future_value
-                old_policy_ev[node] = node.future_value
+                node.__original_policy_ev[node] = node.future_value
                 return
 
-            new_model_state = self._update_model_state(node.state['Models'], new_policy_state)
-
-            # make new predictions
-            new_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
-                               for other_agent, other_agent_model in new_model_state.items()}
-
-            # Compute original policy action
-            old_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
-                               for other_agent, other_agent_model in node.state['Models'].items()}
-            old_action, _ = max(individual_agent_action_values(self._agent_identity, old_predictions,
-                                                               node.action_space,
-                                                               node.action_values()).items(),
-                                key=lambda p: p[1])
-
-            # calc new joint action values
+            # New joint action values using original policy values (not equal to the new successor future values)
             new_action_values = {
                 joint_action: sum(
                     probability * (node.successor_transition_values[(successor.state, joint_action)]
-                                   + old_policy_ev[successor])
+                                   + successor.__original_policy_ev)
                     for successor, probability in successor_distribution.items())
                 for joint_action, successor_distribution in node.successors.items()}
 
             # new individual action values
-            new_individual_action_values = individual_agent_action_values(self._agent_identity, new_predictions,
+            new_individual_action_values = individual_agent_action_values(self._agent_identity, node.__predictions,
                                                                           node.action_space,
                                                                           new_action_values)
 
-            # update policy evs
-            old_policy_ev[node] = new_individual_action_values[old_action]
-            new_policy_ev[node] = max(new_individual_action_values.values())
+            # Store policy evs
+            node.__original_policy_ev = new_individual_action_values[node.__original_node.optimal_action]
             return
 
-        policy_graph = self._policy_root
-        depth_map = map_graph_by_depth(policy_graph)
+        # Compute EV of old policy given new predictions (in new node graph). Store all info on graph.
+        traverse_graph_topologically(new_policy_root.__depth_map, compute_policy_ev_update, top_down=False)
 
-        traverse_graph_topologically(depth_map, node_fn=compute_policy_ev_update, top_down=False)
-
-        # get value of information for new policy update
-        new_value_of_info = new_policy_ev[policy_graph] - old_policy_ev[policy_graph]
+        new_value_of_info = new_policy_root.future_value - new_policy_root.__original_policy_ev
         self._value_of_info[new_policy_state] = new_value_of_info
-
-        # recall value of information for old policy update
-        old_value_of_info = self._value_of_info[old_policy_state]
-
-        return new_value_of_info - old_value_of_info
-
-    def old_utility(self, old_policy_state, action, new_policy_state):
-        """
-        The expected utility for a single query is given as the change in the TOTAL value of information given the
-        policy state (as taken from the initial policy). In short, taking query action a gives this much EXTRA value
-        for the complete set of new information.
-
-        R(I, a, I') = [V(s_0, π_t | I') - V(s_0, π_0 | I')] - [V(s_0, π_{t-1} | I) - V(s_0, π_0 | I)]
-        """
-        print('Utility', action)
-        # If the action is to stop communicating, there is no further utility gain.
-        if action[self._agent_identity] == 'Halt':
-            return 0
-
-        old_policy_new_evs = {}
-
-        def compute_policy_ev_update(nodes, _):
-            old_node, new_node = nodes
-            if not old_node.successors:
-                old_policy_new_evs[new_node] = new_node.future_value
-                return
-
-            # First step: compute original policy action
-            old_predictions = {other_agent: other_agent_model.predict(old_node.state['World State'])
-                               for other_agent, other_agent_model in old_node.state['Models'].items()}
-            old_action, _ = max(individual_agent_action_values(self._agent_identity, old_predictions,
-                                                               old_node.action_space, old_node.action_values()).items(),
-                                key=lambda p: p[1])
-
-            # Need to calculate new action value given the new information
-            new_predictions = {other_agent: other_agent_model.predict(new_node.state['World State'])
-                               for other_agent, other_agent_model in new_node.state['Models'].items()}
-
-            # DEBUG
-            for joint_action, successor_distribution in new_node.successors.items():
-                for successor, probability in successor_distribution.items():
-                    if (successor.state, joint_action) not in new_node.successor_transition_values:
-                        print('Predecessor: ', new_node.state)
-                        print('Missing: ', (successor.state, joint_action))
-                        for key in new_node.successor_transition_values:
-                            print(key, key == (successor.state, joint_action))
-                        print('nooo')
-            # END DEBUG
-
-            new_action_values = {
-                joint_action: sum(
-                    probability * (new_node.successor_transition_values[(successor.state, joint_action)]
-                                   + old_policy_new_evs[successor])
-                    for successor, probability in successor_distribution.items())
-                for joint_action, successor_distribution in new_node.successors.items()}
-
-            old_policy_new_evs[new_node] = sum(new_action_values[joint_action] * \
-                                               reduce(mul,
-                                                      [new_predictions[other_agent][joint_action[other_agent]]
-                                                       for other_agent in new_predictions])
-                                               for joint_action in
-                                               new_node.action_space.fix_actions({self._agent_identity: [old_action]}))
-
-        # Grab old policy and new policy graph
-        old_root = self._get_policy_graph(old_policy_state)
-        new_root = self._get_policy_graph(new_policy_state, old_policy_state)
-        old_depth_map = map_graph_by_depth(old_root)
-        new_depth_map = map_graph_by_depth(new_root)
-        assert all(old[0].state['World State'] == new[0].state['World State'] for old, new in
-                   zip(old_depth_map.items(), new_depth_map.items())), \
-            'World states do not align in depth map.'
-
-        comb_depth_map = {(old[0], new[0]): old[1] for old, new in
-                          zip(old_depth_map.items(), new_depth_map.items())}
-
-        # evaluate old policy under new policy graph/beliefs
-        traverse_graph_topologically(comb_depth_map, node_fn=compute_policy_ev_update, top_down=False)
-
-        return new_root.future_value - old_policy_new_evs[new_root] - self.comm_cost
+        return new_value_of_info
 
     def _update_model_state(self, old_model_state, policy_state):
+        assert all(type(model) is CommunicatingTeammateModel for model in old_model_state.values()), \
+            'Cannot update non-communicating teammate models with policy queries. '
         # Update the model state given the query information
         new_model_state = old_model_state
         for query, response in policy_state['Queries'].items():
-            new_model = new_model_state[query.agent].update(query.state, response)
+            new_model = new_model_state[query.agent].communicated_policy_update([(query.state, response)])
             new_model_state = new_model_state.update_item(query.agent, new_model)  # we can cache this
 
         return new_model_state
@@ -332,71 +247,97 @@ class CommScenario:
         for each step of the communicative search model anyway.
         """
         # Early exit: If we have already calculated this new policy graph, return the cached version.
-        if policy_state in self._policy_graph_cache:
-            return self._policy_graph_cache[policy_state]
+        assert policy_state not in self._policy_graph_cache, 'Already created new policy graph.'
 
-        # Vars for new policy graph
-        new_graph = self._policy_root.copy_subgraph()
-        depth_map = map_graph_by_depth(new_graph)
-        old_to_new_state = {}
+        new_root = copy(self._policy_root)
+        new_root.__original_node = self._policy_root
+        new_root.predecessors = set()
+        new_root.state = new_root.state.update_item('Models', self._update_model_state(new_root.state['Models'],
+                                                                                       policy_state))
 
-        # With new models set, recalculate the policy. This must be done bottom-up.
-        def update_graph(node, _):
-            # Update the model state given the new query information
-            new_model_state = self._update_model_state(node.state['Models'], policy_state)
+        # also need map of graph for dynamic programming things (like pointing to an already generated node!)
+        graph_map_by_state = {new_root.state: new_root}
 
-            old_state = node.state
-            node.state = old_state.update_item('Models', new_model_state)
-            old_to_new_state[old_state] = node.state
+        process_queue = deque([(new_root, 0)])
+        while process_queue:
+            # have copied node and original
+            node, horizon = process_queue.popleft()
+            original = node.__original_node
+            successor_horizon = horizon + 1
 
-            # Update the node value
-            if node.successors:
-                # Update transition utils
-                new_vals = {}
-                for (old_succ, action), value in node.successor_transition_values.items():
-                    new_vals[(old_to_new_state[old_succ], action)] = value
+            assert original.action_space is not None, 'Leaf node encountered unexpectedly.'
 
-                node.successor_transition_values = new_vals
+            # reconstruct new action space based on predictions
+            node.__predictions = {other_agent: other_agent_model.predict(node.state['World State'])
+                                  for other_agent, other_agent_model in node.state['Models'].items()}
+            agent_actions = {agent: set((action for action, prob in predictions.items() if prob > 0.0))
+                             for agent, predictions in node.__predictions.items()}
+            node.action_space = original.action_space.constrain(agent_actions)  # JointActionSpace(agent_actions)
 
-                # Update successors
-                for action, successor_distribution in node.successors.items():
-                    node.successors[action] = {succ: prob for succ, prob in successor_distribution.items()}
+            # for only actions in the new action space, consider successors (effectively pruning when possible)
+            #   if in graph map, only update predecessors
+            #   otherwise, generate new copies, update state and preds, add to queue
+            for joint_action in node.action_space:
+                assert joint_action in original.successors, 'Joint action missing while updating policy graph.'
 
-                # predecessors?
+                action_successors = Distribution()
+                node.successors[joint_action] = action_successors
+                action_incomplete_succ = set()
+                node._incomplete_action_nodes[joint_action] = action_incomplete_succ
+                for orig_successor, succ_prob in original.successors[joint_action].items():
+                    new_succ_state = orig_successor.state.update_item('Models',
+                                                                      self._update_model_state(
+                                                                          orig_successor.state['Models'],
+                                                                          policy_state))
+                    if new_succ_state in graph_map_by_state:
+                        # update to existing new successor
+                        new_successor = graph_map_by_state[new_succ_state]
+                        new_successor.predecessors.add(node)
+                    else:
+                        # need to make new copy of successor
+                        new_successor = orig_successor.copy()
+                        new_successor.predecessors = {node}
+                        new_successor.state = new_succ_state
+                        new_successor.successors = {}
+                        new_successor.successor_transition_values = {}
+                        new_successor._incomplete_action_nodes = {}
 
+                        # add to map and process queue
+                        graph_map_by_state[new_succ_state] = new_successor
+                        if orig_successor.action_space:
+                            # check for leaf node, which doesn't need extra processing
+                            new_successor.__original_node = orig_successor
+                            process_queue.append((new_successor, successor_horizon))
 
-                # Update node value, via backup operator
-                node._has_changed = True
-                self._policy_backup_op(node, self._agent_identity)
-            else:
-                node.future_value = self._heuristic(node.state)
+                    # Add to node data structures
+                    action_successors[new_successor] = succ_prob
+                    node.successor_transition_values[(new_succ_state, joint_action)] = \
+                        orig_successor.successor_transition_values[(orig_successor.state, joint_action)]
+                    if joint_action in original._incomplete_action_nodes and \
+                            orig_successor in original._incomplete_action_nodes[joint_action]:
+                        action_incomplete_succ.add(new_successor)
 
+        # Calculate new policy!
+        new_root.__depth_map = map_graph_by_depth(new_root)
+        horizon_lists = defaultdict(list)
+        for node, horizon in new_root.__depth_map.items():
+            horizon_lists[horizon].append(node)
 
-        import time
-        start = time.time()
-        print('Pre-update')
-        traverse_graph_topologically(depth_map, update_graph, top_down=False)
+        for node in (n for horizon, nodes_at_horizon in sorted(horizon_lists.items(), reverse=True)
+                     for n in nodes_at_horizon):
+            self._policy_backup_op(node, self._agent_identity)
 
-        mid = time.time()
-        print('Traverse: ', mid-start)
-
-        #total_preds = 0
-        for node in depth_map:
-            #total_preds += len(node.predecessors)
-            node.predecessors = set(node.predecessors)
-            node._has_changed = False
-
-        print('Second pass', time.time() - mid)
-        #print('Total nodes: ', len(depth_map))
-        #print('Total predecessors: ', total_preds)
+        # DEBUG CHECK TODO TODO TODO
+        print(f'Old size: {len(self._policy_root.__depth_map)}\tNew size: {len(new_root.__depth_map)}')
 
         # Store and return new policy graph.
-        self._policy_graph_cache[policy_state] = new_graph
+        self._policy_graph_cache[policy_state] = new_root
 
-        return new_graph
+        return new_root
 
 
-def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infinity, domain_heuristic=lambda s: 0, comm_cost=0):
+def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infinity, domain_heuristic=lambda s: 0,
+                comm_cost=0):
     """
     This is the primary method for initiating a series of policy queries. It is run as any other scenario:
         - Initiate scenario
@@ -420,7 +361,7 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
     comm_graph_node = search(state=comm_scenario.initial_state(),
                              scenario=comm_scenario,
                              iterations=passes,
-                             heuristic=lambda comm_state: 0)
+                             heuristic=lambda comm_state: 0)  # HEURISTIC SHOULD CHECK 'END?' FOR TRUE AND GIVE 0 TODO
 
     # No communication can help or no communication possible.
     if not comm_graph_node.successors:
