@@ -54,6 +54,7 @@ class CommScenario:
 
         # Caches of commonly computed items
         self._policy_cache = {}
+        self._action_cache = {}
         self._model_state_cache = {self._initial_policy_state: self._teammates_models_state}
         self._policy_graph_cache = {self._initial_policy_state: self._policy_root}
         self._value_of_info = {self._initial_policy_state: 0}
@@ -83,6 +84,9 @@ class CommScenario:
         The agent may additionally 'Halt' the communication process. This is a vital addition, as in scenarios with a
         cost associated with each communcative action, the agent must minimize the number of queries it poses.
         """
+        if policy_state in self._action_cache:
+            return self._action_cache.pop(policy_state)
+
         # No actions for halted case.
         if policy_state['End?']:
             return set()
@@ -112,16 +116,17 @@ class CommScenario:
 
         # Add 'Halt" action for terminating queries
         action_set.add(Action({self._agent_identity: 'Halt'}))
+        self._action_cache[policy_state] = action_set
         return action_set
 
-    def transition(self, policy_state, action):
+    def transition(self, policy_state, comm_action):
         """
         For a given query, consider the potential reponses from the modeled agent. Then construct a new policy state
         for each possibility.
         """
-        print('Transition', policy_state, action)
+        print('Transition', policy_state, comm_action)
         # Get the agent's action
-        query_action = action[self._agent_identity]
+        query_action = comm_action[self._agent_identity]
 
         # Termination action
         if query_action == 'Halt':
@@ -226,6 +231,10 @@ class CommScenario:
 
         new_value_of_info = new_policy_root.future_value - new_policy_root.__original_policy_ev
         self._value_of_info[new_policy_state] = new_value_of_info
+
+        # quick aside for actions
+        self.actions(new_policy_state)
+
         return new_value_of_info
 
     def _update_model_state(self, old_model_state, policy_state):
@@ -283,9 +292,7 @@ class CommScenario:
                 assert joint_action in original.successors, 'Joint action missing while updating policy graph.'
 
                 action_successors = Distribution()
-                node.successors[joint_action] = action_successors
                 action_incomplete_succ = set()
-                node._incomplete_action_nodes[joint_action] = action_incomplete_succ
                 for orig_successor, succ_prob in original.successors[joint_action].items():
                     new_succ_state = orig_successor.state.update_item('Models',
                                                                       self._update_model_state(
@@ -318,6 +325,9 @@ class CommScenario:
                     if joint_action in original._incomplete_action_nodes and \
                             orig_successor in original._incomplete_action_nodes[joint_action]:
                         action_incomplete_succ.add(new_successor)
+
+                node.add_new_successors(joint_action, action_successors)
+                node._incomplete_action_nodes[joint_action] = action_incomplete_succ
 
         # Calculate new policy!
         new_root.__depth_map = map_graph_by_depth(new_root)
@@ -400,19 +410,6 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
         action = greedy_action(comm_graph_node)
         query_action = action[agent.identity]
         current_policy_state = comm_graph_node.state
-
-    """
-    # update model
-    queries = comm_graph_node.state['Queries'].items()
-    for agent_name in [name for name in agent_dict if name != 'Agent1']:
-        query_state_action_pairs = [(query.state, response) for query, response in queries if query.agent == agent_name]
-        new_model = agent.model_state[agent_name].communicated_policy_update(query_state_action_pairs)
-        agent.model_state = agent.model_state.update({agent_name: new_model})
-
-    new_root_state = agent.policy_graph_root.state.update({'Models': agent.model_state})
-    agent.update_policy_graph(agent.policy_graph_root, new_root_state)
-
-    """
 
     agent.policy_graph_root = comm_scenario._get_policy_graph(current_policy_state)
     action = get_max_action(agent.policy_graph_root, agent.identity)

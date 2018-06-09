@@ -26,6 +26,7 @@ class ModelingAgent:
         self.heuristic = heuristic
         self.policy_graph_root = None
         self.policy_backup = partial(single_agent_policy_backup, agent=self.identity)
+        self._last_observation = None
 
     def copy(self):
         return ModelingAgent(scenario=self.__original_scenario,
@@ -35,10 +36,18 @@ class ModelingAgent:
                              heuristic=self.heuristic)
 
     def get_action(self, state):
-        self._update_graph(state)
-        local_state = State({'World State': state, 'Models': self.model_state})
+        if self.policy_graph_root:
+            self.policy_graph_root = self.policy_graph_root.find_matching_successor(
+                State({'World State': state, 'Models': self.model_state}), action=self._last_observation)
 
-        self.policy_graph_root = search(state=local_state,
+            assert self.policy_graph_root.state['World State'] == state, \
+                'ModelingAgent.get_action(state) state does not match policy root.'
+
+            modeler_state = self.policy_graph_root.state
+        else:
+            modeler_state = State({'World State': state, 'Models': self.model_state})
+
+        self.policy_graph_root = search(state=modeler_state,
                                         scenario=self.scenario,
                                         iterations=self.iterations,
                                         backup_op=self.policy_backup,
@@ -97,7 +106,7 @@ class ModelingAgent:
     def update(self, old_state, observation):
         # Update model
         self.model_state = State({agent_name: model.update(old_state, observation[agent_name])
-                                  for agent_name, model in self.model_state.items()})
+                                  for agent_name, model in self.policy_graph_root.state['Models'].items()})
 
     def _update_graph(self, new_state):
         if self.policy_graph_root:  # Can't update if the agent has not planned yet

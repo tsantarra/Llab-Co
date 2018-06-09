@@ -1,5 +1,10 @@
 BY PRIORITY (ISH)
 
+    New plan, don't save graphs!
+    Calculate and cache the action set after util call
+    Delete actions from cache in actions call
+
+
     New optimizations (before I forget):
         Calculate new policy graph for s' in util(s,a,s') [IF VALUE OF INFO NOT IN CACHE]
             Cache model predictions and mapping to original policy graph during this process
