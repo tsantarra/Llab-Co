@@ -126,7 +126,7 @@ def run_no_comm(scenario, agent, teammate):
         print('Joint Action:', joint_action)
 
         # Communicate
-        action = communicate(agent, agent_dict, 1, local_information_entropy,
+        action, state = communicate(agent, agent_dict, 1, local_information_entropy,
                              branching_factor=3,
                              domain_heuristic=lambda s: 0)
 

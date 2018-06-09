@@ -197,12 +197,11 @@ class CommScenario:
 
         # Generate new graph
         new_policy_root = self._get_policy_graph(new_policy_state)
-        new_policy_root.__depth_map = map_graph_by_depth(new_policy_root)
 
         def compute_policy_ev_update(node, _):
             # leaf check
             if not node.successors:
-                node.__original_policy_ev[node] = node.future_value
+                node.__original_policy_ev = node.future_value
                 return
 
             # New joint action values using original policy values (not equal to the new successor future values)
@@ -252,6 +251,9 @@ class CommScenario:
         new_root = copy(self._policy_root)
         new_root.__original_node = self._policy_root
         new_root.predecessors = set()
+        new_root.successors = {}
+        new_root.successor_transition_values = {}
+        new_root._incomplete_action_nodes = {}
         new_root.state = new_root.state.update_item('Models', self._update_model_state(new_root.state['Models'],
                                                                                        policy_state))
 
@@ -312,7 +314,7 @@ class CommScenario:
                     # Add to node data structures
                     action_successors[new_successor] = succ_prob
                     node.successor_transition_values[(new_succ_state, joint_action)] = \
-                        orig_successor.successor_transition_values[(orig_successor.state, joint_action)]
+                        node.__original_node.successor_transition_values[(orig_successor.state, joint_action)]
                     if joint_action in original._incomplete_action_nodes and \
                             orig_successor in original._incomplete_action_nodes[joint_action]:
                         action_incomplete_succ.add(new_successor)
@@ -399,6 +401,7 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
         query_action = action[agent.identity]
         current_policy_state = comm_graph_node.state
 
+    """
     # update model
     queries = comm_graph_node.state['Queries'].items()
     for agent_name in [name for name in agent_dict if name != 'Agent1']:
@@ -409,7 +412,10 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
     new_root_state = agent.policy_graph_root.state.update({'Models': agent.model_state})
     agent.update_policy_graph(agent.policy_graph_root, new_root_state)
 
+    """
+
+    agent.policy_graph_root = comm_scenario._get_policy_graph(current_policy_state)
     action = get_max_action(agent.policy_graph_root, agent.identity)
     print('END COMMUNICATION/// NEW ACTION:', action)
 
-    return action
+    return action, agent.policy_graph_root.state

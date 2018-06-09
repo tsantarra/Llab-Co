@@ -66,7 +66,7 @@ class ChineseRestaurantProcessModel:
     def posterior(self, prior, state, observed_action):
         """
         Returns the posterior distribution after observing an action in a given state.
-            P(policy | action) = P(action | policy) * P(policy)
+            P(policy | action) = P(action | policy) * P(policy) / P(action)
         """
         state_index = self.state_to_index[state]
         action_index = self.action_to_index[observed_action]
@@ -87,6 +87,30 @@ class ChineseRestaurantProcessModel:
         assert abs(sum(resulting_probs) - 1.0) < 10e-6, 'Posterior not normalized: ' + str(sum(resulting_probs))
 
         return list(pair for pair in zip((pair[0] for pair in prior), resulting_probs) if pair[1] > 0)
+
+    def batch_posterior(self, prior, state_action_pairs):
+        """
+        Returns the posterior distribution after observing an action in a given state.
+            P(policy | action in state) = Π[P(action in state | policy)] * P(policy) / P(all observations)
+        """
+        indices, probabilities = zip(*prior)
+
+        # Calculate posterior
+        for state, observed_action in state_action_pairs:
+            state_index = self.state_to_index[state]
+            action_index = self.action_to_index[observed_action]
+            uniform_prob = 1.0 / len(self.possible_policy_actions[state_index])
+
+            probabilities = [probability * uniform_prob
+                             if policy_index == -1
+                             else (probability
+                                   if probability > 0 and action_index == self.policy_matrix[policy_index][state_index]
+                                   else 0)
+                             for policy_index, probability in zip(indices, probabilities)]
+
+        # Normalize
+        total = sum(probabilities)
+        return list((index, probability/total) for index, probability in zip(indices, probabilities) if probability > 0)
 
     def get_action_distribution(self, state, policy_distribution):
         state_index = self.state_to_index[state]

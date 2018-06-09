@@ -6,6 +6,7 @@ BY PRIORITY (ISH)
             Cache depth map in root of graph
             Cache value of information for s' here, as we'll need it for ALL (s,a,s') calls
         Delete policy graph when actions(s') is called (upon expansion)
+        Delete policy graph when end conditions reached (will never be expanded)
 
 
     Updates on debug/other

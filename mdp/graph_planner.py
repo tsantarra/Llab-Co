@@ -381,6 +381,9 @@ class GraphNode:
     def reachable_subgraph_size(self):
         return len(create_node_set(self))
 
+    def copy(self):
+        return copy(self)
+
     def copy_subgraph(self):
         # two passes -> create new nodes, then replace links between nodes
         cloned_nodes = {}

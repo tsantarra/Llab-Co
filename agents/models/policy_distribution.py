@@ -24,24 +24,31 @@ class PolicyDistributionModel:
 
     def update(self, state, observed_action):
         """
-        Updates the probability according to Bayes' Rule.
+        Updates the probability according to Bayes' Rule:
 
-        P(teammate | action) = P(action | teammate) * P(teammate) / P(action)
+            P(teammate | action) = P(action | teammate) * P(teammate) / P(action)
         """
         return PolicyDistributionModel(self.scenario, self.identity,
                                        self.crp_history.posterior(self.policy_distribution, state, observed_action),
                                        self.crp_history)
 
     def batch_update(self, state_action_pairs):
-        raise NotImplementedError('TODO')
-        # probably put a corresponding method in CRP to handle this and just call like above update method.
+        """
+        Updates the probability according to Bayes' Rule:
+
+            P(teammate | states, actions) = Π[P(action in state | teammate)] * P(teammate) / Z
+
+        where Z is a normalization factor.
+        """
+        return PolicyDistributionModel(self.scenario, self.identity,
+                                       self.crp_history.batch_posterior(self.policy_distribution, state_action_pairs),
+                                       self.crp_history)
 
     def copy(self):
         """
         Creates a new instance of this model.
         """
-        return PolicyDistributionModel(self.scenario, self.identity,
-                                       [(index, prob) for index, prob in self.policy_distribution], self.crp_history)
+        return PolicyDistributionModel(self.scenario, self.identity, self.policy_distribution.copy(), self.crp_history)
 
     def __str__(self):
         return '\t'.join('{teammate}: {prob} '.format(teammate=index, prob=prob)
@@ -58,7 +65,6 @@ class PolicyDistributionModel:
                 return False
 
         return True
-        return self.policy_distribution == other.policy_distribution
 
     def __hash__(self):
         if not self.__hash:
