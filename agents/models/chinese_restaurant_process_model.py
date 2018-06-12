@@ -26,9 +26,6 @@ class ChineseRestaurantProcessModel:
         self.action_to_index = {action: index for index, action in enumerate(self.action_list)}
 
         # Uniform policy vars
-        print(policy_actions)
-        print(self.action_list)
-        print(self.action_to_index)
         self.possible_policy_actions = [[self.action_to_index[action] for action in action_set]
                                         for action_set in policy_actions]
 

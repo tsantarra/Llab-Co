@@ -170,6 +170,7 @@ class CommScenario:
 
         print('temp comm scenario end()')
         return False
+
         # model_state = self._get_policy_graph(policy_state).state['Models']
         model_state = self._update_model_state(self._policy_root.state['Models'], policy_state)
         nodes = set()

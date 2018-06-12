@@ -5,15 +5,10 @@ from agents.models.chinese_restaurant_process_model import ChineseRestaurantProc
 from agents.sampled_policy_teammate import SampledTeammateGenerator
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 from agents.models.policy_distribution import PolicyDistributionModel
-
-from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
-
-from mdp.graph_utilities import get_active_node_set
 from mdp.state import State
 from mdp.action import Action
 
-
-import sys
+from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
 
 
 def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
@@ -39,48 +34,6 @@ def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
     return ModelingAgent(scenario, 'Agent1', {'Agent2': teammate_model}, iterations=10000), teammate_generator
 
 
-def run_comm_attempt(agent, teammate, comm_method, max_queries=50):
-    agent_dict = {'Agent1': agent, 'Agent2': teammate}
-    policy_graph_root = agent.policy_graph_root
-
-    # The communication loop.
-    eligible_states = set(node.state['World State'] for node in get_active_node_set(policy_graph_root))
-    query_set = set()
-    print('comm states:', len(eligible_states))
-    while eligible_states and len(query_set) < max_queries:
-        # Decide on a query
-        query_action = comm_method(root=policy_graph_root, eligible_states=eligible_states)
-
-        # Response bookkeeping
-        target_name = query_action.agent
-        target_entity = agent_dict[target_name]
-
-        # Response & output
-        response = target_entity.get_action(query_action.state)
-
-        # Update model
-        new_model = agent.model_state[target_name].communicated_policy_update([(query_action.state, response)])
-        agent.model_state = agent.model_state.update({target_name: new_model})
-
-        # Update agent's policy
-        new_root_state = policy_graph_root.state.update({'Models': agent.model_state})
-        agent.update_policy_graph(policy_graph_root, new_root_state)
-
-        # Log
-        exp_util = agent.policy_graph_root.future_value
-        # log_results(len(query_set), exp_util)
-
-        # Output
-        print('val:', exp_util)
-
-        # recalculate eligible set, as some nodes may be unreachable now.
-        query_set.add(query_action.state)
-        eligible_states = set(node.state['World State'] for node in get_active_node_set(policy_graph_root))
-        eligible_states -= query_set
-
-        print('new comm states:', len(eligible_states))
-
-
 def perfect_knowledge_val(scenario, agent, teammate):
     """
     Attempts to plan given the true policy of the teammate. Returns the expected value of the policy.
@@ -93,7 +46,7 @@ def perfect_knowledge_val(scenario, agent, teammate):
     return agent.policy_graph_root.future_value
 
 
-def run_experiment(scenario, identity, runs):
+def run_experiment(scenario, agent, teammate):
     """
     April 3, 2018
     # Create sample teammate template (one giant graph to sample teammates from)
@@ -112,34 +65,10 @@ def run_experiment(scenario, identity, runs):
                 # Test on communicating expert distribution
                 run_trial(comm_method)
     """
-    pass
-
-
-def get_size(obj, seen=None):
-    """Recursively finds size of objects"""
-    size = sys.getsizeof(obj)
-    if seen is None:
-        seen = set()
-    obj_id = id(obj)
-    if obj_id in seen:
-        return 0
-    # Important mark as seen *before* entering recursion to gracefully handle
-    # self-referential objects
-    seen.add(obj_id)
-    if isinstance(obj, dict):
-        size += sum([get_size(v, seen) for v in obj.values()])
-        size += sum([get_size(k, seen) for k in obj.keys()])
-    elif hasattr(obj, '__dict__'):
-        size += get_size(obj.__dict__, seen)
-    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
-        size += sum([get_size(i, seen) for i in obj])
-    return size
-
-
-def run_no_comm(scenario, agent, teammate):
     state = scenario.initial_state()
     agent_dict = {'Agent1': agent, 'Agent2': teammate}
 
+    utility = 0
     # Main loop
     print('Begin main loop')
     while not scenario.end(state):
@@ -151,24 +80,27 @@ def run_no_comm(scenario, agent, teammate):
         action, _ = communicate(agent, agent_dict, 1, local_information_entropy,
                              branching_factor=3,
                              domain_heuristic=lambda s: 0)
-
         new_joint_action = joint_action.update({'Agent1': action})
+
         # Observe
         for participating_agent in agent_dict.values():
             participating_agent.update(state, new_joint_action)
 
         # Update world
-        state = scenario.transition(state, new_joint_action).sample()
+        new_state = scenario.transition(state, new_joint_action).sample()
+
+        # Collect reward
+        utility += scenario.utility(state, new_joint_action, new_state)
 
         # Output
-        print('\t'.join('{:4.4f}'.format(prob) for index, prob in agent.model_state['Agent2'].model.policy_distribution
-                        if prob > 10e-5))
-        """
-        print('Action:', action)
+        print('Policy distribution length:', len(agent.model_state['Agent2'].model.policy_distribution))
+        print('New Action:', new_joint_action)
         print('New State')
         print(new_state)
+        print('Utility:', utility)
         print('-----------------')
-        """
+
+        state = new_state
 
 
 if __name__ == '__main__':
@@ -195,7 +127,7 @@ if __name__ == '__main__':
             #print('perfect util:', perfect_util)
 
             # mini test
-            run_no_comm(recipe_scenario, ad_hoc_agent, partner)
+            run_experiment(recipe_scenario, ad_hoc_agent, partner)
             break
 
             # actual area to do testing
