@@ -77,7 +77,7 @@ def run_experiment(scenario, agent, teammate):
         print('Joint Action:', joint_action)
 
         # Communicate
-        action, _ = communicate(agent, agent_dict, 1, local_information_entropy,
+        action, _ = communicate(agent, agent_dict, 10, local_information_entropy,
                              branching_factor=3,
                              domain_heuristic=lambda s: 0)
         new_joint_action = joint_action.update({'Agent1': action})
