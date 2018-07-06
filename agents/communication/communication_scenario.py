@@ -47,6 +47,7 @@ class CommScenario:
 
         # Caches of commonly computed items
         self._action_cache = {}
+        self._heuristic_value_cache = {}
         self._end_cache = {}
         self._value_of_info = {self._initial_policy_state: 0}
 
@@ -125,7 +126,8 @@ class CommScenario:
         """
         Returns True if given the current policy state, there is no incentive to communicate further.
 
-        Case 1: All reachable states have been queried.
+        Case 1: All reachable states have been queried. (I believe this triggers Case 2, so we may not need an explicit
+                check.
 
         Case 2: We can bound the amount of util to be gained from further communication. If that potential is less
                 than the cost of communication, there is no incentive to continue.
@@ -159,13 +161,12 @@ class CommScenario:
         Much of the required MDP information must be gotten from an entirely updated policy graph. Here, we'll
         calculate and store what we need, then delete the copied graph.
         """
+        # Generate new graph
+        new_policy_root = self._get_policy_graph(policy_state)
 
         ########################################################################################################
         # Policy EV
         ########################################################################################################
-        # Generate new graph
-        new_policy_root = self._get_policy_graph(policy_state)
-
         def compute_policy_ev_update(node, _):
             # leaf check
             if not node.successors:
@@ -221,9 +222,63 @@ class CommScenario:
         self._action_cache[policy_state] = action_set
 
         ########################################################################################################
-        # End criterion
+        # End Criterion and Heuristic Evaluation
         ########################################################################################################
-        self._end_cache[policy_state] = False
+        def compute_ev_bounds(node, _):
+            # Leaf check
+            if not node.successors:
+                node.__optimistic_ev = node.future_value
+                node.__pessimistic_ev = node.future_value
+                return
+
+            # If communicated policy state, use communicated info. (Fix action)
+            world_state = node.state['World State']
+            actions_to_fix = {}
+            for teammate_name, teammate_model in node.state['Models'].items():
+                if world_state in teammate_model.previous_communications:
+                    actions_to_fix[teammate_name] = teammate_model.previous_communications[world_state]
+
+            # For optimistic EV, choose joint action maximizing expected value;
+            optimistic_action_space = node.action_space.fix_actions(actions_to_fix)
+
+            optimistic_action_values = {
+                joint_action: sum(
+                    probability * (node.successor_transition_values[(successor.state, joint_action)]
+                                   + successor.__optimistic_ev)
+                    for successor, probability in node.successors[joint_action].items())
+                for joint_action in optimistic_action_space}
+
+            # For pessimistic EV, lock in original action and minimize over teammate actions.
+            pessimistic_action_space = optimistic_action_space.fix_actions({self._agent_identity:
+                                                                            node.__original_node.optimal_action})
+            pessimistic_action_values = {
+                joint_action: sum(
+                    probability * (node.successor_transition_values[(successor.state, joint_action)]
+                                   + successor.__pessimistic_ev)
+                    for successor, probability in node.successors[joint_action].items())
+                for joint_action in pessimistic_action_space}
+
+            # Store policy evs
+            node.__optimistic_ev = max(optimistic_action_values.values())
+            node.__pessimistic_ev = min(pessimistic_action_values.values())
+
+            assert node.__optimistic_ev >= node.__original_policy_ev >= node.__pessimistic_ev, \
+                "EV bounds calculation incorrect."
+
+            return
+
+        # Compute EV of old policy given new predictions (in new node graph). Store all info on graph.
+        traverse_graph_topologically(new_policy_root.__depth_map, compute_ev_bounds, top_down=False)
+
+        # The greatest Value of Information with the existing constraints is given by:
+        max_value_of_info = new_policy_root.__optimistic_ev - new_policy_root.__pessimistic_ev
+
+        # The heuristic value, then, is the largest VOI - the current VOI (delta VOI steps) less the cost of at least
+        # one query. Of course, if this is less than 0, there is no point in continuing, so the agent should stop.
+        heuristic_val = max(max_value_of_info - new_value_of_info - self._comm_cost, 0)
+
+        self._heuristic_value_cache[policy_state] = heuristic_val
+        self._end_cache[policy_state] = heuristic_val <= 0
 
         ########################################################################################################
         # Cleanup
