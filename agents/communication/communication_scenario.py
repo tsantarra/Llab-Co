@@ -3,27 +3,24 @@ The communication process for learning a teammate's intentions in an multiagent 
 just one that is exponentially larger than that of the original problem. The idea here is to construct a communication
 policy, that is, a series of teammate policy queries that will eventually shape the primary agent's own action policy.
 """
-from copy import copy
-
-from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 from mdp.distribution import Distribution
 from mdp.state import State
+from mdp.action import Action
 from mdp.graph_planner import map_graph, search, greedy_action
-from mdp.action import Action, JointActionSpace
+from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically
 from agents.modeling_agent import get_max_action, single_agent_policy_backup, individual_agent_action_values
-from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically, compute_reachable_nodes
+from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 
 from collections import namedtuple, deque, defaultdict
 from math import inf as infinity
 from heapq import nlargest
-from functools import reduce
-from operator import mul
+from copy import copy
 
 Query = namedtuple('Query', ['agent', 'state'])
 
 
 class CommScenario:
-    def __init__(self, policy_graph, initial_model_state, identity, evaluate_query_fn, heuristic,
+    def __init__(self, policy_graph, initial_model_state, identity, evaluate_query_fn,
                  max_branching_factor=infinity, comm_cost=0, policy_backup_op=single_agent_policy_backup):
         """
         Args:
@@ -36,35 +33,32 @@ class CommScenario:
         self._agent_identity = identity
         self._policy_root = policy_graph.copy_subgraph()
         self._policy_root.__depth_map = map_graph_by_depth(self._policy_root)
-        self._teammates_models_state = initial_model_state  # Current model of teammate behavior
+        self._teammate_names = list(initial_model_state.keys())  # Current model of teammate behavior
         self._evaluate_node_queries_fn = evaluate_query_fn  # Return [(state, score), (state, score), ...] list.
         self._max_branches = max_branching_factor
         self._policy_backup_op = policy_backup_op
-        self._heuristic = heuristic  # heuristic used for leaf evaluation (needs to be recalculated with new models)
-        self.comm_cost = comm_cost  # Cost per instance of communication
-
-        # References to policy graph
-        self._state_graph_map = map_graph(self._policy_root)
+        self._comm_cost = comm_cost  # Cost per instance of communication
 
         # Helpful references
-        self.initial_state_queries = State({})
-        #    {Query(name, comm_state): action for name, model in initial_model_state.items()
-        #     for comm_state, action in model.previous_communications.items()})
+        self.initial_state_queries = State(
+            {Query(name, comm_state): action for name, model in initial_model_state.items()
+             for comm_state, action in model.previous_communications.items()})
         self._initial_policy_state = State({'Queries': State(self.initial_state_queries), 'End?': False})
 
         # Caches of commonly computed items
-        self._policy_cache = {}
         self._action_cache = {}
-        self._model_state_cache = {self._initial_policy_state: self._teammates_models_state}
-        self._policy_graph_cache = {self._initial_policy_state: self._policy_root}
+        self._end_cache = {}
         self._value_of_info = {self._initial_policy_state: 0}
+
+        # Precompute info for first policy state
+        self._precompute_info(self._initial_policy_state)
 
     def initial_state(self):
         """
         The communication state is simply a list of queries and responses along with an 'End?' flag, indicating the
         agent has voluntarily ended the communication process.
         """
-        return State({'Queries': State(self.initial_state_queries), 'End?': False})
+        return self._initial_policy_state
 
     def actions(self, policy_state):
         """
@@ -84,40 +78,8 @@ class CommScenario:
         The agent may additionally 'Halt' the communication process. This is a vital addition, as in scenarios with a
         cost associated with each communcative action, the agent must minimize the number of queries it poses.
         """
-        if policy_state in self._action_cache:
-            return self._action_cache.pop(policy_state)
-
-        # No actions for halted case.
-        if policy_state['End?']:
-            return set()
-
-        # Call provided query selector function
-        def prune_query(node, target_agent_name):
-            return node.scenario_end or \
-                   Query(target_agent_name, node.state['World State']) in policy_state['Queries'] or \
-                   len(node.action_space.individual_actions(target_agent_name)) <= 1
-
-        # Need to consider all teammates involved.
-        query_evaluations = []
-        assert policy_state in self._policy_graph_cache, 'Should have precomputed new policy graph in utility().'
-        policy_graph = self._policy_graph_cache[policy_state]
-        for target_agent in self._teammates_models_state:
-            query_evaluations.extend((Query(target_agent, state), value) for state, value in
-                                     self._evaluate_node_queries_fn(policy_graph, target_agent, prune_query))
-
-        # No longer need the policy graph! Ever!
-        del self._policy_graph_cache[policy_state]
-
-        # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
-        # resulting from different nodes having different evaluations (due to different models)
-        action_set = set(Action({self._agent_identity: query_val[0]}) for query_val in
-                         nlargest(self._max_branches if self._max_branches != infinity else len(query_evaluations),
-                                  query_evaluations, key=lambda qv: qv[1]))
-
-        # Add 'Halt" action for terminating queries
-        action_set.add(Action({self._agent_identity: 'Halt'}))
-        self._action_cache[policy_state] = action_set
-        return action_set
+        assert policy_state in self._action_cache, 'The communicative action set should have been precomputed.'
+        return self._action_cache.pop(policy_state)
 
     def transition(self, policy_state, comm_action):
         """
@@ -153,6 +115,10 @@ class CommScenario:
         assert abs(sum(resulting_states.values()) - 1.0) < 10e-6, \
             'Predicted query action distribution does not sum to 1: ' + str(abs(sum(resulting_states.values())))
 
+        # Precompute policy state information
+        for new_policy_state in resulting_states:
+            self._precompute_info(new_policy_state)
+
         return resulting_states
 
     def end(self, policy_state):
@@ -168,21 +134,9 @@ class CommScenario:
         if policy_state['End?']:
             return True
 
-        print('temp comm scenario end()')
-        return False
-
-        # model_state = self._get_policy_graph(policy_state).state['Models']
-        model_state = self._update_model_state(self._policy_root.state['Models'], policy_state)
-        nodes = set()
-        compute_reachable_nodes(node=self._policy_root, visited_set=nodes, model_state=model_state)
-        reachable_states = set(node.state['World State'] for node in nodes)
-
-        # all teammate reachable states - all queried states
-        if all(len(reachable_states - set(query.state for query in policy_state['Queries']
-                                          if query.agent == target_agent)) == 0 for target_agent in model_state):
-            return True
-
-        return False
+        # We have precomputed the end criteria.
+        assert policy_state in self._end_cache, 'End criterion should have been precomputed.'
+        return self._end_cache[policy_state]
 
     def utility(self, old_policy_state, action, new_policy_state):
         """
@@ -192,17 +146,25 @@ class CommScenario:
 
         R(I, a, I') = [V(s_0, π_t | I') - V(s_0, π_0 | I')] - [V(s_0, π_{t-1} | I) - V(s_0, π_0 | I)]
         """
-        print('Utility -', action)
         # If the action is to stop communicating, there is no further utility gain.
         if action[self._agent_identity] == 'Halt':
             return 0
 
-        # Check if we have already calculated the value of information for this policy state.
-        if new_policy_state in self._value_of_info:
-            return self._value_of_info[new_policy_state] - self._value_of_info[old_policy_state]
+        # We have already calculated the value of information for this policy state.
+        assert new_policy_state in self._value_of_info, 'The value of info should have been precomputed.'
+        return self._value_of_info[new_policy_state] - self._value_of_info[old_policy_state] - self._comm_cost
 
+    def _precompute_info(self, policy_state):
+        """
+        Much of the required MDP information must be gotten from an entirely updated policy graph. Here, we'll
+        calculate and store what we need, then delete the copied graph.
+        """
+
+        ########################################################################################################
+        # Policy EV
+        ########################################################################################################
         # Generate new graph
-        new_policy_root = self._get_policy_graph(new_policy_state)
+        new_policy_root = self._get_policy_graph(policy_state)
 
         def compute_policy_ev_update(node, _):
             # leaf check
@@ -231,12 +193,42 @@ class CommScenario:
         traverse_graph_topologically(new_policy_root.__depth_map, compute_policy_ev_update, top_down=False)
 
         new_value_of_info = new_policy_root.future_value - new_policy_root.__original_policy_ev
-        self._value_of_info[new_policy_state] = new_value_of_info
+        self._value_of_info[policy_state] = new_value_of_info
 
-        # quick aside for actions
-        self.actions(new_policy_state)
+        ########################################################################################################
+        # Queries
+        ########################################################################################################
+        # Call provided query selector function
+        def prune_query(node, target_agent_name):
+            return node.scenario_end or \
+                   Query(target_agent_name, node.state['World State']) in policy_state['Queries'] or \
+                   len(node.action_space.individual_actions(target_agent_name)) <= 1
 
-        return new_value_of_info
+        # Need to consider all teammates involved.
+        query_evaluations = []
+        for target_agent in self._teammate_names:
+            query_evaluations.extend((Query(target_agent, state), value) for state, value in
+                                     self._evaluate_node_queries_fn(new_policy_root, target_agent, prune_query))
+
+        # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
+        # resulting from different nodes having different evaluations (due to different models)
+        action_set = set(Action({self._agent_identity: query_val[0]}) for query_val in
+                         nlargest(self._max_branches if self._max_branches != infinity else len(query_evaluations),
+                                  query_evaluations, key=lambda qv: qv[1]))
+
+        # Add 'Halt" action for terminating queries
+        action_set.add(Action({self._agent_identity: 'Halt'}))
+        self._action_cache[policy_state] = action_set
+
+        ########################################################################################################
+        # End criterion
+        ########################################################################################################
+        self._end_cache[policy_state] = False
+
+        ########################################################################################################
+        # Cleanup
+        ########################################################################################################
+        del new_policy_root
 
     def _update_model_state(self, old_model_state, policy_state):
         assert all(type(model) is CommunicatingTeammateModel for model in old_model_state.values()), \
@@ -255,9 +247,6 @@ class CommScenario:
         a single copy of the policy graph for each policy state. A new policy calculation is needed
         for each step of the communicative search model anyway.
         """
-        # Early exit: If we have already calculated this new policy graph, return the cached version.
-        assert policy_state not in self._policy_graph_cache, 'Already created new policy graph.'
-
         new_root = copy(self._policy_root)
         new_root.__original_node = self._policy_root
         new_root.predecessors = set()
@@ -343,14 +332,10 @@ class CommScenario:
         # DEBUG CHECK TODO TODO TODO
         print(f'Old size: {len(self._policy_root.__depth_map)}\tNew size: {len(new_root.__depth_map)}')
 
-        # Store and return new policy graph.
-        self._policy_graph_cache[policy_state] = new_root
-
         return new_root
 
 
-def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infinity, domain_heuristic=lambda s: 0,
-                comm_cost=0):
+def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infinity, comm_cost=0):
     """
     This is the primary method for initiating a series of policy queries. It is run as any other scenario:
         - Initiate scenario
@@ -364,8 +349,7 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
                                  identity=agent.identity,
                                  evaluate_query_fn=comm_heuristic,
                                  max_branching_factor=branching_factor,
-                                 heuristic=domain_heuristic,
-                                 comm_cost=comm_cost)  # backup op?!
+                                 comm_cost=comm_cost)
 
     original_action = get_max_action(agent.policy_graph_root, agent.identity)
     print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', original_action)

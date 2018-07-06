@@ -1,5 +1,4 @@
 
-
 class PolicyDistributionModel:
 
     def __init__(self, scenario, identity, policy_distribution, crp_history):
@@ -58,13 +57,8 @@ class PolicyDistributionModel:
         if len(self.policy_distribution) != len(other.policy_distribution):
             return False
 
-        for ((index1, prob1), (index2, prob2)) in zip(self.policy_distribution, other.policy_distribution):
-            if index1 != index2:
-                return False
-            if abs(prob1 - prob2) > 10e-6:
-                return False
-
-        return True
+        return all(index1 == index2 and abs(prob1 - prob2) < 10e-6 for ((index1, prob1), (index2, prob2))
+                   in zip(self.policy_distribution, other.policy_distribution))
 
     def __hash__(self):
         if not self.__hash:

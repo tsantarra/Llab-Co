@@ -1,7 +1,25 @@
 BY PRIORITY (ISH)
 
+    Comm search heuristic/end criteria:
+        - The heuristic is an optimistic estimate of the total future change in the value of information.
+            H(I) = max_{I', q} [ VOI(I') - VOI(I) - q * comm cost ]
+        - VOI(I) is fixed (we've already calculated it)
+        - q could be accurately estimated, if we had a sense of how many queries remained, but we know it's >= 1
+        - This leaves VOI(I') as the main point of interest.
+            VOI(I') = V(s0, π', I') - V(s0, π0, I')  # cannot easily be computed by DP, but we can bound it by
+                    <= max_{π', I'} V(s0, π', I') - min V(s0, π0, I'')
+        - if H(I) < 0, H(I) == 0, and we've reached our end criteria, as we can always stop at I with no further cost.
+
     New plan, don't save graphs!
-    Calculate and cache the action set after util call
+    Calculate and cache EVERYTHING (in transition)
+        the action set
+        val of info = new policy ev - original policy ev
+        end criterion
+
+    Do it in transition once we compute the new policy states
+        - util -> have all info necessary (new ev - orig ev | new info) - (prev ev - orig ev | pre info)
+        - end -> cached
+        - actions -> cached
     Delete actions from cache in actions call
 
 
