@@ -8,34 +8,34 @@ logger = logging.getLogger()
 
 def setup_logger():
     # create file handler which logs even debug messages
-    fh = RotatingFileHandler("data.log", mode='a', maxBytes=1024*1024,
+    file_handler = RotatingFileHandler("out/data.log", mode='a', maxBytes=1024*1024,
                              backupCount=1000, encoding=None, delay=0)
-    fh.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.DEBUG)
 
     # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.ERROR)
 
     """ Options - 
     %(asctime) %(name) %(processName) %(filename) %(funcName) %(levelname) %(lineno) %(module) %(threadName) %(message)
     """
     formatter = logmatic.JsonFormatter(fmt="%(levelname) %(message)",
-                                       extra={})  # process info in extra?
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
+                                       extra={})  # process additional info in extra
+    file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
 
-    logger.addHandler(fh)
-    logger.addHandler(ch)
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
     logger.setLevel(logging.DEBUG)
 
 
 def test_file_size_logging():
     for _ in range(3):
-        logger.debug('DEBUG %(message)s', extra={'test_debug': 'test_debug1'})
-        logger.info('INFO %(message)s', extra={'test_info': 'test_info2'})
-        logger.warning('WARNING', extra={'test_warning': 'test_warning2'})
-        logger.error('ERROR', extra={'test_error': 'test_error2'})
-        logger.critical('CRITICAL', extra={'test_critical': 'test_critical2'})
+        logger.debug('my debug message', extra={'test_debug': 'test_debug1'})
+        logger.info('my info message', extra={'test_info': 'test_info2'})
+        logger.warning('my warning message', extra={'test_warning': 'test_warning2'})
+        logger.error('my error message', extra={'test_error': 'test_error2'})
+        logger.critical('my critical message', extra={'test_critical': 'test_critical2'})
 
 
 def test_error_logging():
@@ -43,7 +43,7 @@ def test_error_logging():
     try:
         a = 3 / 0
     except Exception:
-        logger.error('Some kind of error', exc_info=True)
+        logger.error('Some kind of error WITH TRACE INFO', exc_info=True)
 
 
 if __name__ == "__main__":

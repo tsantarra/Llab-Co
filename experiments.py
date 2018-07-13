@@ -9,6 +9,12 @@ from mdp.state import State
 from mdp.action import Action
 
 from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
+from log_config import setup_logger
+
+import logging
+import sys
+
+logger = logging.getLogger()
 
 
 def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
@@ -70,14 +76,13 @@ def run_experiment(scenario, agent, teammate):
 
     utility = 0
     # Main loop
-    print('Begin main loop')
     while not scenario.end(state):
         # Have the agents select actions
         joint_action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
         print('Joint Action:', joint_action)
 
         # Communicate
-        action, _ = communicate(agent, agent_dict, 10, local_information_entropy, branching_factor=3)
+        action, _ = communicate(agent, agent_dict, 3, local_information_entropy, branching_factor=3)
         new_joint_action = joint_action.update({'Agent1': action})
 
         # Observe
@@ -109,6 +114,8 @@ if __name__ == '__main__':
                     weighted_entropy:   'weighted entropy',
                     entropy:            'entropy'}
     """
+    setup_logger()
+
 
     for num_models in [1500]:
 
@@ -145,6 +152,6 @@ if __name__ == '__main__':
             print('KEYBOARD INTERRUPT')
             raise
 
-        except:
-            print('error:', sys.exc_info()[0])
+        except Exception as exception:
+            logger.error(exception, exc_info=True)
             raise

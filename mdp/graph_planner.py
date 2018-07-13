@@ -378,6 +378,10 @@ class GraphNode:
 
         return vars(self) == vars(other)
 
+    def __del__(self):
+        for attr in vars(self).values():
+            del attr
+
     def reachable_subgraph_size(self):
         return len(create_node_set(self))
 
@@ -403,13 +407,10 @@ class GraphNode:
 
             cloned.predecessors = set(cloned_nodes[n] for n in node.predecessors)
 
-
         depth_map = map_graph_by_depth(self)
         traverse_graph_topologically(depth_map, clone_node)
         traverse_graph_topologically(depth_map, update_links)  # does not need to be a traversal, technically
 
-        print('Depth Map:', len(depth_map))
-        print('Cloned:', len(cloned_nodes))
         return cloned_nodes[self]
 
     def __deepcopy__(self, memo):

@@ -6,15 +6,19 @@ policy, that is, a series of teammate policy queries that will eventually shape 
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.action import Action
-from mdp.graph_planner import map_graph, search, greedy_action
+from mdp.graph_planner import search, greedy_action
 from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically
 from agents.modeling_agent import get_max_action, single_agent_policy_backup, individual_agent_action_values
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 
 from collections import namedtuple, deque, defaultdict
+from memory_profiler import profile
 from math import inf as infinity
 from heapq import nlargest
 from copy import copy
+import logging
+
+logger = logging.getLogger()
 
 Query = namedtuple('Query', ['agent', 'state'])
 
@@ -87,7 +91,6 @@ class CommScenario:
         For a given query, consider the potential reponses from the modeled agent. Then construct a new policy state
         for each possibility.
         """
-        print('Transition', policy_state, comm_action)
         # Get the agent's action
         query_action = comm_action[self._agent_identity]
 
@@ -118,7 +121,8 @@ class CommScenario:
 
         # Precompute policy state information
         for new_policy_state in resulting_states:
-            self._precompute_info(new_policy_state)
+            if new_policy_state not in self._value_of_info:
+                self._precompute_info(new_policy_state)
 
         return resulting_states
 
@@ -236,7 +240,7 @@ class CommScenario:
             actions_to_fix = {}
             for teammate_name, teammate_model in node.state['Models'].items():
                 if world_state in teammate_model.previous_communications:
-                    actions_to_fix[teammate_name] = teammate_model.previous_communications[world_state]
+                    actions_to_fix[teammate_name] = [teammate_model.previous_communications[world_state]]
 
             # For optimistic EV, choose joint action maximizing expected value;
             optimistic_action_space = node.action_space.fix_actions(actions_to_fix)
@@ -250,7 +254,7 @@ class CommScenario:
 
             # For pessimistic EV, lock in original action and minimize over teammate actions.
             pessimistic_action_space = optimistic_action_space.fix_actions({self._agent_identity:
-                                                                            node.__original_node.optimal_action})
+                                                                            [node.__original_node.optimal_action]})
             pessimistic_action_values = {
                 joint_action: sum(
                     probability * (node.successor_transition_values[(successor.state, joint_action)]
@@ -262,7 +266,8 @@ class CommScenario:
             node.__optimistic_ev = max(optimistic_action_values.values())
             node.__pessimistic_ev = min(pessimistic_action_values.values())
 
-            assert node.__optimistic_ev >= node.__original_policy_ev >= node.__pessimistic_ev, \
+            assert (node.__optimistic_ev - node.__original_policy_ev > -10e-5
+                    and node.__original_policy_ev - node.__pessimistic_ev > -10e-5), \
                 "EV bounds calculation incorrect."
 
             return
@@ -277,13 +282,25 @@ class CommScenario:
         # one query. Of course, if this is less than 0, there is no point in continuing, so the agent should stop.
         heuristic_val = max(max_value_of_info - new_value_of_info - self._comm_cost, 0)
 
+        #print('heuristic:', heuristic_val, '\tOpt:', new_policy_root.__optimistic_ev, '\tPess:', new_policy_root.__pessimistic_ev)
         self._heuristic_value_cache[policy_state] = heuristic_val
-        self._end_cache[policy_state] = heuristic_val <= 0
+        self._end_cache[policy_state] = heuristic_val <= 10e-5
 
         ########################################################################################################
         # Cleanup
         ########################################################################################################
+        for node in new_policy_root.__depth_map.values():
+            del node
+
         del new_policy_root
+
+    def heuristic_value(self, policy_state):
+        """ Heuristic used for communication policy search. """
+        if policy_state['End?']:
+            return 0
+
+        assert policy_state in self._heuristic_value_cache, 'Cannot evaluate heuristic on policy state: ' + policy_state
+        return self._heuristic_value_cache[policy_state]
 
     def _update_model_state(self, old_model_state, policy_state):
         assert all(type(model) is CommunicatingTeammateModel for model in old_model_state.values()), \
@@ -384,9 +401,6 @@ class CommScenario:
                      for n in nodes_at_horizon):
             self._policy_backup_op(node, self._agent_identity)
 
-        # DEBUG CHECK TODO TODO TODO
-        print(f'Old size: {len(self._policy_root.__depth_map)}\tNew size: {len(new_root.__depth_map)}')
-
         return new_root
 
 
@@ -413,7 +427,7 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
     comm_graph_node = search(state=comm_scenario.initial_state(),
                              scenario=comm_scenario,
                              iterations=passes,
-                             heuristic=lambda comm_state: 0)  # HEURISTIC SHOULD CHECK 'END?' FOR TRUE AND GIVE 0 TODO
+                             heuristic=comm_scenario.heuristic_value)
 
     # No communication can help or no communication possible.
     if not comm_graph_node.successors:
@@ -436,6 +450,8 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
         response = query_target.get_action(query_action.state)
         print('Query:\n{state}\nResponse: {response}'.format(state=query_action.state, response=response))
 
+        logger.info('Query Step', extra={'Query': query_action, 'Response': response})
+
         # Update position in policy state graph
         new_query_state = current_policy_state['Queries'].update({query_action: response})
         new_policy_state = current_policy_state.update({'Queries': new_query_state})
@@ -451,8 +467,11 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
         query_action = action[agent.identity]
         current_policy_state = comm_graph_node.state
 
+
     agent.policy_graph_root = comm_scenario._get_policy_graph(current_policy_state)
     action = get_max_action(agent.policy_graph_root, agent.identity)
     print('END COMMUNICATION/// NEW ACTION:', action)
+
+    logger.info('End of Comm', extra={'New EV': agent.policy_graph_root.future_value, 'New action': action})
 
     return action, agent.policy_graph_root.state
