@@ -1,5 +1,72 @@
 BY PRIORITY (ISH)
 
+    State space coverage is increasingly a consideration for policy sampling strategies. The issue lies in the ratio
+    of relevant states--those reachable and on the trajectory of a given policy--to irrelevant states (off-policy/unlikely
+    states). The presence of irrelevant states greatly increases the variety of policies but at the cost of diluting
+    information, as is the case in Cops and Robbers where ~10^47,000 unique policies exist, but only ~13 varieties of
+    observed trajectories are at play. There's something to be said for meaningful differences in behavior via the
+    likelihood and differences of the trajectories that result, not necessarily from the differences that exist at the
+    state-action mapping level. I believe this falls under "behavior equivalence", as reported by one of Doshi's students,
+    though I don't believe there was any really meaningful progress on that front in that small amount of work.
+
+    We can, of course, alter how behaviors are sampled, cutting out fine-grained policy sampling for something that
+    instead samples in the space of observable behaviors. We could forward sample trajectories of policies, perhaps
+    only reachable states given one agent's fixed actions, and leave all other state-action pairs pruned out. This
+    leads to yet another consideration for how the ad hoc agent models these predictions, then. We could leave such
+    predictions unbound in the aggregate model, instead only relying on which agents HAVE visited such states.
+
+    I think this tracks. Anything that would be off policy would have 0 probability anyway for arriving at the state.
+    Therefore, it doesn't matter if they had one action or another. We can simply keep them as None or not contained at
+    all (sparse data structure), which will help with equivalence. Thank god.
+
+    So what does our CRP structure look like, then? I don't think we need to keep a dense matrix anymore. Instead of
+    state index x policy index, we could do state -> sparse policy mapping. But what about queries? If we were to
+    query a teammate about an off-policy state, what is the response? None? Do we sample an action? How does that
+    affect the belief posterior? Anything we don't observe is updated with uniform posterior? Does that work? It doesn't
+    rule it out, but it does bias the result a little more toward observed trajectories with the same action. Of course,
+    that may be okay. How do we justify this, theoretically? Behavioral equivalence might cover this. We're really
+    creating a model that covers all "behaviorally equivalent" model, as all other policy choices are irrelevant. It's
+    kind of an abstraction over policies or a policy bucket.
+
+    Ok, so the new process is as follows:
+        - Sample only relevant states for policy. All other policy states are removed. (assume covered with enough coordination)
+        - Policy likelihoods are updated uniformly for models of policies where no behavior was observed.
+        - When querying a teammate, sample a full policy, so we can get real policy answers.
+        - Do we add queried policy info to the table on update? I feel like we could (should?). It depends what we're testing.
+            - If we're not learning on successive runs with queries, we can leave it off and just assume policy coverage.
+            - If we are learning with successive queries, we should add individual models to the table.
+            - We should make clear our process in the paper.
+
+
+
+    ------
+
+    It doesn't make sense to count the number of unique optimal policies over the entire state space, as the relevant
+    or reachable portion of the state space is comparatively small. In a fully deterministic cops and robbers scenario
+    with a horizon of X, only X states will ever be reached, despite a branching factor of 3-5 at every state.
+        Horizon = 13
+        States involved in optimal policies = 25 (1 shared root, 12x2 states beyond)
+
+    Policy equality -> by state (reachable subgraph/states equal)
+    Hierarchical policy?
+    Store in its own graph structure?
+
+    Heuristic specific to domain.
+
+    Recipe sat scenario generates an ungodly number of optimal policies. I should try to constrain that.
+    Interestingly enough, sampling out from the space only gave me like 1k unique policies. I need to check hashing
+    and equality on those policies. Something seems off.
+
+    I should see how many optimal policies exist for cops and robbers.
+        Answer: soooooo many (8 x 10^47,238)
+
+
+
+
+    Logging could likely be improved. I don't yet have a parser either for all of the information.
+        Needs: read all files in directory into giant corpus.
+        Pass arguments for search over records so we prune first, then aggregate.
+
     Comm search heuristic/end criteria:
         - The heuristic is an optimistic estimate of the total future change in the value of information.
             H(I) = max_{I', q} [ VOI(I') - VOI(I) - q * comm cost ]

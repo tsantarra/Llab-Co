@@ -2,21 +2,32 @@ from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.action import JointActionSpace
 
-from random import sample
+from random import sample, seed
 from itertools import combinations
 from math import factorial
 
 
 class RecipeScenario:
 
-    def __init__(self, num_conditions, num_agents, num_valid_recipes, recipe_size=None):
+    def __init__(self, num_conditions, num_agents, num_valid_recipes, recipe_size=None, random_seed=None):
         self.num_conditions = num_conditions
         self.all_conditions = frozenset(range(num_conditions))
         self.agents = ['Agent' + str(i) for i in range(1, num_agents+1)]
-        self.recipes = [set(recipe) for recipe in self.__make_recipes(num_valid_recipes, self.all_conditions, recipe_size)]
         self.success_util = 10
         self.conflict_penalty = 1
         self.extra_cond_penalty = 2
+
+        if random_seed:
+            seed(random_seed)
+
+        self.recipes = [set(recipe) for recipe in self.__make_recipes(num_valid_recipes, self.all_conditions, recipe_size)]
+
+        print(f'RecipeScenario({self.all_conditions}, '
+              f'success={self.success_util}, '
+              f'conflict={self.conflict_penalty}, '
+              f'extra={self.extra_cond_penalty})'
+              f'\nPotential Goals:\n' + '\n'.join(str(recipe) for recipe in self.recipes))
+
 
     def initial_state(self):
         """ Gives the initial state of the scenario. """

@@ -5,6 +5,7 @@ from agents.models.chinese_restaurant_process_model import ChineseRestaurantProc
 from agents.sampled_policy_teammate import SampledTeammateGenerator
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 from agents.models.policy_distribution import PolicyDistributionModel
+from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import CopsAndRobbersScenario
 from mdp.state import State
 from mdp.action import Action
 
@@ -17,7 +18,7 @@ import sys
 logger = logging.getLogger()
 
 
-def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
+def initialize_agents(scenario, num_initial_models, identity, teammate_identity):  # FOR ONE SHOT TESTING!
     """
     Sample num_models worth of teammate policies (probably a better way to do this, caching the graph TODO).
     Due to the modeling needs of the scenario, the teammate model is represented as such:
@@ -26,18 +27,18 @@ def initialize_agents(scenario, num_initial_models):  # FOR ONE SHOT TESTING!
                 - Multiple OfflineSampledPolicyTeammate models (one policy each; also used for the actual teammate)
                 - One UniformPolicyTeammate model
     """
-    teammate_generator = SampledTeammateGenerator(scenario, 'Agent2')
-    chinese_restaurant_process = ChineseRestaurantProcessModel('Agent2', scenario,
+    teammate_generator = SampledTeammateGenerator(scenario, teammate_identity)
+    chinese_restaurant_process = ChineseRestaurantProcessModel(teammate_identity, scenario,
                                                                teammate_generator.policy_state_order,
                                                                teammate_generator.all_policy_actions)
     for _ in range(num_initial_models):
-        chinese_restaurant_process.add_teammate_model(teammate_generator.sample_policy())
+        chinese_restaurant_process.add_teammate_model(teammate_generator.sample_full_policy())
 
-    teammate_model = PolicyDistributionModel(scenario, 'Agent2', chinese_restaurant_process.prior(),
+    teammate_model = PolicyDistributionModel(scenario, teammate_identity, chinese_restaurant_process.prior(),
                                              chinese_restaurant_process)
     teammate_model = CommunicatingTeammateModel(teammate_model, scenario)
 
-    return ModelingAgent(scenario, 'Agent1', {'Agent2': teammate_model}, iterations=10000), teammate_generator
+    return ModelingAgent(scenario, identity, {teammate_identity: teammate_model}, iterations=10000), teammate_generator
 
 
 def perfect_knowledge_val(scenario, agent, teammate):
@@ -55,9 +56,6 @@ def perfect_knowledge_val(scenario, agent, teammate):
 def run_experiment(scenario, agent, teammate):
     """
     April 3, 2018
-    # Create sample teammate template (one giant graph to sample teammates from)
-    population = SampledTeammateGenerator(scenario, 'Agent2')
-
     # For number of full runs:
     for run in range(runs):
         for comm_method in comm_methods:
@@ -72,7 +70,8 @@ def run_experiment(scenario, agent, teammate):
                 run_trial(comm_method)
     """
     state = scenario.initial_state()
-    agent_dict = {'Agent1': agent, 'Agent2': teammate}
+    agent_name, teammate_name = scenario.agents()
+    agent_dict = {agent_name: agent, teammate_name: teammate}
 
     utility = 0
     # Main loop
@@ -83,7 +82,7 @@ def run_experiment(scenario, agent, teammate):
 
         # Communicate
         action, _ = communicate(agent, agent_dict, 3, local_information_entropy, branching_factor=3)
-        new_joint_action = joint_action.update({'Agent1': action})
+        new_joint_action = joint_action.update({agent_name: action})
 
         # Observe
         for participating_agent in agent_dict.values():
@@ -96,7 +95,7 @@ def run_experiment(scenario, agent, teammate):
         utility += scenario.utility(state, new_joint_action, new_state)
 
         # Output
-        print('Policy distribution length:', len(agent.model_state['Agent2'].model.policy_distribution))
+        print('Policy distribution length:', len(agent.model_state[teammate_name].model.policy_distribution))
         print('New Action:', new_joint_action)
         print('New State')
         print(new_state)
@@ -116,42 +115,30 @@ if __name__ == '__main__':
     """
     setup_logger()
 
+    try:
+        # Initialize scenario and agents. These will be kept constant across comm methods.
+        #scenario = RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5)
+        scenario = CopsAndRobbersScenario()
+        ad_hoc_agent, generator = initialize_agents(scenario, num_initial_models=1, identity='A', teammate_identity='P')
 
-    for num_models in [1500]:
+        generator.sample_partial_policy()
 
-        try:
-            # Initialize scenario and agents. These will be kept constant across comm methods.
-            recipe_scenario = RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=3, recipe_size=5)
-            ad_hoc_agent, generator = initialize_agents(recipe_scenario, num_models)
+        ad_hoc_agent.policy_graph_root = None
+        partner = generator.sample_teammate()
 
-            ad_hoc_agent.policy_graph_root = None
-            partner = generator.sample_teammate()
+        # Perfect knowledge exp util
+        #perfect_util = perfect_knowledge_val(recipe_scenario, ad_hoc_agent, partner)
+        #print('perfect util:', perfect_util)
 
-            # Perfect knowledge exp util
-            #perfect_util = perfect_knowledge_val(recipe_scenario, ad_hoc_agent, partner)
-            #print('perfect util:', perfect_util)
+        logger.info('Begin!')
+        # mini test
+        run_experiment(scenario, ad_hoc_agent, partner)
 
-            # mini test
-            run_experiment(recipe_scenario, ad_hoc_agent, partner)
-            break
 
-            # actual area to do testing
-            for comm_strategy in comm_methods:
-                # Bookkeeping
-                params = [num_models, comm_methods[comm_strategy]]
-                print(params)
+    except KeyboardInterrupt:
+        print('KEYBOARD INTERRUPT')
+        raise
 
-                # Create copy for comparison, as they'll diverge with different information.
-
-                test_agent = ad_hoc_agent.copy()
-
-                # Run current attempt, communicating in the first round
-                run_comm_attempt(test_agent, partner, comm_strategy, max_queries=5000)
-
-        except KeyboardInterrupt:
-            print('KEYBOARD INTERRUPT')
-            raise
-
-        except Exception as exception:
-            logger.error(exception, exc_info=True)
-            raise
+    except Exception as exception:
+        logger.error(exception, exc_info=True)
+        raise

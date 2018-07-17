@@ -23,18 +23,27 @@ WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT = 
     '*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<'
 
 Location = namedtuple('Location', ['row', 'col'])
+_path = './domains/multi_agent/cops_and_robbers/mazes/'
 
 
 class CopsAndRobbersScenario:
 
-    def __init__(self, filename):
+    def __init__(self, filename='a.maze'):
         """
         Open the file and read in the maze configuration.
         """
-        with open(filename, 'r') as maze_file:
+        with open(_path + filename, 'r') as maze_file:
             maze_lines = maze_file.read().split('\n')
 
-        self.maze = {Location(row, col): char for row, line in enumerate(maze_lines) for col, char in enumerate(line)}
+        self.initial_maze = {Location(row, col): char for row, line in enumerate(maze_lines) for col, char in enumerate(line)}
+        replace = set((AGENT, PARTNER, ROBBER))
+        self.maze = {loc : char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
+
+    def agents(self):
+        return ['A','P']
+
+    def heuristic(self, state):
+        return 0
 
     def initial_state(self):
         """
@@ -43,21 +52,19 @@ class CopsAndRobbersScenario:
         state_dict = {'Round': 1}
 
         robber_count = 0
-        for loc, char in self.maze.items():
+        for loc, char in self.initial_maze.items():
 
             if char == AGENT:
                 state_dict['A'] = loc
-                self.maze[loc] = OPEN
 
             elif char == PARTNER:
                 state_dict['P'] = loc
-                self.maze[loc] = OPEN
 
             elif char == ROBBER:
                 robber_count += 1
                 state_dict['Robber' + str(robber_count)] = loc
-                self.maze[loc] = OPEN
 
+        assert len(state_dict) > 2, f'Improper maze comprehension. State={state_dict}'
         return State(state_dict)
 
     def actions(self, state):
@@ -104,22 +111,25 @@ class CopsAndRobbersScenario:
                 elif individual_action == 'L':
                     col -= 1
 
-                assert row > 0 and row < 8 and col > 0 and col < 8, 'Illegal action taken. {action} {loc}'.format(action=individual_action, loc=(row, col)) + '\n' + self.show_state(intermediate_state)
+                assert 0 < row < 8 and 0 < col < 8, \
+                    'Illegal action taken. {action} {loc}'.format(action=individual_action, loc=(row, col)) + '\n' + \
+                    self.show_state(intermediate_state)
 
                 new_state_diff[agent] = Location(row, col)
 
-            new_state_distribution[intermediate_state.update(new_state_diff)] = probability
+            new_state = intermediate_state.update(new_state_diff)
+            assert len(new_state) > 2, f'Improper state update. {new_state}'
+            new_state_distribution[new_state] = probability
 
         return new_state_distribution
 
-    @staticmethod
-    def end(state):
+    def end(self, state):
         """
         End conditions:
             - Round limit hit. Currently 50.
             - Both agents and at least one robber are located in a single cell.
         """
-        if state['Round'] >= 50:
+        if state['Round'] >= 13:
             return True
 
         a_loc, p_loc = state['A'], state['P']
@@ -133,7 +143,7 @@ class CopsAndRobbersScenario:
         """
         Utility is only granted upon successful completion of the task. It is given as the number of remaining rounds.
         """
-        return (50 - new_state['Round']) if CopsAndRobbersScenario.end(new_state) else 0
+        return (50 - new_state['Round']) if self.end(new_state) else 0
 
     def _move_robbers(self, state):
         """

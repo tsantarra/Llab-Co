@@ -3,6 +3,6 @@ For simplicity, we will treat a Scenario as a collection of functions which oper
 """
 from collections import namedtuple
 
-Scenario = namedtuple('Scenario', ['initial_state', 'transition', 'actions', 'utility', 'end'])
+Scenario = namedtuple('Scenario', ['initial_state', 'transition', 'actions', 'utility', 'end', 'agents', 'heuristic'])
 Scenario.__new__.__defaults__ = (None,) * len(Scenario._fields)  # Sets default values to None
 

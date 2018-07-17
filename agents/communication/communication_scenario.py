@@ -207,6 +207,7 @@ class CommScenario:
         def prune_query(node, target_agent_name):
             return node.scenario_end or \
                    Query(target_agent_name, node.state['World State']) in policy_state['Queries'] or \
+                   node.action_space is None or \
                    len(node.action_space.individual_actions(target_agent_name)) <= 1
 
         # Need to consider all teammates involved.
