@@ -1,0 +1,31 @@
+
+    Desires for experimental domain:
+        - Multiple policies are successful
+        - Scalable
+        - Rearrangeable
+            + add or remove policy dependencies
+        - clear way to author/sample/learn teammate policies
+
+    Experiment goals (Show ____):
+        - exhaustive good, but infeasible
+        - myopic bad
+        - entropy okay (p log p)
+        - variance in util better (hopefully)  (E[U' - E[U]])
+        - weighting by likelihood (either) -> best   Ps (p log p)   ///   Ps (E[U' - E[U]])   (Ps = prob state)
+        - if we had a paramaterized model, we could use Fisher information, but we don't (thank god)
+
+        - more experience -> less comms?
+
+    Domains
+        Managing 2+ teammates simultaneously.
+            Helps with reviewer criticism
+        Small domains:
+            Multi-armed bandit (introduce conflict in same bandit? shared obs? someone explores while the other exploits?)
+            Cooperative flocking (various roles?)
+            Blocks world (tagged blocks which can only be moved by certain agent)
+            Traditional pursuit?
+            Generated MDP (Noa Agmon's work "Leading Ad Hoc Agents...")
+        Human supervised classification
+            -> setup: model selects action classifying item in state. Successive state is human classifying image (can skip?).
+            -> Reward: S A S' -> util when select correct classification
+            -> May need to adjust how immediate values are handled by nodes during planning

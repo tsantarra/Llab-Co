@@ -1,0 +1,62 @@
+BY PRIORITY (ISH)
+
+    Logging could likely be improved. I don't yet have a parser either for all of the information.
+        Needs: read all files in directory into giant corpus.
+        Pass arguments for search over records so we prune first, then aggregate.
+
+    TODO
+        DONE - add pruning/heuristic selection to algorithm (comm scenario.actions() (only consider top 5, etc))
+        DONE - add early termination to end() method of comm scenario
+            - remember we're early terminating for the current line of queries (for the current action), not for all queries
+        DONE - comm search heuristic?
+            - want to estimate the gain gotten by optimally querying/terminating
+        DONE - go over communication process code (in comm scenario)
+        DONE - add logging from new log_config json support
+        - run small test
+        - go over experimental setup
+        - finalize changes and run first test!!!
+
+    Tasks:
+        - SET UP ENV TO INCLUDE logmatic-python (for logging in JSON!)
+        - comms
+            - test comm heuristics
+            - full comm alg? pruned dec theory? YES
+
+        - recipe sat
+            - test domain to fix parameters
+                - num recipes
+                - num conditions
+                - max length
+
+        - experimental setups
+            - vary cost of comm
+            - vary cost of conflict
+            - vary prior knowledge
+            - vary num trials with same team (pre-comm)
+            - vary heuristics
+            - vary comm action space (with heuristics)
+            - improving outcome for suboptimal team policy? (like Noa's work)
+            - multiple teammates
+
+        - planning optimization?
+            - can attempt backup operator optimization with little risk
+
+    Nice to have, but completely beyond the scope of the current project.
+        Profiling and unit tests
+
+        Cython
+            MDP planner?
+            Domain scenarios - state transitions are likely a major factor
+
+        Debug
+            - use logging module http://inventwithpython.com/blog/2012/04/06/stop-using-print-for-debugging-a-5-minute-quickstart-guide-to-pythons-logging-module/
+
+        Multiprocessing
+            - far advanced, but consider doing something parallel. You know, maybe you should do an initial search until X
+            branches, where X = #processors, then have each process handle a subtree. That's interesting. Probably not a huge
+            gain, however. Doesn't keep the philosophy of put more resources into Y process because it is more promising. As
+            X -> inf, you just have breadth first search.
+
+        Hierarchical Graph Reduction (maybe keep for second PhD :P)
+            Epsilon merging
+            Multi-level graph partitioning

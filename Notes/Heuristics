@@ -1,0 +1,77 @@
+
+    Comm search heuristic/end criteria:
+        - The heuristic is an optimistic estimate of the total future change in the value of information.
+            H(I) = max_{I', q} [ VOI(I') - VOI(I) - q * comm cost ]
+        - VOI(I) is fixed (we've already calculated it)
+        - q could be accurately estimated, if we had a sense of how many queries remained, but we know it's >= 1
+        - This leaves VOI(I') as the main point of interest.
+            VOI(I') = V(s0, π', I') - V(s0, π0, I')  # cannot easily be computed by DP, but we can bound it by
+                    <= max_{π', I'} V(s0, π', I') - min V(s0, π0, I'')
+        - if H(I) < 0, H(I) == 0, and we've reached our end criteria, as we can always stop at I with no further cost.
+
+    ------
+
+    Variance in util not straightforward without MY policy probs
+        New heuristics!
+            - local entropy minimization - minimize p log p   (can be weighted by p(s))
+            - global entropy minimization - pick query to minimize p log p across entire graph (weighted by p(s)); needs to update entire policy graph
+
+            - local value of information - consider value increase at the state
+                sum p(a) (p'(s_t|a)V'(s_t|a) - p(s_t|a)V(s_t|a))   # p'(s_t) is dependent on policy from 0 to t-1 (not markovian), but V'(s_t)|a isn't. Two options:
+                    1. p'(s_t|a) ~= p(s_t|a) -> p(s_t) * sum p(a) (V'(s_t|a) - V(s_t|a))  # (0 if off policy!) how important it'd be if we were there, weighted by current likelihood
+                    2. p'(s_t|a) <= 1        -> sum p(a) (V'(s_t|a) - p(s_t|a)V(s_t|a))   # (!0 if off policy!) upper bound on the change of value this could contribute to V(s_0)
+            - global value of information - myopic query, then update entire policy
+
+            - local expected quadratic loss - linear loss is 0, no? [sum p(a) V(actual)] - V(expected) = V(expected) - V(expected)
+                p(s_t) sum p(a) (V(actual) - V(expected))^2   # p(s_t) or (p(s_t) - 0) is an upper bound on the potential change in prob of bad prediction (emphasizes on-policy, minimizes off-policy)
+            - global expected quadratic loss - query then update entire policy, calculate weighted sum of quadratic loss across entire graph
+
+            - could use a linear loss if it is an absolute loss, ie p * | V' - V |
+
+            - consider: what about asymmetric loss functions? We use quadratic instead of linear (because expected linear loss = 0), but what about losses that weight underestimations and
+            overestimations differently? In our case, underestimating the chance of a teammate doing something unexpected or against our policy can be far worse than underestimating that
+            they WILL do what we want (in which case, communication could be skipped in certain circumstances).
+
+            - could also consider losses/metrics based on distributions (e.g. KL-divergence) over local state transitions, local action probs,
+            global teammate policy likelihoods, global state likelihoods, global outcome likelihoods, etc
+            - in this thinking, cross entropy seems like a great candidate, as it is used when predicting a prob dist but truth is all 0/1
+                -> in general, cross entropy is preferred for classification problems (we're classifying policies!) while MSE is better for regression (we're also learning distributions over policies!)
+
+    Each heuristic should be given the model state (in comm planner, not in node) and world state to predict on
+        things got crossed when using "node" as parameter
+
+    Justification for uniform policy distribution
+        - care equally about underestimating teammate's policy (out of policy) as overestimating (in-policy) the teammate (which disappoints us)
+        - if probabilities are biased toward policy, swings in util where incorrect prediction occurs have little weight
+        - in truth, (max prob of state - current prob of state) would give a better estimate, but max prob is expensive to calculate
+        - result of uniform -> highly stochastic transitions lead to unlikely states (which is fair, as we'd then care more about near-term predictions)
+
+    ------
+
+    Considerations
+        - Querying a state that is unreachable could inform many reachable policy states. Hmmm.
+        - Subset queries aren't likely to be optimal (as query choice depends on answers), but can improve runtime and coverage
+        - True EV of a policy is not submodular (no guarantees on greedy alg).
+        - Matroids don't apply either, as responses matter.
+        - It's still not quite clear how to handle global policy model vs policy instance
+            + Narrowing a policy from a stochastic policy is probably easier than "learning", no? Just use info gain to discern.
+                - Doesn't take into consideration utility and indifference.
+
+    Thoughts on comm strategies:
+        - Exact
+            + Timing is a consideration. Don't technically need to comm now if policy
+              only at risk of changing later. Can delay comms until then.
+                - As such, storing where policy changes gives the comm timing requirements
+                - Also consider not communicating max potential change, but max change in current NEED of policy change
+        - Given conditional relations between state-action pairs of teammate model
+            + select states with best inference power over all affected states
+        - Greedy (consider each independently, as in last paper)
+        - Best pruning (as queried action makes other actions' subtrees irrelevant)
+        - Limit communication content: limited states considered (what to communicate paper)
+        - Limit computation: Heuristic: Util x Info x likelihood of state
+        - Limit search space: Limiting to similar payoffs
+        - Alternate strategy (like conditional value at risk): Maximizing expected util vs raise lower bound on util (safety value).
+        - Alternate strategy: don't max payoff; rather, max chance agent made correct call (between two alternative distributions, maximize
+        probability sampled outcome of one is greater than sampled outcome of other). In other words, maximize instances of regret, not ev of regret.
+        - Query by committee - pick states where set of models most disagree; can select N most likely models (N most likely paths?)
+        - Expected model change - pick queries that may most change policy (expectation over answers)

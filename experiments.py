@@ -1,36 +1,30 @@
 from agents.communication.communication_scenario import communicate
 from agents.communication.communication_strategies import *
 from agents.modeling_agent import ModelingAgent
-from agents.models.chinese_restaurant_process_model import ChineseRestaurantProcessModel
+from agents.models.chinese_restaurant_process_model import SparseChineseRestaurantProcessModel
 from agents.sampled_policy_teammate import SampledTeammateGenerator
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 from agents.models.policy_distribution import PolicyDistributionModel
-from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import CopsAndRobbersScenario
 from mdp.state import State
 from mdp.action import Action
 
-from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
 from log_config import setup_logger
-
 import logging
-import sys
 
 logger = logging.getLogger()
 
 
 def initialize_agents(scenario, num_initial_models, identity, teammate_identity):  # FOR ONE SHOT TESTING!
     """
-    Sample num_models worth of teammate policies (probably a better way to do this, caching the graph TODO).
+    Sample num_models worth of teammate policies.
     Due to the modeling needs of the scenario, the teammate model is represented as such:
         Communicating Teammate Model (stores and holds to previous policy commitments)
-            Teammate Distribution Model - a distribution over
-                - Multiple OfflineSampledPolicyTeammate models (one policy each; also used for the actual teammate)
+            Teammate Distribution Model - a Chinese Restaurant Process/distribution over
+                - Multiple SampledPolicyTeammate models (one partial policy each; also used for the actual teammate)
                 - One UniformPolicyTeammate model
     """
     teammate_generator = SampledTeammateGenerator(scenario, teammate_identity)
-    chinese_restaurant_process = ChineseRestaurantProcessModel(teammate_identity, scenario,
-                                                               teammate_generator.policy_state_order,
-                                                               teammate_generator.all_policy_actions)
+    chinese_restaurant_process = SparseChineseRestaurantProcessModel(teammate_identity, scenario)
     for _ in range(num_initial_models):
         chinese_restaurant_process.add_teammate_model(teammate_generator.sample_full_policy())
 
@@ -106,20 +100,19 @@ def run_experiment(scenario, agent, teammate):
 
 
 if __name__ == '__main__':
-    global params
-    """
-    comm_methods = {weighted_variance:  'weighted variance',
-                    variance_in_util:    'variance',
-                    weighted_entropy:   'weighted entropy',
-                    entropy:            'entropy'}
-    """
+    from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
+    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import CopsAndRobbersScenario
+
     setup_logger()
 
     try:
         # Initialize scenario and agents. These will be kept constant across comm methods.
-        #scenario = RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5)
-        scenario = CopsAndRobbersScenario()
-        ad_hoc_agent, generator = initialize_agents(scenario, num_initial_models=1, identity='A', teammate_identity='P')
+        scenario = RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5)
+        #scenario = CopsAndRobbersScenario()
+
+        agent_identity, teammate_identity = scenario.agents()
+        ad_hoc_agent, generator = initialize_agents(scenario, num_initial_models=100,
+                                                    identity=agent_identity, teammate_identity=teammate_identity)
 
         generator.sample_partial_policy()
 
@@ -131,6 +124,7 @@ if __name__ == '__main__':
         #print('perfect util:', perfect_util)
 
         logger.info('Begin!')
+
         # mini test
         run_experiment(scenario, ad_hoc_agent, partner)
 

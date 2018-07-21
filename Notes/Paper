@@ -1,0 +1,31 @@
+
+
+    Paper notes:
+        - Search through hypothesis space. V subset of H - version space - set of hypotheses which are
+            consistent with the observed data. See Burr Settles stuff on active learning.
+        - Similar to minimizing expected error of prediction (forward looking through queries), but with a diff objective function
+        - Noa Agmon leading paper -> task is to find the best possible REACHABLE joint actions/plans
+        - Definition of problem
+            - decentralized MDP variant
+            - the modeler's view (planning in world state x modeling space) / POMDP
+                - focus on planning while learning, otherwise only vaguely justified
+            - active vs passive learning
+            - active learning in ad hoc teams -> sharing policy information
+            - planning for active learning -> planning over policy knowledge
+            - optimize not for prediction accuracy, but for utility maximization
+            - applications within teams of multiple unknown agents
+        - Theoretical aspects
+            - conditions where policy sharing is necessary
+            - combinatorial space
+            - MDP structure
+            - DAG
+            - early termination
+            - cost effect? - free comm -> perfect info -> perfect policy
+            - not submodular; matroids don't help
+
+
+    Active learning:
+        - Fisher information? - dependent on model parameters (which we're not using a parameterized model)
+        - Query by committee
+            - useful for set of prior models
+            - also works on N best (most likely) sequence labelings (using model predictions, generate the top most likely outcomes, use that as committee)

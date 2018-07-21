@@ -12,7 +12,7 @@ class RecipeScenario:
     def __init__(self, num_conditions, num_agents, num_valid_recipes, recipe_size=None, random_seed=None):
         self.num_conditions = num_conditions
         self.all_conditions = frozenset(range(num_conditions))
-        self.agents = ['Agent' + str(i) for i in range(1, num_agents+1)]
+        self.__agents = ['Agent' + str(i) for i in range(1, num_agents + 1)]
         self.success_util = 10
         self.conflict_penalty = 1
         self.extra_cond_penalty = 2
@@ -28,6 +28,8 @@ class RecipeScenario:
               f'extra={self.extra_cond_penalty})'
               f'\nPotential Goals:\n' + '\n'.join(str(recipe) for recipe in self.recipes))
 
+    def agents(self):
+        return self.__agents
 
     def initial_state(self):
         """ Gives the initial state of the scenario. """
@@ -38,12 +40,12 @@ class RecipeScenario:
     def actions(self, state):
         """ Returns legal actions in the state. """
         if state['Complete']:
-            agent_actions = {agent: [] for agent in self.agents}
+            agent_actions = {agent: [] for agent in self.__agents}
             return JointActionSpace(agent_actions)
 
         # Otherwise, set actions for each remaining condition.
         unset_conditions = self.all_conditions - state['Conditions']
-        agent_actions = {agent: list(unset_conditions) + ['End'] for agent in self.agents}
+        agent_actions = {agent: list(unset_conditions) + ['End'] for agent in self.__agents}
 
         return JointActionSpace(agent_actions)
 

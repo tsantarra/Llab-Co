@@ -15,7 +15,7 @@ from copy import copy
 
 
 class ModelingAgent:
-    def __init__(self, scenario, identity, models, iterations=1000, heuristic=None):
+    def __init__(self, scenario, identity, models, iterations=100, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
         self.__original_scenario = scenario
         self._set_scenario(scenario)

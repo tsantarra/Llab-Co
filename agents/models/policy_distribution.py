@@ -66,36 +66,3 @@ class PolicyDistributionModel:
 
         return self.__hash
 
-
-if __name__ == '__main__':
-    from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
-    from agents.models.chinese_restaurant_process_model import ChineseRestaurantProcessModel
-    from agents.sampled_policy_teammate import SampledTeammateGenerator
-
-    recipe_scenario = RecipeScenario(num_conditions=3, num_agents=2, num_valid_recipes=1, recipe_size=3)
-    generator = SampledTeammateGenerator(recipe_scenario, 'Agent1')
-    crp = ChineseRestaurantProcessModel('Agent1', recipe_scenario, alpha=1)
-
-    for i in range(10000):
-        teammate = generator.sample_teammate()
-        crp.add_teammate_model(teammate)
-
-    print(', '.join(str(count) for count in crp.observation_counts.values()))
-
-    trial_model = PolicyDistributionModel(recipe_scenario, 'Agent1', crp.prior())
-
-    state = recipe_scenario.initial_state()
-    action = trial_model.predict(state).sample()
-
-    print(state)
-    print(action)
-    print(trial_model)
-    new_model = trial_model.update(state, action)
-    probs1 = []
-    probs2 = []
-    for teammate_model in trial_model.policy_distribution:
-        probs1.append(trial_model.policy_distribution[teammate_model])
-        probs2.append((new_model.policy_distribution[teammate_model]))
-
-    print('\t'.join('{:4.4f}'.format(i) for i in probs1))
-    print('\t'.join('{:4.4f}'.format(i) for i in probs2))

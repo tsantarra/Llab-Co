@@ -1,0 +1,60 @@
+
+
+    How:
+        Docs: https://docs.python.org/3/howto/logging.html
+        Cookbook: https://docs.python.org/3/howto/logging-cookbook.html
+        Custom formatting: https://stackoverflow.com/questions/14844970/modifying-logging-message-format-based-on-message-logging-level-in-python3
+        BaseRotatingHandler -> custom subclass to "rotate" between files (for different runs?)
+        JSON logging: https://logmatic.io/blog/python-logging-with-json-steroids/
+                      https://doc.logmatic.io/docs/python
+        Tiers:
+            - Debug: Dump any message (little/no format). Can be used for params (init) and odd outputs for... debugging.
+            - Info: Reserved strictly for computational output.
+            - Warning?
+            - Error: For errors.
+            - Critical?
+        Handlers -
+        Filters - each handler (and logger!) can filter by record level (warning/debug/etc) https://stackoverflow.com/questions/1383254/logging-streamhandler-and-standard-streams
+
+
+    Data to log:
+        Meta data (not operational data)
+            - Parameters
+                + Comm cost
+                + Heuristic
+                + Branching limit
+                + Graph size (comm and policy)
+                + Prior knowledge
+            - Trial number
+            - Process info?
+        Per run
+            Per step
+                - Expected util pre comm
+                - Each comm
+                - Each expected util after comm
+
+    OSG Structure
+        - fabfile logs in and performs remote commands
+        - submit file specifies requirements for computation in condor network as well as what to run (.sh file)
+        - .sh file loads modules/copies data and runs actual python files, converting output
+
+
+    OSG Process:
+        fabfile
+            - Connects via ssh into OSG
+            - Logs in with account name and rsa key
+            - Runs various Linux commands
+                + git init, pull, mkdir for logs
+                + condor_submit osg_setup.submit
+                + waits, then pulls files in output folder (move to separate method/fab call)
+        submit file
+            - specifies criteria for deploying computation
+                + shell file to run
+                + output, error, log destinations
+                + requests for computers, memory, disk space
+                + specifies command line args to each individual process
+        shell file
+            - loads python, unpacks virtual env and files
+            - mkdir for output
+            - runs python script with arguments
+            - compresses output

@@ -1,0 +1,30 @@
+
+
+    Models
+        Recently I switched the project over to using Chinese Restaurant Processes for lifetime, population modeling,
+        where the model keeps track of all observed policies seen so far and provides priors to the agent for individual
+        trials. The prior includes a catch-all uniform policy teammate model, which represents all of the unobserved
+        but potentially relevant teammate policies (which can be represented without exhaustively enumerating them).
+
+        Due to the modeling needs of the scenario, the teammate model is represented as such:
+            Communicating Teammate Model (stores and holds to previous policy commitments)
+                Teammate Distribution Model - a distribution over
+                    - Multiple OfflineSampledPolicyTeammate models (one policy each; also used for the actual teammate)
+                    - One UniformPolicyTeammate model
+
+    Modeling Notes:
+        An interface for an agent model which can make state-based predictions as well as update with new information.
+
+        We can take the state + operators approach. It works for state because all scenarios have a similar underlying
+        representation: state features and values. But a model?
+
+        Is it just a state-action mapping? No. It's a state x obs history -> action mapping. Just like a POMDP.
+        Is dynamic programming relevant here, as with belief states?
+
+        Is it a calculation? It can be, but it may be potentially computationally intensive.
+
+        Should we cache the already computed components? How does a model update affect cached results?
+
+        Is a model Markovian? 30 heads/70 tails -> 30% prediction, but 3/7 is updated very differently.
+
+        In effect, a model is a distribution over possible policy instances. Communication highlights which instance we are in.
