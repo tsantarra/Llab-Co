@@ -235,14 +235,14 @@ def local_utility_variance(policy_root, target_agent_name, prune_fn, agent_name,
     return eval_list
 
 
-def random_evaluation(policy_root, agent_name):
+def random_evaluation(policy_root, target_agent_name, prune_fn):
     """
     Give random evaluations, as a comparison baseline.
     """
     return [(node.state['World State'], randint()) for node in map_graph_by_depth(policy_root)]
 
 
-def most_likely_next_state(policy_root, agent_name):
+def most_likely_next_state(policy_root, target_agent_name, prune_fn, agent_name):
     """
     Order states by most likely - p(s | π)
     """
@@ -252,7 +252,7 @@ def most_likely_next_state(policy_root, agent_name):
     def evaluate(node, horizon):
         other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                    for other_agent, other_agent_model in node.state['Models'].items()}
-        old_action_values = individual_agent_action_values(agent_name,other_agent_predictions, node.action_space,
+        old_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
                                                            node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 

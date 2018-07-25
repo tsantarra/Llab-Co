@@ -6,6 +6,8 @@ from random import sample, seed
 from itertools import combinations
 from math import factorial
 
+import json
+
 
 class RecipeScenario:
 
@@ -113,3 +115,11 @@ class RecipeScenario:
             recipe_length += 1
 
         raise ValueError('Not enough conditions to generate {num_recipes} recipes.'.format(num_recipes=num_recipes))
+
+    def _serialize_state(self, state):
+        """
+        Returns a serializable version of a state from this domain.
+        """
+        return json.dumps({'Conditions': list(state['Conditions']),
+                           'Complete': state['Complete']})
+

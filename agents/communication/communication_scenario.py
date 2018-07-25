@@ -12,10 +12,10 @@ from agents.modeling_agent import get_max_action, single_agent_policy_backup, in
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
 
 from collections import namedtuple, deque, defaultdict
-from memory_profiler import profile
 from math import inf as infinity
 from heapq import nlargest
 from copy import copy
+import json
 import logging
 
 logger = logging.getLogger()
@@ -405,7 +405,8 @@ class CommScenario:
         return new_root
 
 
-def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infinity, comm_cost=0):
+def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heuristic, branching_factor=infinity,
+                comm_cost=0):
     """
     This is the primary method for initiating a series of policy queries. It is run as any other scenario:
         - Initiate scenario
@@ -451,7 +452,8 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
         response = query_target.get_action(query_action.state)
         print('Query:\n{state}\nResponse: {response}'.format(state=query_action.state, response=response))
 
-        logger.info('Query Step', extra={'Query': query_action, 'Response': response})
+        logger.info('Query Step', extra={'Query': scenario._serialize_state(query_action.state),
+                                         'Response': json.dumps(response)})
 
         # Update position in policy state graph
         new_query_state = current_policy_state['Queries'].update({query_action: response})
@@ -473,6 +475,6 @@ def communicate(agent, agent_dict, passes, comm_heuristic, branching_factor=infi
     action = get_max_action(agent.policy_graph_root, agent.identity)
     print('END COMMUNICATION/// NEW ACTION:', action)
 
-    logger.info('End of Comm', extra={'New EV': agent.policy_graph_root.future_value, 'New action': action})
+    logger.info('End of Comm', extra={'New EV': agent.policy_graph_root.future_value, 'New action': json.dumps(action)})
 
     return action, agent.policy_graph_root.state

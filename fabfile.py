@@ -9,7 +9,7 @@ env.hosts = ['login.osgconnect.net']
 
 # Declare remote username and key info (optional)
 env.user = 'tsantarra'
-#env.password = 'can put password here if not using ssh'
+# env.password = 'can put password here if not using ssh'
 env.key_filename = 'private_ssh_key'
 
 

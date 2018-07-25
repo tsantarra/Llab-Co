@@ -1,0 +1,30 @@
+
+
+    Parameters
+
+        Find best:
+            Plan iterations per step (find best)
+            Comm iterations per step
+            Number of trials at each param config  (test)
+            Comm branching factor
+
+        Vary for experiments:
+            Choice of domain
+            Comm Heuristic
+            Comm Cost
+            Number of policies seen (varies by design)
+            Generating distribution over teammate policies?
+
+
+        2-3 domains
+        ~6 heuristics
+        3 comm costs?
+        5 numbers of policies seen
+        2 distributions?
+    --------------
+        540 combinations x 100 trials each = 54,000
+        @20 minutes per trial over 100 computers -> 15 days
+
+
+
+

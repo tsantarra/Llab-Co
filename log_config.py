@@ -6,9 +6,9 @@ from logging.handlers import RotatingFileHandler
 logger = logging.getLogger()
 
 
-def setup_logger():
+def setup_logger(id=''):
     # create file handler which logs even debug messages
-    file_handler = RotatingFileHandler("out/data.log", mode='a', maxBytes=1024*1024,
+    file_handler = RotatingFileHandler("out/data-" + str(id) + ".log", mode='w', maxBytes=1024*1024,
                              backupCount=1000, encoding=None, delay=0)
     file_handler.setLevel(logging.DEBUG)
 
