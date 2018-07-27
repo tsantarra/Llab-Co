@@ -1,7 +1,6 @@
 #!/bin/bash
 # load necessary modules
-module load python/3.6
-#module load stashcp
+module load python/3.5.2
 
 # transfer data from stashcache
 # stashcp /user/tsantarra/input_data/$2.npy data.npy
@@ -18,7 +17,7 @@ mkdir out
 
 # Run python script
 ./test_env/Scripts/python test_run.py $1 $2
-# python3.5 test_run.py $1 $2
+# python3.5.2 test_run.py $1 $2
 
 # tar output file
 tar -czf out.$1.$2.tar.gz out

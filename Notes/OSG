@@ -1,4 +1,8 @@
 
+TODO:
+    create virtual env should pip install necessary packages for us, which is why we do it at OSG but before sending
+    to compute nodes (which probably can't install packages)
+
 
 Process outline:
 

@@ -1,8 +1,8 @@
 
 #!/bin/bash
 
-# Load python - not needed?
-# module load python
+# Load python
+# module load python/3.5.2
 
 # Activate virtual environment
 python -m venv test_env
