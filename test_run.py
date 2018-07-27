@@ -11,3 +11,6 @@ if __name__ == '__main__':
         writer = csv.writer(f)
         writer.writerow(sys.argv)
 
+        # for testing virtual env
+        from logmatic import jsonlogger
+        writer.writerow([jsonlogger.time])

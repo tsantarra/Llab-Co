@@ -6,7 +6,7 @@
 
 # Activate virtual environment
 python -m venv test_env
-source test_env/bin/activate
+source test_env/Scripts/activate
 
 # Install python packages (some are unused in this demo)
 pip install logmatic-python

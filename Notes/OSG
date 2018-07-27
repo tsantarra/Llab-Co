@@ -1,0 +1,29 @@
+
+
+Process outline:
+
+    [LOCAL] fabfile - Runs remote commands on OSG system.
+    |
+    |-- pull repository
+    |
+    |-- create virtual environment (create_virtual_env.sh)
+    |
+    |-- tar and remove repo python code
+    |
+    |-- make log directory
+    |
+    |-- [OSG] call condor submit script (osg_setup.submit)
+    |                       |
+    |-- collect output      |-- specify transfer files (virtual env, project, run script)
+                            |
+                            |-- set up pc requirements for jobs
+                            |
+                            |-- [COMPUTE NODE] specify run script (run_remote_test.sh)
+                            |                   |
+                            |-- setup args      |-- decompress virtual environment, python project
+                                                |
+                                                |-- make output directory
+                                                |
+                                                |-- run python file (experiments/test_run)
+                                                |
+                                                |-- tar the output for returning

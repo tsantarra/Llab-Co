@@ -1,14 +1,14 @@
 #!/bin/bash
 # load necessary modules
-module load python/3.5
+module load python/3.6
 #module load stashcp
 
 # transfer data from stashcache
-#stashcp /user/tsantarra/input_data/$2.npy data.npy
+# stashcp /user/tsantarra/input_data/$2.npy data.npy
 
 # untar and activate virtual environment
-#tar -xzf python_virtenv_demo.tar.gz
-#source ./python_virtenv_demo/bin/activate
+tar -xzf test_env.tar.gz
+source ./test_env/Scripts/activate
 
 # untar local library
 #tar -xzf misshapen.tar.gz
@@ -17,8 +17,8 @@ module load python/3.5
 mkdir out
 
 # Run python script
-#./python_virtenv_demo/bin/python2.7 find_PsTs.py
-python3.5 test_run.py $1 $2
+./test_env/Scripts/python test_run.py $1 $2
+# python3.5 test_run.py $1 $2
 
 # tar output file
 tar -czf out.$1.$2.tar.gz out
@@ -27,4 +27,4 @@ tar -czf out.$1.$2.tar.gz out
 #rm data.npy
 
 # deactivate virtual environment
-#deactivate
+deactivate
