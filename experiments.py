@@ -40,8 +40,7 @@ heuristics = [local_information_entropy,
 
 def run():
     assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + ' '.join(Parameters._fields)
-
-    parameters = Parameters(sys.argv[1:])
+    parameters = Parameters(*(int(arg) for arg in sys.argv[1:]))
 
     # Set up logger with process info.
     setup_logger(id=parameters.process_no)
@@ -61,8 +60,8 @@ def run():
         # TODO handle rest of parameters in intializations ^^ and experiment vv
 
         logger.info('Begin Trial!', extra={'Trial': trial})
-        run_experiment(scenario, ad_hoc_agent, partner,
-                       parameters.comm_cost, parameters.comm_branch_factor, parameters.comm_iterations)
+        run_experiment(scenario, ad_hoc_agent, partner, parameters.comm_cost,
+                    parameters.comm_branch_factor, parameters.comm_iterations, comm_heuristic)
         logger.info('End Trial', extra={'Trial': trial})
 
 
@@ -100,7 +99,7 @@ def perfect_knowledge_val(scenario, agent, teammate):
     return agent.policy_graph_root.future_value
 
 
-def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, comm_iterations):
+def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, comm_iterations, comm_heuristic):
     """
     April 3, 2018
     # For number of full runs:
@@ -129,8 +128,8 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
 
         # Communicate
         action, _ = communicate(scenario, agent, agent_dict,
-                                passes=comm_iterations,
-                                comm_heuristic=local_information_entropy,
+                                comm_planning_iterations=comm_iterations,
+                                comm_heuristic=comm_heuristic,
                                 branching_factor=comm_branch_factor,
                                 comm_cost=comm_cost)
         new_joint_action = joint_action.update({agent_name: action})

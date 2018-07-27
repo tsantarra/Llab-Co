@@ -428,12 +428,12 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     # Complete graph search
     comm_graph_node = search(state=comm_scenario.initial_state(),
                              scenario=comm_scenario,
-                             iterations=passes,
+                             iterations=comm_planning_iterations,
                              heuristic=comm_scenario.heuristic_value)
 
     # No communication can help or no communication possible.
     if not comm_graph_node.successors:
-        return original_action
+        return original_action, agent.policy_graph_root.state
 
     action = greedy_action(comm_graph_node)
     query_action = action[agent.identity]
