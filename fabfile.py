@@ -39,8 +39,8 @@ def setup():
         if not exists('Log'):
             run('mkdir -p Log')
 
-        run('chmod +x create_virtenv.sh')
-        run('./create_virtenv.sh')
+        run('chmod +x create_virtual_env.sh')
+        run('./create_virtual_env.sh')
 
 
 def run_demo():

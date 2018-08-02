@@ -1,8 +1,7 @@
-
 #!/bin/bash
 
 # Load python
-# module load python/3.5.2
+module load python/3.5.2
 
 # Activate virtual environment
 python3 -m venv test_env
