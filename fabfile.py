@@ -29,7 +29,18 @@ def test_run():
 
 
 def setup():
-    run('git clone https://github.com/tsantarra/Llab-Co')
+    if not exists('Llab-Co'):
+        run('git clone https://github.com/tsantarra/Llab-Co')
+
+    with cd('Llab-Co'):
+        run('git init')
+        run('git pull')
+
+        if not exists('Log'):
+            run('mkdir -p Log')
+
+        run('chmod +x create_virtenv.sh')
+        run('./create_virtenv.sh')
 
 
 def run_demo():
