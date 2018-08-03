@@ -13,21 +13,6 @@ env.user = 'tsantarra'
 env.key_filename = 'private_ssh_key'
 
 
-def test_run():
-    if not exists('Llab-Co'):
-        run('git clone https://github.com/tsantarra/Llab-Co')
-
-    with cd('Llab-Co'):
-        run('git init')
-        run('git pull')
-        run("mkdir -p Log")
-        run("condor_submit osg_setup.submit")
-
-        # Need to wait until done running; should be less than 5 minutes
-        time.sleep(300)
-        get("./out*")
-
-
 def setup():
     if not exists('Llab-Co'):
         run('git clone https://github.com/tsantarra/Llab-Co')
@@ -44,7 +29,11 @@ def setup():
         run('./create_virtual_env.sh')
 
 
-def run_demo():
+def run_tests():
+    run('condor_submit osg_setup.submit')
+
+
+def test_output():
     # Commands to execute on the remote server
     run('rm -R test_dir')
     run("mkdir test_dir")
@@ -54,11 +43,10 @@ def run_demo():
 
 def check():
     run('ls')
-    #run("watch -n2 condor_q " + env.user)
+    run("watch -n2 condor_q " + env.user)
 
 
 def collect_output():
     # grab files
-    with cd('test_dir'):
-        get("./out*")
+    get("./out*")
 
