@@ -20,5 +20,6 @@ tar -cvzf ../test_env.tar.gz test_env
 rm -R test_env
 
 # Compress library
+rm out/*
 tar -cvzf ../Llab-Co.tar.gz ../Llab-Co
 
