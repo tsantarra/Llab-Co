@@ -1,7 +1,16 @@
 
 TODO:
-    create virtual env should pip install necessary packages for us, which is why we do it at OSG but before sending
-    to compute nodes (which probably can't install packages)
+    Need to tar Llab-Co
+
+    Set up submit file with library, virtual env, any other files
+    Set up argument list
+
+    Check to see if we can write to out directory in parent directory, not in Llab_Co. No, I guess we can put it there.
+
+    Have remote_run_test.sh
+        unpack everything
+        pack up out directory
+        remove any files we don't want copied back
 
 
 Process outline:

@@ -34,6 +34,7 @@ def setup():
 
     with cd('Llab-Co'):
         run('git init')
+        run('git reset --hard')
         run('git pull')
 
         if not exists('Log'):
