@@ -14,12 +14,13 @@ pip install logmatic-python
 deactivate
 
 # Compress virtual environment
-tar -cvzf ../test_env.tar.gz test_env
+tar -cvzf ../test_env.tar.gz ../test_env
 
 # Remove directory
 rm -R test_env
 
 # Compress library
+cp remote_run_test.sh ../remote_run_test.sh
+cp osg_setup.submit ../osg_setup.submit
 rm out/*
 tar -cvzf ../Llab-Co.tar.gz ../Llab-Co
-
