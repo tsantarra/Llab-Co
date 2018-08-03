@@ -15,7 +15,10 @@ deactivate
 
 # Compress virtual environment
 tar -cvzf ../test_env.tar.gz test_env
-tar -cvzf ../Llab-Co.tar.gz ../Llab-Co
 
 # Remove directory
 rm -R test_env
+
+# Compress library
+tar -cvzf ../Llab-Co.tar.gz ../Llab-Co
+
