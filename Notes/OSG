@@ -1,16 +1,8 @@
 
 TODO:
-    Need to tar Llab-Co
-
-    Set up submit file with library, virtual env, any other files
-    Set up argument list
-
-    Check to see if we can write to out directory in parent directory, not in Llab_Co. No, I guess we can put it there.
-
-    Have remote_run_test.sh
-        unpack everything
-        pack up out directory
-        remove any files we don't want copied back
+    tar doesn't seem to be working
+        virtual env and llab-co tar files aren't filled with anything
+        run set up and go back through log to see errors
 
 
 Process outline:

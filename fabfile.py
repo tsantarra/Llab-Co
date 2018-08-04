@@ -9,7 +9,7 @@ env.hosts = ['login.osgconnect.net']
 
 # Declare remote username and key info (optional)
 env.user = 'tsantarra'
-# env.password = 'can put password here if not using ssh'
+env.password = 'Joseph88?' #''can put password here if not using ssh'
 env.key_filename = 'private_ssh_key'
 
 
@@ -29,7 +29,7 @@ def setup():
         run('./create_virtual_env.sh')
 
 
-def run_tests():
+def start():
     run('condor_submit osg_setup.submit')
 
 
@@ -46,12 +46,12 @@ def check():
     run("watch -n2 condor_q " + env.user)
 
 
-def collect_output():
+def get_output():
     # grab files
     get("./out*")
 
 
-def collect_logs():
+def get_logs():
     get("./Log*")
 
 # http://www.iac.es/sieinvens/siepedia/pmwiki.php?n=HOWTOs.CondorUsefulCommands <---- YESSS
