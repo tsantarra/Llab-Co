@@ -14,9 +14,8 @@ source ./test_env/bin/activate
 # untar local library
 tar -xzf Llab-Co.tar.gz
 
-# Make directory for output files  - already have one!
-rm Llab-Co/out/*
-# mkdir out
+# Make directory for output files
+# mkdir -p out
 
 # Run python script
 ./test_env/bin/python3 Llab-Co/test_run.py $1 $2 $3 $4 $5 $6 $7 $8 $9
