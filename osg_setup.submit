@@ -6,7 +6,8 @@ Executable = remote_run_test.sh
 
 # Files to transfer and trasnfer settings
 should_transfer_files = YES
-transfer_input_files = test_env.tar.gz, Llab-Co.tar.gz, remote_run_test.sh
+transfer_input_files = Llab-Co.tar.gz, remote_run_test.sh
+# test_env.tar.gz,
 when_to_transfer_output = ON_EXIT
 # Notification = Error  # only email if error
 
