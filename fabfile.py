@@ -50,3 +50,12 @@ def collect_output():
     # grab files
     get("./out*")
 
+
+def collect_logs():
+    get("./Log*")
+
+# http://www.iac.es/sieinvens/siepedia/pmwiki.php?n=HOWTOs.CondorUsefulCommands <---- YESSS
+# watch -n2 condor_q -nobatch   -> live status
+# condor_q -better-analyze      -> more detail
+# nano error101_job.submit      -> edit file
+# condor_q username             -> check status of jobs
