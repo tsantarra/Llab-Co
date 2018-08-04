@@ -8,9 +8,10 @@ from fabric.contrib.files import exists
 env.hosts = ['login.osgconnect.net']
 
 # Declare remote username and key info (optional)
-env.user = 'tsantarra'
-env.password = 'Joseph88?' #''can put password here if not using ssh'
-env.key_filename = 'private_ssh_key'
+with open('osg_credentials.txt', 'r') as cred_file:
+    env.user = cred_file.readline().strip('\n')
+    env.password = cred_file.readline().strip('\n')  #''can put password here if not using ssh'
+    env.key_filename = cred_file.readline().strip('\n')
 
 
 def setup():
