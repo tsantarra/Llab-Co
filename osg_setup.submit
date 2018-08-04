@@ -6,8 +6,7 @@ Executable = remote_run_test.sh
 
 # Files to transfer and trasnfer settings
 should_transfer_files = YES
-transfer_input_files = remote_run_test.sh, test_run.py
-#transfer_input_files = python_virtenv_demo.tar.gz, Llab-Co.tar.gz, remote_run_test.sh
+transfer_input_files = python_virtenv_demo.tar.gz, Llab-Co.tar.gz, remote_run_test.sh
 when_to_transfer_output = ON_EXIT
 # Notification = Error  # only email if error
 
@@ -19,15 +18,18 @@ log           = Log/job_hc2_v1.$(Cluster).$(Process).log
 # Specs needed on nodes
 request_cpus = 1
 request_memory = 4GB
-request_disk = 5GB
+request_disk = 1GB
 
 
 # Node requirements
-#+WantsStashCache = true
-requirements = (HAS_MODULES == True)
+# +WantsStashCache = true
+# requirements = (HAS_MODULES == True)
 
 # Arguments for the shell file we run
 # Arguments = $(Cluster) $(Process)
+
+# Periodically retry the jobs every 1 hour, up to a maximum of 5 retries.
+periodic_release =  (NumJobStarts < 2) && ((CurrentTime - EnteredCurrentStatus) > 10)
 
 # Do 10 processes (0-9)
 # queue 10
