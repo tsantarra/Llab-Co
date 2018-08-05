@@ -209,7 +209,7 @@ class ChineseRestaurantProcessModel:
                 a. Yes -> increment observation_counts
                 b. No -> add to policy_to_index + policy_matrix(index -> list)
         """
-        assert len(policy) == len(self.state_to_index), f'Incorrect policy length given: {0} vs {1} \n{2}'.format(
+        assert len(policy) == len(self.state_to_index), 'Incorrect policy length given: {0} vs {1} \n{2}'.format(
             len(policy), len(self.state_to_index), policy)
 
         # Convert policy and check if already encountered

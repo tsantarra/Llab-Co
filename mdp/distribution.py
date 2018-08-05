@@ -112,30 +112,30 @@ class ListDistribution:
         """
         Returns an expectation over values using the probabilities in this distribution.
         """
-        assert len(self) == len(value_distribution), f'Improper expectation call: \n{self}\n{value_distribution}'
+        assert len(self) == len(value_distribution),'Improper expectation call: \n{0}\n{1}'.format(self, value_distribution)
 
         if type(value_distribution) is ListDistribution:
             assert self.__keys == value_distribution.__keys, \
-                f'Keys do not align between distributions: \n{self}\n{value_distribution}'
+                'Keys do not align between distributions: \n{0}\n{1}'.format(self, value_distribution)
             return sum(prob * value for prob, value in zip(self.__probabilities, value_distribution.values()))
 
         elif type(value_distribution) is Distribution:
             assert all(key in value_distribution for key in self.__keys), \
-                f'Keys do not align between distributions: \n{self}\n{value_distribution}'
+                'Keys do not align between distributions: \n{0}\n{1}'.format(self, value_distribution)
             return sum(prob * value_distribution[key] for key, prob in zip(self.__keys, self.__probabilities))
 
         else:
-            raise TypeError(f'Value distribution has incorrect type ({0}).'.format(type(value_distribution)))
+            raise TypeError('Value distribution has incorrect type ({0}).'.format(type(value_distribution)))
 
     def conditional_update(self, conditional_probs):
         """
         Given a set of conditional probabilities, the distribution updates itself via Bayes' rule.
         """
-        assert len(self) == len(conditional_probs), f'Improper expectation call: \n{self}\n{conditional_probs}'
+        assert len(self) == len(conditional_probs), 'Improper expectation call: \n{0}\n{1}'.format(self, conditional_probs)
 
         if type(conditional_probs) is ListDistribution:
             assert self.__keys == conditional_probs.__keys, \
-                f'Keys do not align between distributions: \n{self}\n{conditional_probs}'
+                'Keys do not align between distributions: \n{0}\n{1}'.format(self, conditional_probs)
             new_list_dist = ListDistribution([(key, prob * prob2) for key, prob, prob2 in
                                               zip(self.__keys,
                                                   self.__probabilities,
@@ -143,12 +143,12 @@ class ListDistribution:
 
         elif type(conditional_probs) is Distribution:
             assert self.__keys == conditional_probs.__keys, \
-                f'Keys do not align between distributions: \n{self}\n{conditional_probs}'
+                'Keys do not align between distributions: \n{0}\n{1}'.format(self, conditional_probs)
 
             new_list_dist = ListDistribution([(key, self.__probabilities[index] * conditional_probs[key])
                                               for index, key in enumerate(self.__keys)])
         else:
-            raise TypeError(f'Conditional distribution has incorrect type ({0}).'.format(type(conditional_probs)))
+            raise TypeError('Conditional distribution has incorrect type ({0}).'.format(type(conditional_probs)))
 
         new_list_dist.normalize()
         return new_list_dist

@@ -22,13 +22,14 @@ class RecipeScenario:
         if random_seed:
             seed(random_seed)
 
-        self.recipes = [set(recipe) for recipe in self.__make_recipes(num_valid_recipes, self.all_conditions, recipe_size)]
+        self.recipes = [set(recipe) for recipe in
+                        self.__make_recipes(num_valid_recipes, self.all_conditions, recipe_size)]
 
-        print(f'RecipeScenario({self.all_conditions}, '
-              f'success={self.success_util}, '
-              f'conflict={self.conflict_penalty}, '
-              f'extra={self.extra_cond_penalty})'
-              f'\nPotential Goals:\n' + '\n'.join(str(recipe) for recipe in self.recipes))
+        print('RecipeScenario({0}, success={1}, conflict={2}, extra={3})'.format(self.all_conditions,
+                                                                                 self.success_util,
+                                                                                 self.conflict_penalty,
+                                                                                 self.extra_cond_penalty)
+              + '\nPotential Goals:\n' + '\n'.join(str(recipe) for recipe in self.recipes))
 
     def agents(self):
         return self.__agents
@@ -93,7 +94,9 @@ class RecipeScenario:
 
     def __make_recipes(self, num_recipes, conditions, recipe_length=None):
         """ Generate some subset of combinations that can be used as recipes. """
-        def num_combs(n, r): return factorial(n)/(factorial(r) * factorial(n-r))
+
+        def num_combs(n, r):
+            return factorial(n) / (factorial(r) * factorial(n - r))
 
         if recipe_length:
             combs = num_combs(len(conditions), recipe_length)
@@ -108,7 +111,7 @@ class RecipeScenario:
         recipe_length = 1
 
         # increase recipe length until num recipes is satisfied
-        while recipe_length <= len(conditions)/2:
+        while recipe_length <= len(conditions) / 2:
             if num_combs(len(conditions), recipe_length) >= num_recipes:
                 return sample(list(combinations(conditions, recipe_length)), num_recipes)
 
@@ -122,4 +125,3 @@ class RecipeScenario:
         """
         return json.dumps({'Conditions': list(state['Conditions']),
                            'Complete': state['Complete']})
-

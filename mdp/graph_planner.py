@@ -70,6 +70,9 @@ def _traverse_nodes(node, tie_selector=choice):
         action_values = {act: val for act, val in node.action_values().items()
                          if act in node._incomplete_action_nodes}
 
+        if not action_values:
+            print('at least one action should be incomplete')
+
         best_action, best_value = max(action_values.items(),
                                       key=lambda av: av[1] + (node.future_value + 1) *
                                       _ucb_explore_factor(node.visits, node.action_counts[av[0]]))
@@ -81,6 +84,10 @@ def _traverse_nodes(node, tie_selector=choice):
         node.action_counts[selected_action] += 1
         node.visits += 1
 
+        incomplete_children = {child: prob for child, prob in node.successors[selected_action].items()
+                             if not child.complete}
+        if not incomplete_children:
+            print('all children should not be complete')
         node = Distribution({child: prob for child, prob in node.successors[selected_action].items()
                              if not child.complete}).sample()
 
@@ -107,7 +114,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
     """
     assert not node.complete, 'ERROR. SHOULD NOT EXPAND COMPLETE NODE.'
 
-    node.set_actions(scenario.actions(node.state))  # save computation of actions for fringe nodes
+    node.action_space = scenario.actions(node.state) # save computation of actions for fringe nodes
 
     # Expand all actions (rather than selecting one randomly)
     for action in list(node.action_space):
@@ -184,6 +191,8 @@ def _backup(node, backup_op):
             child_set = set(child for child in child_set if not child.complete)
             if len(child_set) == 0:
                 del node._incomplete_action_nodes[action]
+            else:
+                node._incomplete_action_nodes[action] = child_set
 
         # Labeling -> if all child nodes complete, this node is complete
         if not node.complete and all(child.complete for child in node.successor_set()):
@@ -273,9 +282,6 @@ class GraphNode:
         self._incomplete_action_nodes = {}
         self._has_changed = False
         self._old_future_value = self.future_value
-
-    def set_actions(self, action_space):
-        self.action_space = action_space
 
     def action_values(self):
         if not self.__action_values:

@@ -385,12 +385,12 @@ class CommScenario:
                     action_successors[new_successor] = succ_prob
                     node.successor_transition_values[(new_succ_state, joint_action)] = \
                         node.__original_node.successor_transition_values[(orig_successor.state, joint_action)]
-                    if joint_action in original._incomplete_action_nodes and \
-                            orig_successor in original._incomplete_action_nodes[joint_action]:
+                    if not new_successor.complete:
                         action_incomplete_succ.add(new_successor)
 
                 node.add_new_successors(joint_action, action_successors)
-                node._incomplete_action_nodes[joint_action] = action_incomplete_succ
+                if action_incomplete_succ:  # do not add if no incomplete successors
+                    node._incomplete_action_nodes[joint_action] = action_incomplete_succ
 
         # Calculate new policy!
         new_root.__depth_map = map_graph_by_depth(new_root)
@@ -400,7 +400,27 @@ class CommScenario:
 
         for node in (n for horizon, nodes_at_horizon in sorted(horizon_lists.items(), reverse=True)
                      for n in nodes_at_horizon):
+            # Backup value and flag updates.
+            node._old_future_value = node.future_value
+
             self._policy_backup_op(node, self._agent_identity)
+
+            node._has_changed = (node.future_value != node._old_future_value)
+            if not node.complete and node.successors and all(child.complete for child in node.successor_set()):
+                node.complete = True
+                node._has_changed = True
+
+            # Update node's incomplete actions/child nodes
+            for action, child_set in list(node._incomplete_action_nodes.items()):
+                child_set = set(child for child in child_set if not child.complete)
+                if len(child_set) == 0:
+                    del node._incomplete_action_nodes[action]
+                else:
+                    node._incomplete_action_nodes[action] = child_set
+
+        # Reset changed status.
+        for node in new_root.__depth_map:
+            node._has_changed = False
 
         return new_root
 

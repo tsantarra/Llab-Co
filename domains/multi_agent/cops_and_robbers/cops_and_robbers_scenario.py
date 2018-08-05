@@ -64,7 +64,7 @@ class CopsAndRobbersScenario:
                 robber_count += 1
                 state_dict['Robber' + str(robber_count)] = loc
 
-        assert len(state_dict) > 2, f'Improper maze comprehension. State={state_dict}'
+        assert len(state_dict) > 2, 'Improper maze comprehension. State=' + str(state_dict)
         return State(state_dict)
 
     def actions(self, state):
@@ -118,7 +118,7 @@ class CopsAndRobbersScenario:
                 new_state_diff[agent] = Location(row, col)
 
             new_state = intermediate_state.update(new_state_diff)
-            assert len(new_state) > 2, f'Improper state update. {new_state}'
+            assert len(new_state) > 2, 'Improper state update. ' + str(new_state)
             new_state_distribution[new_state] = probability
 
         return new_state_distribution
