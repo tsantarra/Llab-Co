@@ -55,6 +55,10 @@ def get_output():
 def get_logs():
     get("./Log*")
 
+
+def clear_logs():
+    run('rm -R Log/*')
+
 # http://www.iac.es/sieinvens/siepedia/pmwiki.php?n=HOWTOs.CondorUsefulCommands <---- YESSS
 # watch -n2 condor_q -nobatch   -> live status
 # condor_q -better-analyze      -> more detail

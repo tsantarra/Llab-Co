@@ -17,7 +17,7 @@ cd Llab-Co
 source ./test_env/bin/activate
 
 # Make directory for output files
-# mkdir -p out
+mkdir -p out
 
 # Run python script
 ./test_env/bin/python3 experiments.py $1 $2 $3 $4 $5 $6 $7 $8 $9
