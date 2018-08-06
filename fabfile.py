@@ -44,12 +44,23 @@ def test_output():
 
 def check():
     run('ls')
-    run("watch -n2 condor_q " + env.user)
+    run('condor_q')
+    # run('condor_q -better-analyze')
+    # run("watch -n2 condor_q " + env.user)
 
 
 def get_output():
-    # grab files
+    run('''files=$(ls out.* 2> /dev/null | wc -l)
+           if ls out.* &> /dev/null
+           then
+                mv out.* out/
+           fi''')
+
     get("./out*")
+
+
+def clear_output():
+    run('rm -rf out/*')
 
 
 def get_logs():
@@ -57,7 +68,7 @@ def get_logs():
 
 
 def clear_logs():
-    run('rm -R Log/*')
+    run('rm -rf Log/*')
 
 # http://www.iac.es/sieinvens/siepedia/pmwiki.php?n=HOWTOs.CondorUsefulCommands <---- YESSS
 # watch -n2 condor_q -nobatch   -> live status
