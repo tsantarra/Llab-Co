@@ -35,7 +35,20 @@ periodic_release =  (NumJobStarts < 2) && ((CurrentTime - EnteredCurrentStatus) 
 # Do 10 processes (0-9)
 # queue 10
 
+# Arguments for:
+#   Scenario ID
+#   Heuristic ID
+#   Comm branch factor
+#   Comm iterations
+#   Comm cost
+#   Plan iterations (pre-comms)
+#   Experience
+#   Trials
+#   Process #
 Queue Arguments From (
+    0 0 2 1 1 100 100 2 2
     0 0 2 5 1 100 100 2 1
-    0 0 2 5 2 100 100 2 2
+    0 0 2 25 1 100 100 2 2
+    0 0 2 125 1 100 100 2 2
+    0 0 2 525 1 100 100 2 2
 )

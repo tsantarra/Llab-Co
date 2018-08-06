@@ -43,7 +43,7 @@ def run():
     parameters = Parameters(*(int(arg) for arg in sys.argv[1:]))
 
     # Set up logger with process info.
-    setup_logger(id=parameters.process_no)
+    setup_logger(id='-'.join(sys.argv[1:]))
     logger.info('Parameters', extra=parameters._asdict())
 
     # id -> param conversions

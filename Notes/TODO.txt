@@ -4,6 +4,8 @@ BY PRIORITY (ISH)
         Needs: read all files in directory into giant corpus.
         Pass arguments for search over records so we prune first, then aggregate.
 
+    
+
     TODO
         DONE - add pruning/heuristic selection to algorithm (comm scenario.actions() (only consider top 5, etc))
         DONE - add early termination to end() method of comm scenario
