@@ -289,7 +289,7 @@ class GraphNode:
         else:
             return self.__action_values
 
-    def calculate_action_values(self, force_recalculate=False):
+    def calculate_action_values(self, force_recalculate=True):
         """
         For every action, return the expectation over stochastic transitions to successors states.
         """
@@ -302,7 +302,7 @@ class GraphNode:
                                                successor.future_value)
                                 for successor, probability in successor_distribution.items())
                     for action, successor_distribution in self.successors.items()}
-        else:
+        else:  # todo - figure out why this occasionally incorrectly adjusts values
             for action, succ_dist in self._successors.items():
                 for child, probability in succ_dist.items():
                     if child._has_changed:

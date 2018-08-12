@@ -39,7 +39,7 @@ def test_output():
     run('rm -R test_dir')
     run("mkdir test_dir")
     with cd('test_dir'):
-        run('touch out_test.txt')
+        run('touch this_is_remote_out.txt')
 
 
 def check():
@@ -56,7 +56,11 @@ def get_output():
                 mv out.* out/
            fi''')
 
-    get("./out*")
+    with cd('out'):
+        run('if ls *.tar.gz 1> /dev/null 2>&1; then for file in *.tar.gz; do tar -zxf $file; done; fi')
+        run("if ls *.tar.gz 1> /dev/null 2>&1; then find . -name '*.tar.gz' -delete; fi")
+
+    get("./out/Llab-Co/*")
 
 
 def clear_output():

@@ -4,7 +4,8 @@ BY PRIORITY (ISH)
         Needs: read all files in directory into giant corpus.
         Pass arguments for search over records so we prune first, then aggregate.
 
-    
+    EV estimates are too high. :/
+        - Had to do with not completely recalculating action values on nodes. Disabled for now.
 
     TODO
         DONE - add pruning/heuristic selection to algorithm (comm scenario.actions() (only consider top 5, etc))
@@ -14,7 +15,7 @@ BY PRIORITY (ISH)
             - want to estimate the gain gotten by optimally querying/terminating
         DONE - go over communication process code (in comm scenario)
         DONE - add logging from new log_config json support
-        - run small test
+        - run small test (successfully)
         - go over experimental setup
         - finalize changes and run first test!!!
 

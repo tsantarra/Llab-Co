@@ -388,6 +388,7 @@ class CommScenario:
                     if not new_successor.complete:
                         action_incomplete_succ.add(new_successor)
 
+                assert abs(sum(action_successors.values()) - 1.0) < 10e-6, 'Action distribution is not normalized.'
                 node.add_new_successors(joint_action, action_successors)
                 if action_incomplete_succ:  # do not add if no incomplete successors
                     node._incomplete_action_nodes[joint_action] = action_incomplete_succ
@@ -403,7 +404,16 @@ class CommScenario:
             # Backup value and flag updates.
             node._old_future_value = node.future_value
 
+            # test if fixes issue
+            node.__action_values = None
+
+            if node.future_value > 10:
+                print('PRE possibly incorrect ev: ' + str(node.future_value))
+
             self._policy_backup_op(node, self._agent_identity)
+
+            if node.future_value > 10:
+                print('POST possibly incorrect ev: ' + str(node.future_value))
 
             node._has_changed = (node.future_value != node._old_future_value)
             if not node.complete and node.successors and all(child.complete for child in node.successor_set()):
@@ -444,6 +454,9 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
 
     original_action = get_max_action(agent.policy_graph_root, agent.identity)
     print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', original_action)
+    print('Current EV: ' + str(agent.policy_graph_root.future_value))
+    logger.info('Comm', extra={'EV': agent.policy_graph_root.future_value, 'Action': json.dumps(original_action),
+                               'Type': 'Begin'})
 
     # Complete graph search
     comm_graph_node = search(state=comm_scenario.initial_state(),
@@ -494,7 +507,8 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     agent.policy_graph_root = comm_scenario._get_policy_graph(current_policy_state)
     action = get_max_action(agent.policy_graph_root, agent.identity)
     print('END COMMUNICATION/// NEW ACTION:', action)
+    print('End EV: ' + str(agent.policy_graph_root.future_value))
 
-    logger.info('End of Comm', extra={'New EV': agent.policy_graph_root.future_value, 'New action': json.dumps(action)})
+    logger.info('Comm', extra={'EV': agent.policy_graph_root.future_value, 'Action': json.dumps(action), 'Type': 'End'})
 
     return action, agent.policy_graph_root.state

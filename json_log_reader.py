@@ -1,19 +1,41 @@
+from pandas.io.json import read_json
 from json import loads
-from pandas import DataFrame
+from os import listdir
+from os.path import isfile, join
+
+
+data_file = 'login.osgconnect.net/out/data-1.log'
 
 
 def read(file):
     with open(file, 'r') as json_file:
-        records = [loads(line) for line in json_file]
+        param_line = loads(json_file.readline())
+        df = read_json(json_file, lines=True)
 
-    for record in records:
-        print(DataFrame.from_dict({k: [v] for k,v in record.items()}))
-        break
-        # pull out the keys per record type (different keys for different info) - new DataFrame for each
-        # values are just rows (or columns?) of the keyed array
+        params = {param: value for param, value in param_line.items()
+                   if param not in {'timestamp', 'message', 'levelname'}}
+        df = df.assign(**params)
 
-    #print('\n'.join(str(sorted(record.items())) for record in records))
+    return params, df
+
+
+def read_all_files(directory):
+    dataset = {}
+    for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.endswith('.log')):
+        params, df = read(join(directory, file))
+        dataset[params] = df
+
+        df2 = df.sort_values(by=[''])
+
+    return dataset
+
+
+def print_five(df):
+    print(df[['message']][0:5])
 
 
 if __name__ == '__main__':
-    read('login.osgconnect.net/out/data-1.log')
+    dataset = read_all_files('login.osgconnect.net/out/')
+
+
+
