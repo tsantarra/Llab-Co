@@ -474,10 +474,12 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     # Initial communication options
     current_policy_state = comm_graph_node.state
 
+    how = None
     while not current_policy_state['End?']:
         # Check for termination
         if query_action == 'Halt':
             print('Halt')
+            how = 'Halt'
             break
 
         # Response
@@ -496,6 +498,7 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
         # Check if graph ends
         if not comm_graph_node.successors:
             print('Reached end of comm graph.')
+            how = 'Leaf'
             break
 
         # Calculate next step
@@ -509,6 +512,10 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     print('END COMMUNICATION/// NEW ACTION:', action)
     print('End EV: ' + str(agent.policy_graph_root.future_value))
 
-    logger.info('Comm', extra={'EV': agent.policy_graph_root.future_value, 'Action': json.dumps(action), 'Type': 'End'})
+    logger.info('Comm', extra={'EV': agent.policy_graph_root.future_value,
+                               'New Action': json.dumps(action),
+                               'Original Action': json.dumps(original_action),
+                               'Type': 'End',
+                               'How': how})
 
     return action, agent.policy_graph_root.state

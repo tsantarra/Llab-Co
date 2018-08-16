@@ -15,6 +15,7 @@ from collections import namedtuple
 from log_config import setup_logger
 import sys
 import logging
+import json
 
 logger = logging.getLogger()
 
@@ -133,6 +134,9 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
                                 branching_factor=comm_branch_factor,
                                 comm_cost=comm_cost)
         new_joint_action = joint_action.update({agent_name: action})
+
+        logger.info('State-Action', extra={'State': scenario._serialize_state(state),
+                                           'Action': json.dumps(list(new_joint_action.items()))})
 
         # Observe
         for participating_agent in agent_dict.values():
