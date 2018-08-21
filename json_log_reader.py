@@ -57,7 +57,7 @@ def read_all_files(directory):
 
         grouped_df = df.groupby(['levelname', 'message'])
         for group, groupdf in grouped_df:
-            dataset[group] = groupdf if not group in dataset else concat([dataset[group], groupdf])
+            dataset[group] = groupdf if not group in dataset else concat([dataset[group], groupdf], sort=False)
 
     return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
 

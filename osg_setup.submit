@@ -24,13 +24,13 @@ request_disk = 1GB
 
 # Node requirements
 # +WantsStashCache = true
-# requirements = (HAS_MODULES == True)
+requirements = HAS_MODULES == True
 
 # Arguments for the shell file we run
 # Arguments = $(Cluster) $(Process)
 
 # Periodically retry the jobs every 1 hour, up to a maximum of 5 retries.
-periodic_release =  (NumJobStarts < 2) && ((CurrentTime - EnteredCurrentStatus) > 10)
+periodic_release =  (NumJobStarts < 2) && ((CurrentTime - EnteredCurrentStatus) > 120)
 
 # Do 10 processes (0-9)
 # queue 10
@@ -46,9 +46,9 @@ periodic_release =  (NumJobStarts < 2) && ((CurrentTime - EnteredCurrentStatus) 
 #   Trials
 #   Process #
 Queue Arguments From (
-    0 0 5 1 1 100 100 50 3
-    0 0 5 5 1 100 100 50 3
-    0 0 5 25 1 100 100 50 3
-    0 0 5 125 1 100 100 50 3
-    0 0 5 525 1 100 100 50 3
+    0 0 5 1 1 100 100 50 4
+    0 0 5 5 1 100 100 50 4
+    0 0 5 25 1 100 100 50 4
+    0 0 5 125 1 100 100 50 4
+    0 0 5 525 1 100 100 50 4
 )
