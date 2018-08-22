@@ -24,7 +24,7 @@ request_disk = 1GB
 
 # Node requirements
 # +WantsStashCache = true
-requirements = HAS_MODULES == True
+requirements = HAS_MODULES == True && HAS_NUMPY == True
 
 # Arguments for the shell file we run
 # Arguments = $(Cluster) $(Process)
