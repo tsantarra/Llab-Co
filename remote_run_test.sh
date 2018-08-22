@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # load necessary modules
-module load python/3.5.2
+module --ignore-cache load python/3.5.2
 
 # transfer data from stashcache
 # module load stashcp
