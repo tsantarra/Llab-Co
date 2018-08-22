@@ -46,6 +46,7 @@ def run():
     assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + ' '.join(Parameters._fields)
     parameters = [int(arg) for arg in sys.argv[1:-2]] + list(sys.argv[-2:])
     parameters = Parameters(*parameters)
+    print('Parameters: ' + str(parameters))
 
     # Set up logger with process info.
     setup_logger(id='-'.join(sys.argv[1:]))

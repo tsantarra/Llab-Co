@@ -25,11 +25,12 @@ class RecipeScenario:
         self.recipes = [set(recipe) for recipe in
                         self.__make_recipes(num_valid_recipes, self.all_conditions, recipe_size)]
 
-        print('RecipeScenario({0}, success={1}, conflict={2}, extra={3})'.format(self.all_conditions,
+    def __str__(self):
+        return 'RecipeScenario({0}, success={1}, conflict={2}, extra={3})'.format(self.all_conditions,
                                                                                  self.success_util,
                                                                                  self.conflict_penalty,
-                                                                                 self.extra_cond_penalty)
-              + '\nPotential Goals:\n' + '\n'.join(str(recipe) for recipe in self.recipes))
+                                                                                 self.extra_cond_penalty) \
+                + '\nPotential Goals:\n' + '\n'.join(str(recipe) for recipe in self.recipes)
 
     def agents(self):
         return self.__agents

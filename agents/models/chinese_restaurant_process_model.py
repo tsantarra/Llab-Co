@@ -68,6 +68,8 @@ class SparseChineseRestaurantProcessModel:
         converted_policy = tuple(sorted([(self.__get_state_index(state), self.__get_action_index(action))
                                          for state, action in state_action_pairs]))
 
+        self.total_observations += 1
+
         # Check if we've encountered this policy before.
         if converted_policy in self.policy_to_index:
             self.observation_counts[self.policy_to_index[converted_policy]] += 1
@@ -78,7 +80,6 @@ class SparseChineseRestaurantProcessModel:
         policy_index = len(self.policies) - 1
         self.policy_to_index[converted_policy] = policy_index
         self.observation_counts.append(1)
-        self.total_observations += 1
 
         # Add to policy lookup data structure (for predictions).
         for state_index, action_index in converted_policy:
@@ -165,6 +166,13 @@ class SparseChineseRestaurantProcessModel:
                 for action_index in action_index_distribution:
                     action_index_distribution[action_index] += policy_probability * uniform_prob
             else:
+                if state_index not in self.policy_matrix:
+                    print('not correct state index: ' + str(state_index))
+                if policy_index not in self.policy_matrix[state_index]:
+                    print('not correct policy index: ' + str(policy_index) + '\n' + str(self.policy_matrix[state_index]))
+                action_index = self.policy_matrix[state_index][policy_index]
+                if action_index not in action_index_distribution:
+                    print('not correct action index: ' + str(action_index) + '\n' + str(action_index_distribution))
                 action_index_distribution[self.policy_matrix[state_index][policy_index]] += policy_probability
 
         assert abs(sum(action_index_distribution.values()) - 1.0) < 10e-6, 'Action predictions not normalized.'

@@ -124,6 +124,9 @@ class CopsAndRobbersScenario:
         return new_state_distribution
 
     def end(self, state):
+        return self.end_check(state)
+
+    def end_check(self, state):
         """
         End conditions:
             - Round limit hit. Currently 50.
@@ -143,7 +146,7 @@ class CopsAndRobbersScenario:
         """
         Utility is only granted upon successful completion of the task. It is given as the number of remaining rounds.
         """
-        return (50 - new_state['Round']) if self.end(new_state) else 0
+        return (50 - new_state['Round']) if self.end_check(new_state) else 0
 
     def _move_robbers(self, state):
         """
@@ -167,7 +170,7 @@ class CopsAndRobbersScenario:
                 targets.append(Location(row, col + 1))
             if self.maze[(row, col - 1)] == OPEN or self.maze[(row, col - 1)] == GATE_LEFT:
                 targets.append(Location(row, col - 1))
-            shuffle(targets)
+            # shuffle(targets)
 
             assert all(0 < row < 8 and 0 < col < 8 for row, col in targets), 'Illegal robber target. ' + '\n'.join(str(target) for target in targets)
 

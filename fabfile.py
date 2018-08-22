@@ -1,4 +1,3 @@
-import time
 from fabric.api import env, run
 from fabric.context_managers import cd
 from fabric.operations import get
