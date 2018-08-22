@@ -13,7 +13,7 @@
             Comm Heuristic
             Comm Cost
             Number of policies seen (varies by design)
-            Generating distribution over teammate policies?
+            Generating distribution over teammate policies? (probably best for a stretch goal)
 
 
         2-3 domains
@@ -26,5 +26,64 @@
         @20 minutes per trial over 100 computers -> 15 days
 
 
+    Goals:
+        Things to show:
+            Fewer trials BEFORE identifying optimal joint policy
+            Better performance with novel teammate policy
+            Better performance WHILE gaining experience
 
+            Comm cost suppresses comm effectiveness (duh)
+            More comm iterations -> better results, but slow execution time
+            More comm branching factor -> better comm strategy, but shallower or more time
+
+            Domain plays an important role (if set up for informative observations or few optimal policies)
+            Experience helps (the more, the better)
+            Heuristic matters (uncertainty AND risk are at play)
+
+
+
+        Domain-specific knobs (hard to control):
+            Few observations before critical choice
+            No observations
+            Uninformative observations until late
+            New part of state space (prior experience unhelpful)
+
+
+        Comm hurdles:
+            Number of states with critical choices -> more = more comms (potentially, depends on num optimal policies)
+            Number of optimal policies -> more = more comms
+
+
+        Potential domains:
+            Pursuit (boring)
+            Bandits (not great)
+            Soccer (hard to implement)
+            Navigation/collision avoidance (common)
+            Cooperative box-pushing?
+            3x3 meetup
+            Economic games? (like repeated prisoner's dilemma)
+
+
+
+    Experiment design:
+
+    0. Find good parameters.
+
+
+    1. Comms > no comms, via different comm costs (limiting ability to comm via cost)
+        - Easy to show. Just pick some increasing comm costs (the lines).
+        - Groups: comm costs
+        - Depict: box/whisker plot, with lines for non-comm comparators
+        - Axes: cost x score
+        - Comparators: perfect knowledge (~= free comms), no comms (~= expensive comms)
+
+    2. Correct predictions?
+
+    3. Steps to capture (C&R)
+
+    4. Heuristic performance
+    
+    5. Comm iterations performance
+
+    6.
 

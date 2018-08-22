@@ -27,10 +27,13 @@ Parameters = namedtuple('Parameters', ['scenario_id',
                                        'plan_iterations',
                                        'experience',
                                        'trials',
-                                       'process_no'])
+                                       'process_no',
+                                       'osg_cluster',
+                                       'osg_process'])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
              CopsAndRobbersScenario(filename='a.maze')]
+
 heuristics = [local_information_entropy,
               local_value_of_information,
               local_absolute_error,
@@ -41,7 +44,8 @@ heuristics = [local_information_entropy,
 
 def run():
     assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + ' '.join(Parameters._fields)
-    parameters = Parameters(*(int(arg) for arg in sys.argv[1:]))
+    parameters = [int(arg) for arg in sys.argv[1:-2]] + list(sys.argv[-2:])
+    parameters = Parameters(*parameters)
 
     # Set up logger with process info.
     setup_logger(id='-'.join(sys.argv[1:]))
@@ -58,12 +62,10 @@ def run():
                                                     identity=agent_identity, teammate_identity=teammate_identity)
         partner = generator.sample_teammate()
 
-        # TODO handle rest of parameters in intializations ^^ and experiment vv
-
         logger.info('Begin Trial!', extra={'Trial': trial})
-        run_experiment(scenario, ad_hoc_agent, partner, parameters.comm_cost,
-                    parameters.comm_branch_factor, parameters.comm_iterations, comm_heuristic)
-        logger.info('End Trial', extra={'Trial': trial})
+        reward = run_experiment(scenario, ad_hoc_agent, partner, parameters.comm_cost, parameters.comm_branch_factor,
+                                parameters.comm_iterations, comm_heuristic)
+        logger.info('End Trial', extra={'Trial': trial, 'Reward': reward})
 
 
 def initialize_agents(scenario, num_initial_models, planning_iterations, identity, teammate_identity):
@@ -157,6 +159,8 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         print('-----------------')
 
         state = new_state
+
+    return utility
 
 
 if __name__ == '__main__':

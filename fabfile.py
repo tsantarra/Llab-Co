@@ -58,7 +58,7 @@ def get_output():
 
     with cd('out'):
         run('if ls *.tar.gz 1> /dev/null 2>&1; then for file in *.tar.gz; do tar -zxf $file; done; fi')
-        run("if ls *.tar.gz 1> /dev/null 2>&1; then find . -name '*.tar.gz' -delete; fi")
+        # run("if ls *.tar.gz 1> /dev/null 2>&1; then find . -name '*.tar.gz' -delete; fi")
 
     get("./out/Llab-Co/*")
 
