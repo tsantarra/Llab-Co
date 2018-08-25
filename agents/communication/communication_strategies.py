@@ -93,7 +93,7 @@ def example_heuristic(policy_root, target_agent_name, prune_fn):
     pass
 
 
-def local_information_entropy(policy_root, target_agent_name, prune_fn, gamma=1.0):
+def local_information_entropy(policy_root, target_agent_name, prune_fn, agent_name, gamma=1.0):
     """
     Weight by lambda^t until we can figure out a better estimate of the probabilities involved in:
         Information Entropy           λ^t sum_{p(a)} [ p(a) log p(a) ]
@@ -123,7 +123,7 @@ def local_value_of_information(policy_root, target_agent_name, prune_fn, agent_n
     eval_list = []
 
     def evaluate(node, horizon):
-        if prune_fn(node):
+        if prune_fn(node, target_agent_name):
             return
 
         # Calculate entropy
@@ -160,7 +160,7 @@ def local_absolute_error(policy_root, target_agent_name, prune_fn, agent_name, g
     eval_list = []
 
     def evaluate(node, horizon):
-        if prune_fn(node):
+        if prune_fn(node, target_agent_name):
             return
 
         # Calculate entropy
@@ -200,7 +200,7 @@ def local_utility_variance(policy_root, target_agent_name, prune_fn, agent_name,
     eval_list = []
 
     def evaluate(node, horizon):
-        if prune_fn(node):
+        if prune_fn(node, target_agent_name):
             return
 
         # Calculate entropy
@@ -235,7 +235,7 @@ def local_utility_variance(policy_root, target_agent_name, prune_fn, agent_name,
     return eval_list
 
 
-def random_evaluation(policy_root, target_agent_name, prune_fn):
+def random_evaluation(policy_root, target_agent_name, prune_fn, agent_name):
     """
     Give random evaluations, as a comparison baseline.
     """

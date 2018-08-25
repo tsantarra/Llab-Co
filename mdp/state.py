@@ -62,7 +62,7 @@ class State(Mapping):
         Returns a hashable form of the state.
         """
         if not self.__hash:
-            self.__hash = hash(tuple(self.items()))
+            self.__hash = hash(tuple(sorted(self.items())))
 
         return self.__hash
 

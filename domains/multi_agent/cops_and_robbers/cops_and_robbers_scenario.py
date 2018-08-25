@@ -11,13 +11,13 @@ State variables:
 
 The state can also be extended with a partner model, taking the role of the 'belief state' in POMDPs. 
 """
-
-from random import shuffle
 from collections import namedtuple
 
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.action import JointActionSpace
+
+import json
 
 WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT = \
     '*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<'
@@ -147,6 +147,9 @@ class CopsAndRobbersScenario:
         Utility is only granted upon successful completion of the task. It is given as the number of remaining rounds.
         """
         return (50 - new_state['Round']) if self.end_check(new_state) else 0
+
+    def _serialize_state(self, state):
+        return json.dumps({k: tuple(v) if type(v) is Location else v for k, v in state.items()})
 
     def _move_robbers(self, state):
         """

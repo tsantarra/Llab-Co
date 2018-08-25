@@ -32,7 +32,7 @@ class SparseChineseRestaurantProcessModel:
         self.observation_counts = []            # policy index -> count
         self.policy_matrix = defaultdict(dict)  # state_id -> dict (policy_id -> action_id)
 
-    def __get_state_index(self, state):
+    def __add_or_get_state_index(self, state):
         if state in self.state_to_index:
             return self.state_to_index[state]
 
@@ -40,6 +40,10 @@ class SparseChineseRestaurantProcessModel:
         index = len(self.state_list) - 1
         self.state_to_index[state] = index
         return index
+
+    def __get_state_index(self, state):
+        assert state in self.state_to_index, 'State missing from state lookup.'
+        return self.state_to_index[state]
 
     def __get_action_index(self, action):
         if action in self.action_to_index:
@@ -65,7 +69,7 @@ class SparseChineseRestaurantProcessModel:
         else:
             raise TypeError('Incorrect policy format: ' + str(policy))
 
-        converted_policy = tuple(sorted([(self.__get_state_index(state), self.__get_action_index(action))
+        converted_policy = tuple(sorted([(self.__add_or_get_state_index(state), self.__get_action_index(action))
                                          for state, action in state_action_pairs]))
 
         self.total_observations += 1

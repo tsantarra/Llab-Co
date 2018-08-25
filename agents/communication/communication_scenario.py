@@ -214,7 +214,7 @@ class CommScenario:
         query_evaluations = []
         for target_agent in self._teammate_names:
             query_evaluations.extend((Query(target_agent, state), value) for state, value in
-                                     self._evaluate_node_queries_fn(new_policy_root, target_agent, prune_query))
+                                     self._evaluate_node_queries_fn(new_policy_root, target_agent, prune_query, self._agent_identity))
 
         # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
         # resulting from different nodes having different evaluations (due to different models)
@@ -404,16 +404,7 @@ class CommScenario:
             # Backup value and flag updates.
             node._old_future_value = node.future_value
 
-            # test if fixes issue
-            node.__action_values = None
-
-            if node.future_value > 10:
-                print('PRE possibly incorrect ev: ' + str(node.future_value))
-
             self._policy_backup_op(node, self._agent_identity)
-
-            if node.future_value > 10:
-                print('POST possibly incorrect ev: ' + str(node.future_value))
 
             node._has_changed = (node.future_value != node._old_future_value)
             if not node.complete and node.successors and all(child.complete for child in node.successor_set()):

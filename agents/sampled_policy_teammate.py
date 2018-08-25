@@ -20,6 +20,7 @@ class SampledTeammateGenerator:
 
         self.policy_state_order = []
         self.all_policy_actions = []
+        self._depth_map = None
 
         for node in self.__node_order:
             if not node.action_space:
@@ -77,6 +78,9 @@ class SampledTeammateGenerator:
                                                for node in self.__node_order if node.action_space and node in added))
         print('Number of Optimal Individual Policies: ' + str(num_individual_policies))
 
+    def update(self, old_state, observation):
+        pass  # does not update
+
     def setup_optimal_policy_graph(self, graph_iterations=inf):
         """
         Creates a complete policy search over the state space of the scenario. Prunes out suboptimal joint actions,
@@ -125,7 +129,6 @@ class SampledTeammateGenerator:
             individual_action = joint_action[self.identity]
             policy[node.state] = individual_action
 
-            # Not correct. Need to look at all joint actions with this single-agent action.
             for possible_joint_action in node.action_space.fix_actions({self.identity: [individual_action]}):
                 for successor in node.successors[possible_joint_action]:
                     if successor.state not in policy:
@@ -134,8 +137,7 @@ class SampledTeammateGenerator:
         return policy
 
     def sample_teammate(self):
-        policy_dict = dict(self.sample_full_policy())
-        return SampledPolicyTeammate(self.identity, policy_dict, self.scenario)
+        return SampledPolicyTeammate(self.identity, self.sample_partial_policy(), self.scenario)
 
 
 class SampledPolicyTeammate:
@@ -146,18 +148,12 @@ class SampledPolicyTeammate:
         self.scenario = scenario
         self.__hash = None
 
-    def copy(self):
-        return SampledPolicyTeammate(self.identity, self.policy.copy(), self.scenario)
-
     def get_action(self, state):
         return self.policy[state]
 
     def predict(self, state):
         return Distribution({action: 1.0 if action == self.policy[state] else 0
                              for action in self.scenario.actions(state).individual_actions(self.identity)})
-
-    def update(self, old_state, observation):
-        pass  # does not update
 
     def __eq__(self, other):
         if self.__hash__() != other.__hash__():
