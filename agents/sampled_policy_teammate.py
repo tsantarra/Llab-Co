@@ -78,9 +78,6 @@ class SampledTeammateGenerator:
                                                for node in self.__node_order if node.action_space and node in added))
         print('Number of Optimal Individual Policies: ' + str(num_individual_policies))
 
-    def update(self, old_state, observation):
-        pass  # does not update
-
     def setup_optimal_policy_graph(self, graph_iterations=inf):
         """
         Creates a complete policy search over the state space of the scenario. Prunes out suboptimal joint actions,
@@ -154,6 +151,9 @@ class SampledPolicyTeammate:
     def predict(self, state):
         return Distribution({action: 1.0 if action == self.policy[state] else 0
                              for action in self.scenario.actions(state).individual_actions(self.identity)})
+
+    def update(self, old_state, observation):
+        pass  # does not update
 
     def __eq__(self, other):
         if self.__hash__() != other.__hash__():
