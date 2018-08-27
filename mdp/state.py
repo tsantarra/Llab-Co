@@ -20,7 +20,7 @@ class State(Mapping):
         """
         Returns a string representing the state.
         """
-        return 'State({\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.items())) + '})'
+        return 'State({\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.__dict.items())) + '})'
 
     def copy(self):
         """
@@ -62,7 +62,7 @@ class State(Mapping):
         Returns a hashable form of the state.
         """
         if not self.__hash:
-            self.__hash = hash(tuple(sorted(self.items())))
+            self.__hash = hash(tuple(sorted(self.__dict.items())))
 
         return self.__hash
 
@@ -79,7 +79,7 @@ class State(Mapping):
         return self.__dict == other.__dict
 
     def __lt__(self, other):
-        return tuple(self.items()) < tuple(other.items())
+        return tuple(sorted(self.__dict.items())) < tuple(sorted(other.__dict.items()))
 
     def contains_state(self, state):
         """
@@ -91,7 +91,7 @@ class State(Mapping):
         if self.keys() - state.keys():
             return False
         else:
-            return all(val == state[key] for key, val in self.items())
+            return all(val == state[key] for key, val in self.__dict.items())
 
     def feature_intersection(self, state):
         """

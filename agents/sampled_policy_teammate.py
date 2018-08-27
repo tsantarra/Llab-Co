@@ -21,6 +21,7 @@ class SampledTeammateGenerator:
         self.policy_state_order = []
         self.all_policy_actions = []
         self._depth_map = None
+        self._graph_map = None
 
         for node in self.__node_order:
             if not node.action_space:
@@ -62,10 +63,7 @@ class SampledTeammateGenerator:
         traverse_graph_topologically(self._depth_map, count_policies, top_down=False)
 
         print('Optimal trajectories: ' + str(sub_policy_counts[self.__internal_root]))
-
-
         print('New Count of Optimal Joint Policies: ' + str(optimal_policies))
-
         print('Number of Non-Terminal Nodes: ' + str(len(list(node for node in self.__node_order
                                                               if node.action_space and node in added))))
         print('Optimal actions: ' + str(list(len(node.__optimal_joint_actions)
@@ -73,10 +71,10 @@ class SampledTeammateGenerator:
         print('Number of Optimal Joint Policies: ' + str(reduce(mul, (len(node.__optimal_joint_actions)
                                                                       for node in self.__node_order
                                                                       if node.action_space and node in added))))
-        num_individual_policies = reduce(mul, (len(set(action[self.identity]
-                                                       for action in node.__optimal_joint_actions))
-                                               for node in self.__node_order if node.action_space and node in added))
-        print('Number of Optimal Individual Policies: ' + str(num_individual_policies))
+        print('Number of Optimal Individual Policies: ' + str(reduce(mul, (len(set(action[self.identity]
+                                                                           for action in node.__optimal_joint_actions))
+                                                                           for node in self.__node_order
+                                                                           if node.action_space and node in added))))
 
     def setup_optimal_policy_graph(self, graph_iterations=inf):
         """
@@ -86,6 +84,7 @@ class SampledTeammateGenerator:
         root = search(self.scenario.initial_state(), self.scenario, graph_iterations)
 
         self._depth_map = map_graph_by_depth(root)
+        self._graph_map = {node.state: node for node in self._depth_map}
         node_list = list((horizon, node) for node, horizon in self._depth_map.items())
         node_list.sort(reverse=True)
         node_order = [node for horizon, node in node_list]
@@ -119,33 +118,34 @@ class SampledTeammateGenerator:
         while queue:
             node = queue.popleft()
 
-            if not node.action_space:
-                continue
-
-            joint_action = choice(node.__optimal_joint_actions)
-            individual_action = joint_action[self.identity]
+            individual_action = choice(node.__optimal_joint_actions)[self.identity]
             policy[node.state] = individual_action
 
-            for possible_joint_action in node.action_space.fix_actions({self.identity: [individual_action]}):
-                for successor in node.successors[possible_joint_action]:
-                    if successor.state not in policy:
-                        queue.append(successor)
+            for possible_joint_action in node.action_space:
+                if possible_joint_action[self.identity] == individual_action:
+                    for successor in node.successors[possible_joint_action]:
+                        if successor.action_space and successor.state not in policy:
+                            queue.append(successor)
 
         return policy
 
     def sample_teammate(self):
-        return SampledPolicyTeammate(self.identity, self.sample_partial_policy(), self.scenario)
+        return SampledPolicyTeammate(self.identity, self.sample_partial_policy(), self.scenario, self)
 
 
 class SampledPolicyTeammate:
 
-    def __init__(self, identity, policy, scenario):
+    def __init__(self, identity, policy, scenario, generator):
         self.identity = identity
         self.policy = policy
         self.scenario = scenario
         self.__hash = None
+        self.__generator = generator
 
     def get_action(self, state):
+        if state not in self.policy:
+            return choice(self.__generator._graph_map[state].__optimal_joint_actions)[self.identity]
+
         return self.policy[state]
 
     def predict(self, state):

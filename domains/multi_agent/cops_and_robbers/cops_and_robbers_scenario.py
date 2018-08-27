@@ -39,6 +39,8 @@ class CopsAndRobbersScenario:
         replace = set((AGENT, PARTNER, ROBBER))
         self.maze = {loc : char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
 
+        self._state_transition_cache = {}
+
     def agents(self):
         return ['A','P']
 
@@ -94,6 +96,9 @@ class CopsAndRobbersScenario:
         In order for the end check to work (both agents and one robber in the same cell), it is necessary to move the
         robbers before the agents. Otherwise, the robber will always slip away.
         """
+        if (state, action) in self._state_transition_cache:
+            return self._state_transition_cache[(state, action)] # Distribution({s.copy(): prob for s, prob in self._state_transition_cache[(state, action)].items()})
+
         intermediate_state_distribution = self._move_robbers(state)
 
         new_state_distribution = Distribution()
@@ -121,6 +126,8 @@ class CopsAndRobbersScenario:
             assert len(new_state) > 2, 'Improper state update. ' + str(new_state)
             new_state_distribution[new_state] = probability
 
+        self._state_transition_cache[(state, action)] = new_state_distribution
+
         return new_state_distribution
 
     def end(self, state):
@@ -135,6 +142,9 @@ class CopsAndRobbersScenario:
         if state['Round'] >= 13:
             return True
 
+        return self.robber_caught(state)
+
+    def robber_caught(self, state):
         a_loc, p_loc = state['A'], state['P']
         for loc in [loc for key, loc in state.items() if 'Robber' in key]:
             if a_loc == p_loc == loc:
@@ -146,7 +156,7 @@ class CopsAndRobbersScenario:
         """
         Utility is only granted upon successful completion of the task. It is given as the number of remaining rounds.
         """
-        return (50 - new_state['Round']) if self.end_check(new_state) else 0
+        return (50 - new_state['Round']) if self.robber_caught(new_state) else 0
 
     def _serialize_state(self, state):
         return json.dumps({k: tuple(v) if type(v) is Location else v for k, v in state.items()})
@@ -173,9 +183,6 @@ class CopsAndRobbersScenario:
                 targets.append(Location(row, col + 1))
             if self.maze[(row, col - 1)] == OPEN or self.maze[(row, col - 1)] == GATE_LEFT:
                 targets.append(Location(row, col - 1))
-            # shuffle(targets)
-
-            assert all(0 < row < 8 and 0 < col < 8 for row, col in targets), 'Illegal robber target. ' + '\n'.join(str(target) for target in targets)
 
             # Use Manhattan distance for convenience.
             def distance(p1, p2): return abs(p1.row - p2.row) + abs(p1.col - p2.col)
@@ -191,20 +198,12 @@ class CopsAndRobbersScenario:
 
             # Update state distribution.
             new_state_dist = Distribution()
+            tie_prob = 1/len(ties)
             for result_state, state_prob in resulting_distribution.items():
-                tie_prob = 1/len(ties)
                 for target, _, _ in ties:
                     new_state = result_state.update({robber: target})  # state.update() returns a modified copy
                     new_state_dist[new_state] = tie_prob * state_prob
             resulting_distribution = new_state_dist
-
-        # Safety check to ensure we haven't calculated new state probabilities incorrectly.
-        assert abs(sum(resulting_distribution.values()) - 1.0) < 10e-5, 'Resulting transition too large. ' + str(sum(resulting_distribution.values()))
-
-        for state in resulting_distribution:
-            for robber_loc in [val for key, val in state.items() if 'Robber' in key]:
-                row, col = robber_loc
-                assert 0 < row < 8 and 0 < col < 8, 'Illegal robber location. Bad move. ' + str((row, col))
 
         return resulting_distribution
 

@@ -26,6 +26,17 @@
         @20 minutes per trial over 100 computers -> 15 days
 
 
+        2 domains
+        1 underlying teammate distribution (sample from optimal; fix alpha in CRP)
+        5 experience pre-trial
+        1 size of coordination policy (fix)
+        1 size of communication policy (fix)
+        3 branching factor of comm policy
+        10 comm heuristics
+        3 comm costs
+    ---------------------
+    900
+
     Goals:
         Things to show:
             Fewer trials BEFORE identifying optimal joint policy
@@ -40,7 +51,20 @@
             Experience helps (the more, the better)
             Heuristic matters (uncertainty AND risk are at play)
 
+        HEURISTIC: VARIANCE OF CRP DISTRIBUTION -> EASY TO UPDATE AND COMPUTE GIVEN A QUERY
+        HEURISTIC: VARIANCE OF CRP DISTRIBUTION -> EASY TO UPDATE AND COMPUTE GIVEN A QUERY
+        HEURISTIC: VARIANCE OF CRP DISTRIBUTION -> EASY TO UPDATE AND COMPUTE GIVEN A QUERY
+            -> of policy root CRP (a global stat, not local to that state)
+            -> I think maybe I mean entropy, given we're operating on a distribution.
 
+        Given we're at I0 = {s0, M0} and evaluating at node It = {st, Mt}, there's a body of
+        heuristics that leverage those four items:
+            - how much knowing pi(st) affects mt (delayed benefit)
+                - local info entropy
+                - local value of information
+            - how much knowing pi(st) affects m0 (immediate benefit)
+                - immediate information entropy
+                - approximate immediate value of information (how M0 changes EV with all M1+ not updated))
 
         Domain-specific knobs (hard to control):
             Few observations before critical choice

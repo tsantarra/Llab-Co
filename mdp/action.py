@@ -31,9 +31,15 @@ class Action(Mapping):
     def __repr__(self):
         return 'Action(' + str(self.__dict) + ')'
 
+    def __eq__(self, other):
+        return self.__dict == other.__dict
+
+    def __lt__(self, other):
+        return tuple(sorted(self.__dict.items())) < tuple(sorted(other.__dict.items()))
+
     def __hash__(self):
         if not self.__hash:
-            self.__hash = hash(tuple(self.__dict.items()))
+            self.__hash = hash(tuple(sorted(self.__dict.items())))
         return self.__hash
 
 

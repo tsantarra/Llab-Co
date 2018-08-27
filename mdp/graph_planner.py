@@ -70,25 +70,15 @@ def _traverse_nodes(node, tie_selector=choice):
         action_values = {act: val for act, val in node.action_values().items()
                          if act in node._incomplete_action_nodes}
 
-        if not action_values:
-            print('at least one action should be incomplete')
-
         best_action, best_value = max(action_values.items(),
                                       key=lambda av: av[1] + (node.future_value + 1) *
                                       _ucb_explore_factor(node.visits, node.action_counts[av[0]]))
 
-        tied_actions = [a for a in action_values if action_values[a] == best_value]
-        selected_action = tie_selector(tied_actions)
-
         # Sample-based node update
-        node.action_counts[selected_action] += 1
+        node.action_counts[best_action] += 1
         node.visits += 1
 
-        incomplete_children = {child: prob for child, prob in node.successors[selected_action].items()
-                             if not child.complete}
-        if not incomplete_children:
-            print('all children should not be complete')
-        node = Distribution({child: prob for child, prob in node.successors[selected_action].items()
+        node = Distribution({child: prob for child, prob in node.successors[best_action].items()
                              if not child.complete}).sample()
 
     return node
@@ -211,7 +201,7 @@ def _backup(node, backup_op):
         node._has_changed = False
 
 
-def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristic=None, tie_selector=choice,
+def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristic=lambda s: 0, tie_selector=choice,
            root_node=None, prune=True):
     """
     Search game tree according to THTS.

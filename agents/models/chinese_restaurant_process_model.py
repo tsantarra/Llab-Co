@@ -42,6 +42,8 @@ class SparseChineseRestaurantProcessModel:
         return index
 
     def __get_state_index(self, state):
+        if not self.policies:  # Occurs when no policies have been added.
+            return self.__add_or_get_state_index(state)
         assert state in self.state_to_index, 'State missing from state lookup.'
         return self.state_to_index[state]
 
@@ -63,14 +65,13 @@ class SparseChineseRestaurantProcessModel:
                 b. No -> add to policy_to_index + policy_matrix(index -> list)
         """
         if type(policy) is list:
-            state_action_pairs = policy
+            converted_policy = tuple(sorted([(self.__add_or_get_state_index(state), self.__get_action_index(action))
+                                             for state, action in policy]))
         elif type(policy) is dict:
-            state_action_pairs = list(policy.items())
+            converted_policy = tuple(sorted([(self.__add_or_get_state_index(state), self.__get_action_index(action))
+                                             for state, action in policy.items()]))
         else:
             raise TypeError('Incorrect policy format: ' + str(policy))
-
-        converted_policy = tuple(sorted([(self.__add_or_get_state_index(state), self.__get_action_index(action))
-                                         for state, action in state_action_pairs]))
 
         self.total_observations += 1
 
@@ -100,6 +101,9 @@ class SparseChineseRestaurantProcessModel:
         Returns the posterior distribution after observing an action in a given state.
             P(policy | action) = P(action | policy) * P(policy) / P(action)
         """
+        if len(prior) == 1:
+            return prior[:]
+
         state_index = self.__get_state_index(state)
         action_index = self.__get_action_index(observed_action)
 

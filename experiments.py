@@ -81,7 +81,7 @@ def initialize_agents(scenario, num_initial_models, planning_iterations, identit
     teammate_generator = SampledTeammateGenerator(scenario, teammate_identity)
     chinese_restaurant_process = SparseChineseRestaurantProcessModel(teammate_identity, scenario)
     for _ in range(num_initial_models):
-        chinese_restaurant_process.add_teammate_model(teammate_generator.sample_full_policy())
+        chinese_restaurant_process.add_teammate_model(teammate_generator.sample_partial_policy())
 
     teammate_model = PolicyDistributionModel(scenario, teammate_identity, chinese_restaurant_process.prior(),
                                              chinese_restaurant_process)
@@ -131,11 +131,13 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         print('Joint Action:', joint_action)
 
         # Communicate
-        action, _ = communicate(scenario, agent, agent_dict,
+        action, _, cost = communicate(scenario, agent, agent_dict,
                                 comm_planning_iterations=comm_iterations,
                                 comm_heuristic=comm_heuristic,
                                 branching_factor=comm_branch_factor,
                                 comm_cost=comm_cost)
+        utility -= cost
+        print('Utility spent in communication: ' + str(cost))
         new_joint_action = joint_action.update({agent_name: action})
 
         logger.info('State-Action', extra={'State': scenario._serialize_state(state),

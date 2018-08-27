@@ -457,7 +457,7 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
 
     # No communication can help or no communication possible.
     if not comm_graph_node.successors:
-        return original_action, agent.policy_graph_root.state
+        return original_action, agent.policy_graph_root.state, 0
 
     action = greedy_action(comm_graph_node)
     query_action = action[agent.identity]
@@ -466,12 +466,16 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     current_policy_state = comm_graph_node.state
 
     how = None
+    cost = 0
     while not current_policy_state['End?']:
         # Check for termination
         if query_action == 'Halt':
             print('Halt')
             how = 'Halt'
             break
+
+        # Update cost
+        cost += comm_cost
 
         # Response
         query_target = agent_dict[query_action.agent]
@@ -497,7 +501,6 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
         query_action = action[agent.identity]
         current_policy_state = comm_graph_node.state
 
-
     agent.policy_graph_root = comm_scenario._get_policy_graph(current_policy_state)
     action = get_max_action(agent.policy_graph_root, agent.identity)
     print('END COMMUNICATION/// NEW ACTION:', action)
@@ -509,4 +512,4 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
                                'Type': 'End',
                                'How': how})
 
-    return action, agent.policy_graph_root.state
+    return action, agent.policy_graph_root.state, cost
