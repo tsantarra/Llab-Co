@@ -83,3 +83,6 @@ class JointActionSpace:
 
     def __str__(self):
         return str(self.agent_actions)
+
+    def __bool__(self):
+        return len(self.joint_actions) != 0

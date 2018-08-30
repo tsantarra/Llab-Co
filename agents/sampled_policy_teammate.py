@@ -21,7 +21,7 @@ class SampledTeammateGenerator:
         self.policy_state_order = []
         self.all_policy_actions = []
         self._depth_map = None
-        self._graph_map = None
+        self._graph_map = {}
 
         for node in self.__node_order:
             if not node.action_space:

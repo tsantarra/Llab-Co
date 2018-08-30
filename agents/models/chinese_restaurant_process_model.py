@@ -158,6 +158,12 @@ class SparseChineseRestaurantProcessModel:
                     for index, probability in zip(policy_indices, probabilities) if probability > 0)
 
     def get_action_distribution(self, state, policy_distribution):
+        if len(policy_distribution) == 1:
+            # All known policies ruled out. Return uniform prediction.
+            actions = self.scenario.actions(state).individual_actions(self.identity)
+            uniform_prob = 1.0/len(actions)
+            return Distribution({action: uniform_prob for action in actions})
+
         state_index = self.__get_state_index(state)
         if state_index not in self.possible_policy_actions:
             self.possible_policy_actions[state_index] = [self.__get_action_index(action)
