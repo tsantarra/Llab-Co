@@ -11,7 +11,7 @@ def generate_args():
                         ('plan_iterations', [100, 200]),
                         ('experience', [0, 10, 50]),
                         ('trials', [50]),
-                        ('process_no', [5]),
+                        ('process_no', [6]),
                         ('osg_cluster', ['$(Cluster)']),
                         ('osg_process', ['$(Process)'])])
 
