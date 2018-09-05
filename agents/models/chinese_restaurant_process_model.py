@@ -101,7 +101,10 @@ class SparseChineseRestaurantProcessModel:
         Returns the posterior distribution after observing an action in a given state.
             P(policy | action) = P(action | policy) * P(policy) / P(action)
         """
-        if len(prior) == 1:
+        if len(prior) == 1 or state not in self.state_to_index:
+            # Case 1: All known models ruled out.
+            # Case 2: Observation of state not covered in any policy.
+            # Result: Uniform update / no change.
             return prior[:]
 
         state_index = self.__get_state_index(state)
@@ -133,10 +136,17 @@ class SparseChineseRestaurantProcessModel:
         Returns the posterior distribution after observing an action in a given state.
             P(policy | action in state) = Π[P(action in state | policy)] * P(policy) / P(all observations)
         """
+        if len(prior) == 1:
+            return prior[:]
+
         policy_indices, probabilities = zip(*prior)
 
         # Calculate posterior
         for state, observed_action in state_action_pairs:
+            if state not in self.state_to_index:
+                # Rare case a state is not found in any known policy: update uniformly
+                continue
+
             state_index = self.__get_state_index(state)
             action_index = self.__get_action_index(observed_action)
 
@@ -158,8 +168,10 @@ class SparseChineseRestaurantProcessModel:
                     for index, probability in zip(policy_indices, probabilities) if probability > 0)
 
     def get_action_distribution(self, state, policy_distribution):
-        if len(policy_distribution) == 1:
-            # All known policies ruled out. Return uniform prediction.
+        if len(policy_distribution) == 1 or state not in self.state_to_index:
+            # Case 1: All known policies ruled out.
+            # Case 2: State is not included in any policy (rare, unless little experience or in some edge case)
+            # Solution: Return base prediction (uniform, by default).
             actions = self.scenario.actions(state).individual_actions(self.identity)
             uniform_prob = 1.0/len(actions)
             return Distribution({action: uniform_prob for action in actions})
@@ -176,17 +188,10 @@ class SparseChineseRestaurantProcessModel:
             'Policy distribution not normalized: ' + str(sum(val for pol, val in policy_distribution))
 
         for policy_index, policy_probability in policy_distribution:
-            if policy_index == -1:
+            if policy_index == -1 or policy_index not in self.policy_matrix[state_index]:
                 for action_index in action_index_distribution:
                     action_index_distribution[action_index] += policy_probability * uniform_prob
             else:
-                if state_index not in self.policy_matrix:
-                    print('not correct state index: ' + str(state_index))
-                if policy_index not in self.policy_matrix[state_index]:
-                    print('not correct policy index: ' + str(policy_index) + '\n' + str(self.policy_matrix[state_index]))
-                action_index = self.policy_matrix[state_index][policy_index]
-                if action_index not in action_index_distribution:
-                    print('not correct action index: ' + str(action_index) + '\n' + str(action_index_distribution))
                 action_index_distribution[self.policy_matrix[state_index][policy_index]] += policy_probability
 
         assert abs(sum(action_index_distribution.values()) - 1.0) < 10e-6, 'Action predictions not normalized.'

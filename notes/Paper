@@ -22,6 +22,15 @@
             - early termination
             - cost effect? - free comm -> perfect info -> perfect policy
             - not submodular; matroids don't help
+                - I'm not sure this is correct anymore, now that we've updated VOI calculations to be a delta
+                - Alternatively, the submodular function could be the optimistic info gain left, given a subset of queries
+
+                - interactive submodular set covering (interactive -> need a stochastic response)
+                    - some guarantees on greedy algorithm -> Interactive Submodular Set Cover - Guillory and Bilmes
+                    Interactive submodular set cover cannot be approximated within a factor of (1 − ǫ) max(ln |H|, ln α) in
+                    polynomial time for any ǫ > 0 unless NP has n^{O(log log n)} time deterministic algorithms
+
+
 
 
     Active learning:
