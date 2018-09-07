@@ -15,25 +15,17 @@ class SampledTeammateGenerator:
     def __init__(self, scenario, identity, min_graph_iterations=inf):
         self.identity = identity
         self.scenario = scenario
-        self.min_graph_iterations = min_graph_iterations
-        self.__internal_root, self.__node_order = self.setup_optimal_policy_graph(min_graph_iterations)
-
-        self.policy_state_order = []
-        self.all_policy_actions = []
         self._depth_map = None
         self._graph_map = {}
+        self._internal_root, self._node_order = self.setup_optimal_policy_graph(min_graph_iterations)
 
-        for node in self.__node_order:
-            if not node.action_space:
-                continue
-            self.policy_state_order.append(node.state)
-            self.all_policy_actions.append(set(action[identity] for action in node.action_values()))
+        assert len(self._graph_map) == len(self._node_order)
 
     def policy_stats(self):
         queue = deque()
 
-        queue.append(self.__internal_root)
-        added = {self.__internal_root}
+        queue.append(self._internal_root)
+        added = {self._internal_root}
 
         optimal_policies = 1
 
@@ -62,18 +54,19 @@ class SampledTeammateGenerator:
 
         traverse_graph_topologically(self._depth_map, count_policies, top_down=False)
 
-        print('Optimal trajectories: ' + str(sub_policy_counts[self.__internal_root]))
+        print('Optimal trajectories: ' + str(sub_policy_counts[self._internal_root]))
         print('New Count of Optimal Joint Policies: ' + str(optimal_policies))
-        print('Number of Non-Terminal Nodes: ' + str(len(list(node for node in self.__node_order
+        print('Number of Non-Terminal Nodes: ' + str(len(list(node for node in self._node_order
                                                               if node.action_space and node in added))))
         print('Optimal actions: ' + str(list(len(node.__optimal_joint_actions)
-                                             for node in self.__node_order if node.action_space and node in added)))
+                                             for node in self._node_order if node.action_space and node in added)))
         print('Number of Optimal Joint Policies: ' + str(reduce(mul, (len(node.__optimal_joint_actions)
-                                                                      for node in self.__node_order
+                                                                      for node in self._node_order
                                                                       if node.action_space and node in added))))
         print('Number of Optimal Individual Policies: ' + str(reduce(mul, (len(set(action[self.identity]
-                                                                           for action in node.__optimal_joint_actions))
-                                                                           for node in self.__node_order
+                                                                                   for action in
+                                                                                   node.__optimal_joint_actions))
+                                                                           for node in self._node_order
                                                                            if node.action_space and node in added))))
 
     def setup_optimal_policy_graph(self, graph_iterations=inf):
@@ -95,7 +88,7 @@ class SampledTeammateGenerator:
 
             joint_action_values = node.action_values()
             max_action_value = max(joint_action_values.values())
-            node.__optimal_joint_actions = list(action for action, value in joint_action_values.items()
+            node._optimal_joint_actions = list(action for action, value in joint_action_values.items()
                                                 if abs(value - max_action_value) < 10e-5)
 
         return root, node_order
@@ -105,7 +98,7 @@ class SampledTeammateGenerator:
         Returns a teammate sampled from the stored policy graph.
         """
         return [(node.state, choice(node.__optimal_joint_actions)[self.identity])
-                for node in self.__node_order if node.action_space]
+                for node in self._node_order if node.action_space]
 
     def sample_partial_policy(self):
         """
@@ -113,7 +106,7 @@ class SampledTeammateGenerator:
         """
         policy = {}
         queue = deque()
-        queue.append(self.__internal_root)
+        queue.append(self._internal_root)
 
         while queue:
             node = queue.popleft()
@@ -121,11 +114,15 @@ class SampledTeammateGenerator:
             individual_action = choice(node.__optimal_joint_actions)[self.identity]
             policy[node.state] = individual_action
 
-            for possible_joint_action in node.action_space:
-                if possible_joint_action[self.identity] == individual_action:
-                    for successor in node.successors[possible_joint_action]:
-                        if successor.action_space and successor.state not in policy:
-                            queue.append(successor)
+            queue.extend(successor for possible_joint_action
+                         in node.action_space.fix_actions({self.identity: individual_action})
+                         for successor in node.successors[possible_joint_action]
+                         if successor.action_space and successor.state not in policy)
+            #for possible_joint_action in node.action_space:
+            #    if possible_joint_action[self.identity] == individual_action:
+            #        for successor in node.successors[possible_joint_action]:
+            #            if successor.action_space and successor.state not in policy:
+            #                queue.append(successor)
 
         return policy
 
@@ -143,10 +140,12 @@ class SampledPolicyTeammate:
         self.__generator = generator
 
     def get_action(self, state):
-        if state not in self.policy:
-            return choice(self.__generator._graph_map[state].__optimal_joint_actions)[self.identity]
+        if state in self.policy:
+            return self.policy[state]
 
-        return self.policy[state]
+        policy_node = self.__generator._graph_map[state]
+        if policy_node.action_space:
+            return choice(policy_node._optimal_joint_actions)[self.identity]
 
     def predict(self, state):
         return Distribution({action: 1.0 if action == self.policy[state] else 0
@@ -162,7 +161,7 @@ class SampledPolicyTeammate:
 
     def __hash__(self):
         if not self.__hash:
-            self.__hash = hash(self.policy)
+            self.__hash = hash(frozenset(self.policy.items()))
 
         return self.__hash
 

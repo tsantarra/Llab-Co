@@ -155,10 +155,11 @@ class SparseChineseRestaurantProcessModel:
                                                          for action in self.scenario.actions(state).individual_actions(self.identity)]
             uniform_prob = 1.0 / len(self.possible_policy_actions[state_index])
 
+            known_policy_actions = self.policy_matrix[state_index]
             probabilities = [probability * uniform_prob
-                             if policy_index == -1
+                             if policy_index == -1 or policy_index not in known_policy_actions
                              else (probability
-                                   if probability > 0 and action_index == self.policy_matrix[state_index][policy_index]
+                                   if probability > 0 and action_index == known_policy_actions[policy_index]
                                    else 0)
                              for policy_index, probability in zip(policy_indices, probabilities)]
 

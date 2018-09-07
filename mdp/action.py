@@ -39,7 +39,7 @@ class Action(Mapping):
 
     def __hash__(self):
         if not self.__hash:
-            self.__hash = hash(tuple(sorted(self.__dict.items())))
+            self.__hash = hash(frozenset(self.__dict.items()))
         return self.__hash
 
 

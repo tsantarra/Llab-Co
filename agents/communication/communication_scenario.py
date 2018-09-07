@@ -207,7 +207,7 @@ class CommScenario:
         def prune_query(node, target_agent_name):
             return node.scenario_end or \
                    Query(target_agent_name, node.state['World State']) in policy_state['Queries'] or \
-                   node.action_space is None or \
+                   not node.action_space or \
                    len(node.action_space.individual_actions(target_agent_name)) <= 1
 
         # Need to consider all teammates involved.
@@ -426,7 +426,7 @@ class CommScenario:
         return new_root
 
 
-def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heuristic, branching_factor=infinity,
+def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heuristic, trial, branching_factor=infinity,
                 comm_cost=0):
     """
     This is the primary method for initiating a series of policy queries. It is run as any other scenario:
@@ -447,7 +447,7 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     print('BEGIN COMMUNICATION/// ORIGINAL ACTION: ', original_action)
     print('Current EV: ' + str(agent.policy_graph_root.future_value))
     logger.info('Comm', extra={'EV': agent.policy_graph_root.future_value, 'Action': json.dumps(original_action),
-                               'Type': 'Begin'})
+                               'Type': 'Begin', 'Trial': trial})
 
     # Complete graph search
     comm_graph_node = search(state=comm_scenario.initial_state(),
@@ -483,7 +483,7 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
         print('Query:\n{state}\nResponse: {response}'.format(state=query_action.state, response=response))
 
         logger.info('Query Step', extra={'Query': scenario._serialize_state(query_action.state),
-                                         'Response': json.dumps(response)})
+                                         'Response': json.dumps(response), 'Trial': trial})
 
         # Update position in policy state graph
         new_query_state = current_policy_state['Queries'].update({query_action: response})
@@ -510,6 +510,7 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
                                'New Action': json.dumps(action),
                                'Original Action': json.dumps(original_action),
                                'Type': 'End',
-                               'How': how})
+                               'How': how,
+                               'Trial': trial})
 
     return action, agent.policy_graph_root.state, cost
