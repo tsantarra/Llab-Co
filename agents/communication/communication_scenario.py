@@ -35,8 +35,7 @@ class CommScenario:
         """
         # Save current policy graph for future reference
         self._agent_identity = identity
-        self._policy_root = policy_graph.copy_subgraph()
-        self._policy_root.__depth_map = map_graph_by_depth(self._policy_root)
+        self._policy_root = policy_graph  # .copy_subgraph()
         self._teammate_names = list(initial_model_state.keys())  # Current model of teammate behavior
         self._evaluate_node_queries_fn = evaluate_query_fn  # Return [(state, score), (state, score), ...] list.
         self._max_branches = max_branching_factor
@@ -457,6 +456,7 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
 
     # No communication can help or no communication possible.
     if not comm_graph_node.successors:
+        print('END COMMUNICATION/// NO COMMS')
         return original_action, agent.policy_graph_root.state, 0
 
     action = greedy_action(comm_graph_node)

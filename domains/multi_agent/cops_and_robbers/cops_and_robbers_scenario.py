@@ -97,7 +97,7 @@ class CopsAndRobbersScenario:
         robbers before the agents. Otherwise, the robber will always slip away.
         """
         if (state, action) in self._state_transition_cache:
-            return self._state_transition_cache[(state, action)] # Distribution({s.copy(): prob for s, prob in self._state_transition_cache[(state, action)].items()})
+            return self._state_transition_cache[(state, action)]
 
         intermediate_state_distribution = self._move_robbers(state)
 
@@ -123,7 +123,6 @@ class CopsAndRobbersScenario:
                 new_state_diff[agent] = Location(row, col)
 
             new_state = intermediate_state.update(new_state_diff)
-            assert len(new_state) > 2, 'Improper state update. ' + str(new_state)
             new_state_distribution[new_state] = probability
 
         self._state_transition_cache[(state, action)] = new_state_distribution

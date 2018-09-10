@@ -62,8 +62,8 @@ class State(Mapping):
         Returns a hashable form of the state.
         """
         if not self.__hash:
-            # self.__hash = hash(tuple(sorted(self.__dict.items())))
-            self.__hash = hash(frozenset(self.__dict.items()))
+            self.__hash = hash(tuple(self.__dict.items()))
+            # self.__hash = hash(frozenset(self.__dict.items()))
 
         return self.__hash
 

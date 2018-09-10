@@ -19,17 +19,15 @@ import json
 
 logger = logging.getLogger()
 
-Parameters = namedtuple('Parameters', ['scenario_id',
+Parameters = namedtuple('Parameters', ['process_no',
+                                       'scenario_id',
                                        'heuristic_id',
                                        'comm_branch_factor',
                                        'comm_iterations',
                                        'comm_cost',
                                        'plan_iterations',
                                        'experience',
-                                       'trials',
-                                       'process_no',
-                                       'osg_cluster',
-                                       'osg_process'])
+                                       'trials'])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
              CopsAndRobbersScenario(filename='a.maze')]
@@ -44,7 +42,7 @@ heuristics = [local_information_entropy,
 
 def run():
     assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + ' '.join(Parameters._fields)
-    parameters = [int(arg) for arg in sys.argv[1:-2]] + list(sys.argv[-2:])
+    parameters = [int(arg) for arg in sys.argv[1:]]
     parameters = Parameters(*parameters)
     print('Parameters: ' + str(parameters))
 
