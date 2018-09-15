@@ -4,7 +4,9 @@
 module load python/3.6.5-5
 
 # Activate virtual environment
-python3 -m venv test_env
+rm -rf test_env/*
+#python3 -m venv test_env
+virtualenv -p python3 test_env
 source test_env/bin/activate
 
 # Install python packages (some are unused in this demo)
