@@ -41,7 +41,9 @@ heuristics = [local_information_entropy,
 
 
 def run():
-    assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + ' '.join(Parameters._fields)
+    assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + \
+                                                         ' '.join(str(i) for i in sys.argv) + \
+                                                         '\nExpected: ' + ' '.join(Parameters._fields)
     parameters = [int(arg) for arg in sys.argv[1:]]
     parameters = Parameters(*parameters)
     print('Parameters: ' + str(parameters))

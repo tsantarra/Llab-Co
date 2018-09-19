@@ -33,14 +33,6 @@ def start():
     run('condor_submit osg_setup.submit')
 
 
-def test_output():
-    # Commands to execute on the remote server
-    run('rm -R test_dir')
-    run("mkdir test_dir")
-    with cd('test_dir'):
-        run('touch this_is_remote_out.txt')
-
-
 def check():
     run('ls')
     run('condor_q')
