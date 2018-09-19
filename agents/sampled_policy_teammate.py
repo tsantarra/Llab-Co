@@ -2,10 +2,8 @@ from collections import deque
 
 from mdp.graph_planner import search
 from mdp.distribution import Distribution
-from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically
+from mdp.graph_utilities import map_graph_by_depth
 
-from functools import reduce
-from operator import mul
 from math import inf
 from random import choice
 
@@ -15,8 +13,8 @@ class SampledTeammateGenerator:
     def __init__(self, scenario, identity, min_graph_iterations=inf):
         self.identity = identity
         self.scenario = scenario
-        self._depth_map = None
-        self._internal_root = self.setup_optimal_policy_graph(min_graph_iterations)
+        self._internal_root, self._depth_map, self._graph_map = \
+            self.setup_optimal_policy_graph(min_graph_iterations)
 
     def setup_optimal_policy_graph(self, graph_iterations=inf):
         """
@@ -24,19 +22,15 @@ class SampledTeammateGenerator:
         allowing for sampling from only optimal policies as needed.
         """
         root = search(self.scenario.initial_state(), self.scenario, graph_iterations)
+        depth_map = map_graph_by_depth(root)
 
-        self._depth_map = map_graph_by_depth(root)
-
-        for node in self._depth_map:
-            if not node.action_space:
-                continue
-
+        for node in (n for n in depth_map if n.action_space):
             joint_action_values = node.action_values()
             max_action_value = max(joint_action_values.values())
             node._optimal_joint_actions = list(action for action, value in joint_action_values.items()
                                                 if abs(value - max_action_value) < 10e-5)
 
-        return root
+        return root, depth_map, {node.state: node for node in depth_map}
 
     def sample_partial_policy(self):
         """
@@ -99,3 +93,6 @@ class SampledPolicyTeammate:
 
         return self.__hash
 
+
+if __name__ == '__main__':
+    print(inf)
