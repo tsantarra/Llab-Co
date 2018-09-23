@@ -1,11 +1,10 @@
-from collections import deque
-
 from mdp.graph_planner import search
 from mdp.distribution import Distribution
 from mdp.graph_utilities import map_graph_by_depth
 
 from math import inf
 from random import choice
+from collections import deque
 
 
 class SampledTeammateGenerator:
