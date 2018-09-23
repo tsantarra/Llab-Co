@@ -1,0 +1,76 @@
+
+
+
+Note: Central Limit Theorem applies to skewed/non-normal distributions in calculating confidence intervals for the mean,
+as the mean is a sum over the underlying random variable (divided by n). We can use CIs from normal distributions
+on sample data, then, for CIs involving the mean.
+
+CI: x +- z * std / sqrt(n)
+    x   = sample avg
+    z   = z-value used for confidence level (z=1.96 for 95%, t=2.09 for 95% for n < 100)
+    std = sample std
+    n   = sample size
+    scipy.stats.norm.interval(confidence, loc=mean, scale=sigma)
+
+Or: Use Empirical Confidence Interval, based on empirical results' percentiles
+    ordered = sort(data)
+    lower = percentile(ordered, (1-alpha)/2)            # alpha = 0.95
+    upper = percentile(ordered, alpha+((1-alpha)/2))
+
+
+======================================================================================================
+Heuristic Evaluation
+======================================================================================================
+
+
+
+
+
+
+
+======================================================================================================
+Prior Experience
+======================================================================================================
+
+
+
+
+
+
+======================================================================================================
+Communication Policy Branching Factor // Greedy Evaluation
+======================================================================================================
+
+
+
+
+
+
+======================================================================================================
+Cost of Communication
+======================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
