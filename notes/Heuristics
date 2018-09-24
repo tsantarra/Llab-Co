@@ -12,7 +12,7 @@
     ------
 
     Variance in util not straightforward without MY policy probs
-        New heuristics!
+        New possible heuristics!
             - local entropy minimization - minimize p log p   (can be weighted by p(s))
             - global entropy minimization - pick query to minimize p log p across entire graph (weighted by p(s)); needs to update entire policy graph
 
@@ -28,14 +28,41 @@
 
             - could use a linear loss if it is an absolute loss, ie p * | V' - V |
 
-            - consider: what about asymmetric loss functions? We use quadratic instead of linear (because expected linear loss = 0), but what about losses that weight underestimations and
+            - CONSIDER: what about asymmetric loss functions? We use quadratic instead of linear (because expected linear loss = 0), but what about losses that weight underestimations and
             overestimations differently? In our case, underestimating the chance of a teammate doing something unexpected or against our policy can be far worse than underestimating that
             they WILL do what we want (in which case, communication could be skipped in certain circumstances).
 
-            - could also consider losses/metrics based on distributions (e.g. KL-divergence) over local state transitions, local action probs,
+            - CONSIDER: losses/metrics based on distributions (e.g. KL-divergence) over local state transitions, local action probs,
             global teammate policy likelihoods, global state likelihoods, global outcome likelihoods, etc
-            - in this thinking, cross entropy seems like a great candidate, as it is used when predicting a prob dist but truth is all 0/1
-                -> in general, cross entropy is preferred for classification problems (we're classifying policies!) while MSE is better for regression (we're also learning distributions over policies!)
+
+
+            Items of intereste when at I_t = {s_t, M_t}:
+                Teammate policy distribution
+                    - Policy information entropy
+                    - Change in policy information entropy
+                    - Action information entropy
+                    - EQUIVALENT: Change in action information entropy (result = 0, so this is eq to above)
+                Current policy action/Updated policy action
+                    - Expected value (Q(s,a))
+                    - Change in expected value (VOI)
+                    - Absolute error (for original action, as updated = 0)
+                    - Quadratic error (for original action, as updated = 0)
+
+
+            Given we're at I_0 = {s_0, M_0} and evaluating at node I_t = {s_t, M_t}, there's a body of
+            heuristics that leverage those four items:
+                - how much knowing pi(s_t) affects m_t (delayed benefit)
+                    - "local" info entropy
+                    - "local" delta info entropy
+                    - "local" value of information
+                    - "local" expected absolute loss
+                    - "local" expected quadratic loss
+                - how much knowing pi(s_t) affects m_0 (immediate benefit)
+                    - "immediate" delta info entropy
+                    - "immediate" value of information (how M0 changes EV with all M1+ not updated))
+                    - "immediate" expected absolute loss
+                    - "immediate" expected quadratic loss
+
 
     Each heuristic should be given the model state (in comm planner, not in node) and world state to predict on
         things got crossed when using "node" as parameter
@@ -51,8 +78,8 @@
     Considerations
         - Querying a state that is unreachable could inform many reachable policy states. Hmmm.
         - Subset queries aren't likely to be optimal (as query choice depends on answers), but can improve runtime and coverage
-        - True EV of a policy is not submodular (no guarantees on greedy alg).
-        - Matroids don't apply either, as responses matter.
+        - MAY NOT BE TRUE : True EV of a policy is not submodular (no guarantees on greedy alg).
+        - MAY NOT BE TRUE : Matroids don't apply either, as responses matter.
         - It's still not quite clear how to handle global policy model vs policy instance
             + Narrowing a policy from a stochastic policy is probably easier than "learning", no? Just use info gain to discern.
                 - Doesn't take into consideration utility and indifference.

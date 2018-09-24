@@ -18,10 +18,25 @@ Or: Use Empirical Confidence Interval, based on empirical results' percentiles
     upper = percentile(ordered, alpha+((1-alpha)/2))
 
 
+Evaluation metrics:
+    Expected util
+    Actual util
+
+
+Knobs:
+    Choice of heuristic
+    Prior experience
+    Policy branching factor
+    Cost of communication
+
+
+
 ======================================================================================================
 Heuristic Evaluation
 ======================================================================================================
 
+Plots:
+    Box and whisker - distribution of performance of each heuristic with fixed other parameters
 
 
 
