@@ -51,17 +51,15 @@
 
             Given we're at I_0 = {s_0, M_0} and evaluating at node I_t = {s_t, M_t}, there's a body of
             heuristics that leverage those four items:
-                - how much knowing pi(s_t) affects m_t (delayed benefit)
-                    - "local" info entropy
-                    - "local" delta info entropy
-                    - "local" value of information
+                - how much knowing pi(s_t) affects I_t (delayed benefit; plan focused)
+                    - "local" info entropy (actions)
                     - "local" expected absolute loss
                     - "local" expected quadratic loss
-                - how much knowing pi(s_t) affects m_0 (immediate benefit)
-                    - "immediate" delta info entropy
+                    - "local" delta info entropy (policies)
+                    - "local" value of information
+                - how much knowing pi(s_t) affects I_0 (immediate benefit; inference focused)
+                    - "immediate" delta info entropy (policies)
                     - "immediate" value of information (how M0 changes EV with all M1+ not updated))
-                    - "immediate" expected absolute loss
-                    - "immediate" expected quadratic loss
 
 
     Each heuristic should be given the model state (in comm planner, not in node) and world state to predict on

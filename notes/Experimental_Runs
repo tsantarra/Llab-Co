@@ -15,8 +15,8 @@
 ('scenario_id', [1]),
 ('heuristic_id', [1]),
 ('comm_branch_factor', [3]),
-('comm_iterations', [100, 250, 1000]),
+('comm_iterations', [100, 250, 1000]),  # comm iterations
 ('comm_cost', [0]),
-('plan_iterations', [100, 500, 1000]),
-('experience', [0, 100, 1000]),
+('plan_iterations', [100, 500, 1000]),  # plan iterations
+('experience', [0, 100, 1000]),         # experience
 ('trials', [50]),
