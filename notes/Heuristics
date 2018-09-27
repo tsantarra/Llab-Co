@@ -52,11 +52,13 @@
             Given we're at I_0 = {s_0, M_0} and evaluating at node I_t = {s_t, M_t}, there's a body of
             heuristics that leverage those four items:
                 - how much knowing pi(s_t) affects I_t (delayed benefit; plan focused)
+                    Information-theoretic:
                     - "local" info entropy (actions)
+                    - "local" delta info entropy (policies)     # from knowing, ignores global info update
+                    Decision-theoretic:
                     - "local" expected absolute loss
                     - "local" expected quadratic loss
-                    - "local" delta info entropy (policies)
-                    - "local" value of information
+                    - "local" value of information              # from knowing, ignores global info update
                 - how much knowing pi(s_t) affects I_0 (immediate benefit; inference focused)
                     - "immediate" delta info entropy (policies)
                     - "immediate" value of information (how M0 changes EV with all M1+ not updated))

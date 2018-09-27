@@ -161,6 +161,7 @@ class ListDistribution:
         assert total > 0, 'Distribution probability total = 0. \n' + str(self)
 
         self.__probabilities = [prob/total for prob in self.__probabilities]
+        return self
 
     def sample(self):
         """

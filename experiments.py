@@ -35,7 +35,7 @@ scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1,
 heuristics = [local_information_entropy,
               local_value_of_information,
               local_absolute_error,
-              local_utility_variance,
+              local_mean_squared_error,
               random_evaluation,
               most_likely_next_state]  # TODO these do not have the same signature
 
