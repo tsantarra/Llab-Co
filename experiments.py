@@ -32,7 +32,7 @@ Parameters = namedtuple('Parameters', ['process_no',
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
              CopsAndRobbersScenario(filename='a.maze')]
 
-heuristics = [local_information_entropy,
+heuristics = [local_action_information_entropy,
               local_value_of_information,
               local_absolute_error,
               local_mean_squared_error,

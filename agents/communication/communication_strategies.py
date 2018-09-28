@@ -15,15 +15,16 @@
         (W) Information entropy over actions  (Δ would be equivalent, given drop to 0)
                 sum_{a_i} p(a_i | M_t) log p(a_i | M_t)   (at s_t)
                 future, fixed, information-theoretic
-        (W) Δ Future information entropy over policies
-                E_{π_i(s_t)}[ sum_{π_i} p'(π_i | M_t) log p'(π_i | M_t) ] - sum_{π_i} p(π_i | M_t) log p(π_i | M_t)
-                future, potential-based, information-theoretic
         (W) Expected absolute loss
                 E_π[ |V(s_t | a_i) - V(s)| ]
                 future, fixed, decision-theoretic
         (W) Expected mean squared error
                 E_π[ (V(s_t | a_i) - V(s))^2 ]
                 future, fixed, decision-theoretic
+
+        (W) Δ Future information entropy over policies
+                E_{π_i(s_t)}[ sum_{π_i} p'(π_i | M_t) log p'(π_i | M_t) ] - sum_{π_i} p(π_i | M_t) log p(π_i | M_t)
+                future, potential-based, information-theoretic
         (W) Future value of information
                 E_{M_t}[ V(s_t | π') - V(s_t | π) ]
                 future, potential-based, decision-theoretic
@@ -88,16 +89,19 @@ from functools import reduce
 
 from agents.communication.communication_scenario import Query
 from agents.modeling_agent import individual_agent_action_values
-from mdp.graph_utilities import recursive_traverse_policy_graph, traverse_graph_topologically, map_graph_by_depth
+from mdp.graph_utilities import recursive_traverse_policy_graph, traverse_graph_topologically
 from mdp.distribution import ListDistribution
 
 
-def example_heuristic(policy_root, target_agent_name, prune_fn):
+def example_heuristic(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
     Args:
         policy_root:            A pointer to the root node for the policy graph paired with the target_agent_model
+        depth_map:              A horizon-based map of the policy graph
         target_agent_name:      The name of the agent we're considering querying.
+        agent_identity:         The name of the agent communicating.
         prune_fn:               A function that determines if a node would be ruled out from communication.
+        gamma:                  The discount factor used in the scenario.
 
     Returns:
         A list of query, heuristic value pairs to be used in choosing policy query actions. (higher value => better)
@@ -116,7 +120,7 @@ def example_heuristic(policy_root, target_agent_name, prune_fn):
 
 
 def weighted(heuristic):
-    def weighted_heuristic(policy_root, target_agent_name, prune_fn, agent_name):
+    def weighted_heuristic(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
         # Calculate weights
         probs = [1.0]
         node_probs = defaultdict(float)
@@ -129,32 +133,33 @@ def weighted(heuristic):
 
             other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                        for other_agent, other_agent_model in node.state['Models'].items()}
-            action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
+            action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,
                                                                node.action_values())
             action_distribution = ListDistribution([(action, exp(value)) for action, value in action_values.items()])\
                                     .normalize()
 
             for action, action_prob in action_distribution:
-                for joint_action in node.action_space.fix_actions({agent_name: [action]}):
+                for joint_action in node.action_space.fix_actions({agent_identity: [action]}):
                     for successor, successor_prob in node.successors[joint_action].items():
                         node_probs[successor] += action_prob * successor_prob * \
                                                  reduce(mul,
                                                         [other_agent_predictions[other_agent][joint_action[other_agent]]
                                                          for other_agent in other_agent_predictions])
 
-        traverse_graph_topologically(map_graph_by_depth(policy_root), calculate_node_likelihoods, top_down=True)
+        traverse_graph_topologically(depth_map, calculate_node_likelihoods, top_down=True)
 
-        results = heuristic(policy_root, target_agent_name, prune_fn, agent_name)
+        results = heuristic(policy_root, target_agent_name, prune_fn, agent_identity)
 
         return [(state, val * prob) for (state, val), prob in zip(results, probs)]
 
     return weighted_heuristic
 
 
-def local_information_entropy(policy_root, target_agent_name, prune_fn, agent_name, gamma=1.0):
+def local_action_information_entropy(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
-    Weight by lambda^t until we can figure out a better estimate of the probabilities involved in:
-        Information Entropy           λ^t sum_{p(a)} [ p(a) log p(a) ]
+        (W) Information entropy over actions  (Δ would be equivalent, given drop to 0)
+            sum_{a_i} p(a_i | M_t) log p(a_i | M_t)   (at s_t)
+            future, fixed, information-theoretic
     """
     eval_list = []
 
@@ -168,52 +173,15 @@ def local_information_entropy(policy_root, target_agent_name, prune_fn, agent_na
                          (gamma ** horizon) * sum(-1 * probability * log(probability)
                                                   for probability in predicted_actions.values() if probability > 0)))
 
-    depth_map = map_graph_by_depth(policy_root)
-    i = len(depth_map)
     traverse_graph_topologically(depth_map, evaluate)
     return eval_list
 
 
-def local_value_of_information(policy_root, target_agent_name, prune_fn, agent_name, gamma=1.0):
+def local_absolute_error(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
-    Value of Information            sum_{p(a)} [ V(s | a, π') - V(s | a, π)]
-    """
-    eval_list = []
-
-    def evaluate(node, horizon):
-        if prune_fn(node, target_agent_name):
-            return
-
-        # Calculate entropy
-        other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
-                                   for other_agent, other_agent_model in node.state['Models'].items()}
-
-        # needs identity
-        old_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
-                                                           node.action_values())
-        old_policy_action, old_policy_old_val = max(old_action_values.items(), key=lambda pair: pair[1])
-
-        calc_value = 0
-        for teammate_action, probability in other_agent_predictions[target_agent_name].items():
-            # Q(s,a) with model updated and policy changed
-            other_agent_predictions[target_agent_name] = defaultdict(float)
-            other_agent_predictions[target_agent_name][teammate_action] = 1.0
-
-            new_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
-                                                               node.action_values())
-
-            # sum_{responses} P(response) [V(new policy action, new knowledge) - V(old policy action, new knowledge)]
-            calc_value += probability * (max(new_action_values.values()) - new_action_values[old_policy_action])
-
-        eval_list.append((node.state['World State'], (gamma ** horizon) * calc_value))
-
-    traverse_graph_topologically(map_graph_by_depth(policy_root), evaluate)
-    return eval_list
-
-
-def local_absolute_error(policy_root, target_agent_name, prune_fn, agent_name, gamma=1.0):
-    """
-    Absolute Error                  sum_{p(a)} [ V(s | a) - V(s)]
+        (W) Expected absolute loss
+                E_π[ |V(s_t | a_i) - V(s)| ]
+                future, fixed, decision-theoretic
     """
     eval_list = []
 
@@ -226,14 +194,14 @@ def local_absolute_error(policy_root, target_agent_name, prune_fn, agent_name, g
                                    for other_agent, other_agent_model in node.state['Models'].items()}
 
         # needs identity
-        old_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
+        old_action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,
                                                            node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 
         # We need the expected value conditioned on the teammate's action, so we use individual_agent_action_values,
         # but we use our policy as a prediction and leave open the teammate's policy (inverse of normal usage).
-        other_agent_predictions[agent_name] = defaultdict(float)
-        other_agent_predictions[agent_name][policy_action] = 1.0
+        other_agent_predictions[agent_identity] = defaultdict(float)
+        other_agent_predictions[agent_identity][policy_action] = 1.0
         teammate_predictions = other_agent_predictions[target_agent_name]
         del other_agent_predictions[target_agent_name]
 
@@ -247,13 +215,15 @@ def local_absolute_error(policy_root, target_agent_name, prune_fn, agent_name, g
 
         eval_list.append((node.state['World State'], (gamma ** horizon) * expected_absolute_error))
 
-    traverse_graph_topologically(map_graph_by_depth(policy_root), evaluate)
+    traverse_graph_topologically(depth_map, evaluate)
     return eval_list
 
 
-def local_mean_squared_error(policy_root, target_agent_name, prune_fn, agent_name, gamma=1.0):
+def local_mean_squared_error(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
-    Utility Variance                sum_{p(a)} [ V(s | a) - V(s)]^2
+        (W) Expected mean squared error
+                E_π[ (V(s_t | a_i) - V(s))^2 ]
+                future, fixed, decision-theoretic
     """
     eval_list = []
 
@@ -266,7 +236,7 @@ def local_mean_squared_error(policy_root, target_agent_name, prune_fn, agent_nam
                                    for other_agent, other_agent_model in node.state['Models'].items()}
 
         # needs identity
-        old_action_values = individual_agent_action_values(agent_name,
+        old_action_values = individual_agent_action_values(agent_identity,
                                                            other_agent_predictions,
                                                            node.action_space,
                                                            node.action_values())
@@ -274,8 +244,8 @@ def local_mean_squared_error(policy_root, target_agent_name, prune_fn, agent_nam
 
         # We need the expected value conditioned on the teammate's action, so we use individual_agent_action_values,
         # but we use our policy as a prediction and leave open the teammate's policy (inverse of normal usage).
-        other_agent_predictions[agent_name] = defaultdict(float)
-        other_agent_predictions[agent_name][policy_action] = 1.0
+        other_agent_predictions[agent_identity] = defaultdict(float)
+        other_agent_predictions[agent_identity][policy_action] = 1.0
         teammate_predictions = other_agent_predictions[target_agent_name]
         del other_agent_predictions[target_agent_name]
 
@@ -284,23 +254,173 @@ def local_mean_squared_error(policy_root, target_agent_name, prune_fn, agent_nam
                                                                 node.action_space,
                                                                 node.action_values())
 
-        expected_absolute_error = sum(prob * pow(teammate_action_values[action] - node.future_value, 2)
+        mean_squared_error = sum(prob * pow(teammate_action_values[action] - node.future_value, 2)
                                       for action, prob in teammate_predictions.items)
 
-        eval_list.append((node.state['World State'], (gamma ** horizon) * expected_absolute_error))
+        eval_list.append((node.state['World State'], (gamma ** horizon) * mean_squared_error))
 
-    traverse_graph_topologically(map_graph_by_depth(policy_root), evaluate)
+    traverse_graph_topologically(depth_map, evaluate)
     return eval_list
 
 
-def random_evaluation(policy_root, target_agent_name, prune_fn, agent_name):
+def local_delta_policy_entropy(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
+    """
+        (W) Δ Future information entropy over policies
+                E_{π_i(s_t)}[ sum_{π_i} p'(π_i | M_t) log p'(π_i | M_t) ] - sum_{π_i} p(π_i | M_t) log p(π_i | M_t)
+                future, potential-based, information-theoretic
+    """
+    eval_list = []
+
+    def evaluate(node, _):
+        if prune_fn(node, target_agent_name):
+            return
+
+        # Get model
+        state = node.state['World State']
+        teammate_model = node.state['Models'][target_agent_name]
+
+        # -1 * E[ΔH] = H - E[H | a]  -> we flip it because we end at lower entropy, but we're MAXing values
+        expected_entropy_diff = sum(-1 * prob * log(prob) for policy_index, prob
+                                        in teammate_model.policy_distribution if prob > 0)
+
+        expected_entropy_diff -= sum(probability * sum(-1 * policy_prob * log(policy_prob)
+                                                       for policy_index, policy_prob
+                                                       in teammate_model.update(state, prediction).policy_distribution
+                                                       if policy_prob > 0)
+                                     for prediction, probability in teammate_model.predict(state))
+
+        eval_list.append((state, expected_entropy_diff))
+
+    traverse_graph_topologically(depth_map, evaluate)
+    return eval_list
+
+
+def local_value_of_information(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
+    """
+        (W) Future value of information
+                E_{M_t}[ V(s_t | π') - V(s_t | π) ]
+                future, potential-based, decision-theoretic
+    """
+    eval_list = []
+
+    def evaluate(node, horizon):
+        if prune_fn(node, target_agent_name):
+            return
+
+        # Calculate old policy (to be evaluated under new action values)
+        other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
+                                   for other_agent, other_agent_model in node.state['Models'].items()}
+
+        old_action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,
+                                                           node.action_values())
+        old_policy_action, old_policy_old_val = max(old_action_values.items(), key=lambda pair: pair[1])
+
+        value_of_info = 0
+        for teammate_action, probability in other_agent_predictions[target_agent_name].items():
+            # Q(s,a) with model updated and policy changed
+            other_agent_predictions[target_agent_name] = defaultdict(float)
+            other_agent_predictions[target_agent_name][teammate_action] = 1.0
+
+            new_action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,
+                                                               node.action_values())
+
+            # sum_{responses} P(response) [V(new policy action, new knowledge) - V(old policy action, new knowledge)]
+            value_of_info += probability * (max(new_action_values.values()) - new_action_values[old_policy_action])
+
+        eval_list.append((node.state['World State'], (gamma ** horizon) * value_of_info))
+
+    traverse_graph_topologically(depth_map, evaluate)
+    return eval_list
+
+
+def immediate_delta_policy_entropy(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
+    """
+        Δ Immediate information entropy over policies
+            E_{π_i(s_t)}[ Δ sum_{π_i} p(π_i | M_0) log p(π_i | M_0) ]
+            future, potential-based, information-theoretic
+    """
+    eval_list = []
+
+    root_teammate_model = policy_root.state['Models'][target_agent_name]
+    base_entropy = sum(-1 * prob * log(prob) for policy_index, prob in root_teammate_model.policy_distribution
+                       if prob > 0)
+
+    def evaluate(node, _):
+        if prune_fn(node, target_agent_name):
+            return
+
+        # E[ΔH] = E[H | a] - H
+        future_state = node.state['World State']
+        expected_root_entropy = sum(probability *
+                                    sum(-1 * policy_prob * log(policy_prob)
+                                        for policy_index, policy_prob
+                                        in root_teammate_model.update(future_state, prediction).policy_distribution
+                                        if policy_prob > 0)
+                                    for prediction, probability in root_teammate_model.predict(future_state))
+
+        eval_list.append((future_state, base_entropy - expected_root_entropy))
+
+    traverse_graph_topologically(depth_map, evaluate)
+    return eval_list
+
+
+def immediate_approx_value_of_information(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
+    """
+        Immediate value of information
+            E_{M_0}[ V(s_0 | π_i(s_t)) - V(s_0 | π_i(s_t)) ]
+            future, potential-based, decision-theoretic
+    """
+    eval_list = []
+
+    root_state = policy_root.state['World State']
+    root_teammate_model = policy_root.state['Models'][target_agent_name]
+    teammate_predictions = {other_agent: other_agent_model.predict(root_state)
+                               for other_agent, other_agent_model in policy_root.state['Models'].items()}
+
+    old_action_values = individual_agent_action_values(agent_identity, teammate_predictions, policy_root.action_space,
+                                                       policy_root.action_values())
+    old_policy_action, _ = max(old_action_values.items(), key=lambda pair: pair[1])
+
+    def evaluate(node, _):
+        if prune_fn(node, target_agent_name):
+            return
+
+        value_of_info = 0
+        future_state = node.state['World State']
+
+        # Expectation of root model predictions of FUTURE state policy (query/response)
+        # Value of knowing (query/response) NOW (root)
+        for future_action, future_action_prob in root_teammate_model.predict(future_state).items():
+            # Q(s,a) with model updated and policy changed
+            new_model = root_teammate_model.update(future_state, future_action)
+            new_root_prediction = new_model.predict(root_state)
+
+            new_agent_predictions = {agent: teammate_predictions[agent] if agent != target_agent_name
+                                                                        else new_root_prediction
+                                     for agent in teammate_predictions}
+
+            new_action_values = individual_agent_action_values(agent_identity, new_agent_predictions,
+                                                               node.action_space,
+                                                               node.action_values())
+
+            # sum_{responses} P(response) [V(new policy action, new knowledge) - V(old policy action, new knowledge)]
+            value_of_info += future_action_prob * (max(new_action_values.values()) - new_action_values[old_policy_action])
+
+        eval_list.append((node.state['World State'], value_of_info))
+
+    traverse_graph_topologically(depth_map, evaluate)
+    return eval_list
+
+
+
+def random_evaluation(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
     Give random evaluations, as a comparison baseline.
     """
-    return [(node.state['World State'], randint()) for node in map_graph_by_depth(policy_root)]
+    return [(node.state['World State'], randint()) for node in depth_map]
 
 
-def most_likely_next_state(policy_root, target_agent_name, prune_fn, agent_name):
+def most_likely_next_state(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
     Order states by most likely - p(s | π)
     """
@@ -310,21 +430,21 @@ def most_likely_next_state(policy_root, target_agent_name, prune_fn, agent_name)
     def evaluate(node, horizon):
         other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                    for other_agent, other_agent_model in node.state['Models'].items()}
-        old_action_values = individual_agent_action_values(agent_name, other_agent_predictions, node.action_space,
+        old_action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,
                                                            node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 
-        for joint_action in node.action_space.fix_actions({agent_name: [policy_action]}):
+        for joint_action in node.action_space.fix_actions({agent_identity: [policy_action]}):
             for successor, successor_prob in node.successors[joint_action].items():
                 node_probs[successor] += node_probs[node] * successor_prob * \
                                          reduce(mul, [other_agent_predictions[other_agent][joint_action[other_agent]]
                                                       for other_agent in other_agent_predictions])
 
-    traverse_graph_topologically(map_graph_by_depth(policy_root), evaluate)
+    traverse_graph_topologically(depth_map, evaluate)
     return [(node.state['World State'], prob) for node, prob in node_probs.items()]
 
 
-def create_myopic_heuristic(root, agent_identity):
+def create_myopic_heuristic(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
     query = argmax(q=s_t) sum_{p(a_t)} [ V(s_0 | a_t, π') - V(s_0 | a_t, π)]
     """
@@ -339,11 +459,13 @@ def create_myopic_heuristic(root, agent_identity):
                 return action_value
 
             new_model = model.communicated_policy_update([(query, action)])
-            new_model_state = root.state['Models'].update({agent: new_model})
+            new_model_state = policy_root.state['Models'].update({agent: new_model})
             policy = {}
-            expected_util = recursive_traverse_policy_graph(node=root, node_values={}, model_state=new_model_state,
-                                                  policy=policy, policy_fn=compute_policy,
-                                                  agent_identity=agent_identity)
+            #### Update this
+            expected_util = recursive_traverse_policy_graph(node=policy_root, node_values={},
+                                                            model_state=new_model_state,
+                                                            policy=policy, policy_fn=compute_policy,
+                                                            agent_identity=agent_identity)
 
             return expected_util
 

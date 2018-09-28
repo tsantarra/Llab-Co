@@ -213,7 +213,8 @@ class CommScenario:
         query_evaluations = []
         for target_agent in self._teammate_names:
             query_evaluations.extend((Query(target_agent, state), value) for state, value in
-                                     self._evaluate_node_queries_fn(new_policy_root, target_agent, prune_query, self._agent_identity))
+                                     self._evaluate_node_queries_fn(new_policy_root, new_policy_root.__depth_map,
+                                                                    target_agent, self._agent_identity, prune_query))
 
         # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
         # resulting from different nodes having different evaluations (due to different models)
