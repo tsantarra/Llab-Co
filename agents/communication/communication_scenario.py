@@ -283,7 +283,6 @@ class CommScenario:
         # one query. Of course, if this is less than 0, there is no point in continuing, so the agent should stop.
         heuristic_val = max(max_value_of_info - new_value_of_info - self._comm_cost, 0)
 
-        #print('heuristic:', heuristic_val, '\tOpt:', new_policy_root.__optimistic_ev, '\tPess:', new_policy_root.__pessimistic_ev)
         self._heuristic_value_cache[policy_state] = heuristic_val
         self._end_cache[policy_state] = heuristic_val <= 10e-5
 

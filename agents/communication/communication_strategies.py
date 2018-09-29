@@ -211,7 +211,7 @@ def local_absolute_error(policy_root, depth_map, target_agent_name, agent_identi
                                                                 node.action_values())
 
         expected_absolute_error = sum(prob * abs(teammate_action_values[action] - node.future_value)
-                                      for action, prob in teammate_predictions.items)
+                                      for action, prob in teammate_predictions.items())
 
         eval_list.append((node.state['World State'], (gamma ** horizon) * expected_absolute_error))
 
@@ -255,7 +255,7 @@ def local_mean_squared_error(policy_root, depth_map, target_agent_name, agent_id
                                                                 node.action_values())
 
         mean_squared_error = sum(prob * pow(teammate_action_values[action] - node.future_value, 2)
-                                      for action, prob in teammate_predictions.items)
+                                      for action, prob in teammate_predictions.items())
 
         eval_list.append((node.state['World State'], (gamma ** horizon) * mean_squared_error))
 
@@ -420,7 +420,7 @@ def random_evaluation(policy_root, depth_map, target_agent_name, agent_identity,
     return [(node.state['World State'], randint()) for node in depth_map]
 
 
-def most_likely_next_state(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
+def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
     """
     Order states by most likely - p(s | π)
     """
@@ -477,6 +477,8 @@ def create_myopic_heuristic(policy_root, depth_map, target_agent_name, agent_ide
         # Return the expectation over responses.
         return sum(prob * calc_ev(target_agent, model, query, action)
                    for action, prob in model.predict(world_state).items())
+
+    raise Exception('Not checked for correctness. Verify before using.')
 
     return myopic
 
