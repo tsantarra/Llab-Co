@@ -138,7 +138,7 @@ def weighted(heuristic):
             action_distribution = ListDistribution([(action, exp(value)) for action, value in action_values.items()])\
                                     .normalize()
 
-            for action, action_prob in action_distribution:
+            for action, action_prob in action_distribution.items():
                 for joint_action in node.action_space.fix_actions({agent_identity: [action]}):
                     for successor, successor_prob in node.successors[joint_action].items():
                         node_probs[successor] += action_prob * successor_prob * \
@@ -277,17 +277,17 @@ def local_delta_policy_entropy(policy_root, depth_map, target_agent_name, agent_
 
         # Get model
         state = node.state['World State']
-        teammate_model = node.state['Models'][target_agent_name]
+        communicating_teammate_model = node.state['Models'][target_agent_name]
 
         # -1 * E[ΔH] = H - E[H | a]  -> we flip it because we end at lower entropy, but we're MAXing values
         expected_entropy_diff = sum(-1 * prob * log(prob) for policy_index, prob
-                                        in teammate_model.policy_distribution if prob > 0)
+                                        in communicating_teammate_model.model.policy_distribution if prob > 0)
 
         expected_entropy_diff -= sum(probability * sum(-1 * policy_prob * log(policy_prob)
                                                        for policy_index, policy_prob
-                                                       in teammate_model.update(state, prediction).policy_distribution
+                                                       in communicating_teammate_model.update(state, prediction).model.policy_distribution
                                                        if policy_prob > 0)
-                                     for prediction, probability in teammate_model.predict(state))
+                                     for prediction, probability in communicating_teammate_model.predict(state).items())
 
         eval_list.append((state, expected_entropy_diff))
 
@@ -342,7 +342,7 @@ def immediate_delta_policy_entropy(policy_root, depth_map, target_agent_name, ag
     eval_list = []
 
     root_teammate_model = policy_root.state['Models'][target_agent_name]
-    base_entropy = sum(-1 * prob * log(prob) for policy_index, prob in root_teammate_model.policy_distribution
+    base_entropy = sum(-1 * prob * log(prob) for policy_index, prob in root_teammate_model.model.policy_distribution
                        if prob > 0)
 
     def evaluate(node, _):
@@ -354,9 +354,9 @@ def immediate_delta_policy_entropy(policy_root, depth_map, target_agent_name, ag
         expected_root_entropy = sum(probability *
                                     sum(-1 * policy_prob * log(policy_prob)
                                         for policy_index, policy_prob
-                                        in root_teammate_model.update(future_state, prediction).policy_distribution
+                                        in root_teammate_model.update(future_state, prediction).model.policy_distribution
                                         if policy_prob > 0)
-                                    for prediction, probability in root_teammate_model.predict(future_state))
+                                    for prediction, probability in root_teammate_model.predict(future_state).items())
 
         eval_list.append((future_state, base_entropy - expected_root_entropy))
 

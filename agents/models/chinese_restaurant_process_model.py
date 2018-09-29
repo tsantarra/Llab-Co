@@ -116,10 +116,11 @@ class SparseChineseRestaurantProcessModel:
         uniform_prob = 1.0 / len(self.possible_policy_actions[state_index])
 
         # Calculate posterior
+        known_policy_actions = self.policy_matrix[state_index]
         resulting_probs = [probability * uniform_prob
-                           if policy_index == -1
+                           if policy_index == -1 or policy_index not in known_policy_actions
                            else (probability
-                                 if action_index == self.policy_matrix[state_index][policy_index]
+                                 if action_index == known_policy_actions[policy_index]
                                  else 0.0)
                            for policy_index, probability in prior]
 
@@ -129,7 +130,7 @@ class SparseChineseRestaurantProcessModel:
 
         assert abs(sum(resulting_probs) - 1.0) < 10e-6, 'Posterior not normalized: ' + str(sum(resulting_probs))
 
-        return list(pair for pair in zip((pair[0] for pair in prior), resulting_probs) if pair[1] > 0)
+        return list(pair for pair in zip((policy for policy in prior), resulting_probs) if pair[1] > 0)
 
     def batch_posterior(self, prior, state_action_pairs):
         """

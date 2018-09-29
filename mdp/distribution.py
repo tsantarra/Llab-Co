@@ -222,5 +222,8 @@ class ListDistribution:
     def __setitem__(self, item):
         raise NotImplementedError
 
-    def __getitem__(self, item):
-        return self.__probabilities[self.__keys.index(item)]
+    def __getitem__(self, index):
+        return self.__keys[index], self.__probabilities[index]
+
+    def __iter__(self):
+        return self.__keys.__iter__()
