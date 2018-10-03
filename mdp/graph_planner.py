@@ -264,7 +264,7 @@ class GraphNode:
         # Node info for search
         self.visits = 1
         self.future_value = 0
-        self.__action_values = None
+        self._action_values = None
         self.optimal_action = None
         self.action_counts = defaultdict(int)
 
@@ -274,10 +274,10 @@ class GraphNode:
         self._old_future_value = self.future_value
 
     def action_values(self):
-        if not self.__action_values:
+        if not self._action_values:
             return self.calculate_action_values(force_recalculate=True)
         else:
-            return self.__action_values
+            return self._action_values
 
     def calculate_action_values(self, force_recalculate=True):
         """
@@ -287,7 +287,7 @@ class GraphNode:
             return {action: 0 for action in self.action_space}
 
         if force_recalculate:
-            self.__action_values = {
+            self._action_values = {
                     action: sum(probability * (self.successor_transition_values[(successor.state, action)] +
                                                successor.future_value)
                                 for successor, probability in successor_distribution.items())
@@ -296,9 +296,9 @@ class GraphNode:
             for action, succ_dist in self._successors.items():
                 for child, probability in succ_dist.items():
                     if child._has_changed:
-                        self.__action_values[action] += probability * (child.future_value - child._old_future_value)
+                        self._action_values[action] += probability * (child.future_value - child._old_future_value)
 
-        return self.__action_values
+        return self._action_values
 
     def find_matching_successor(self, state, action=None):
         """
@@ -365,10 +365,28 @@ class GraphNode:
         """
         return True
 
+    def __getstate__(self):
+        """Extract state to pickle."""
+        # Remove recursive links to other nodes (will be rebuilt upon deserialization)
+        node_dict = self.__dict__.copy()
+        node_dict['predecessor_states'] = [pred.state for pred in node_dict['predecessors']]
+        node_dict['flat_successors'] = [(action, [(node.state, prob) for node, prob in node_dist.items()])
+                                        for action, node_dist in self._successors.items()]
+        del node_dict['predecessors']
+        del node_dict['_successors']
+        del node_dict['_succ_set']
+        return node_dict
+
     def __hash__(self):
-        return hash(self.state)
+        if 'state' in self.__dict__:
+            return hash(self.state)
+        else:
+            return 0
 
     def __eq__(self, other):
+        if not ('state' in self.__dict__ and 'state' in other.__dict__):
+            return not ('state' in self.__dict__ or 'state' in other.__dict__)
+
         if self.state != other.state:
             return False
 
@@ -418,8 +436,35 @@ class GraphNode:
         result = cls.__new__(cls)
         memo[this_id] = result
 
-
         result.state = self.state.copy()
         for k, v in self.__dict__.items():
             setattr(result, k, deepcopy(v, memo))
         return result
+
+
+class PolicyContainer:
+
+    def __init__(self, policy_root):
+        self.flat_policy_graph = []
+        self.policy_root = policy_root
+
+    def __getstate__(self):
+        def _flatten_graph(node, horizon):
+            self.flat_policy_graph.append((node.state, node))
+
+        traverse_graph_topologically(map_graph_by_depth(self.policy_root), _flatten_graph)
+        return self.__dict__
+
+    def __setstate__(self, container_state):
+        self.__dict__.update(container_state)
+
+        node_lookup = dict(self.flat_policy_graph)
+
+        for node_state, node in node_lookup:
+            node.predecessors = {node_lookup[pred_state] for pred_state in node.predecessor_states}
+            node._successors = {action: Distribution({node_lookup[state]: prob  for state, prob in node_dist})
+                                for action, node_dist in node.flat_successors}
+            node._succ_set = set(successor for successor_dist in node.successors.values()
+                                 for successor in successor_dist)
+            del node.predecessor_states
+            del node.flat_successors

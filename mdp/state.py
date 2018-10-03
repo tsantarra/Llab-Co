@@ -13,20 +13,20 @@ class State(Mapping):
         """
         Constructs the dict as normal.
         """
-        self.__dict = dict(*args, **kwargs)
-        self.__hash = None
+        self._dict = dict(*args, **kwargs)
+        self._hash = None
 
     def __repr__(self):
         """
         Returns a string representing the state.
         """
-        return 'State({\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self.__dict.items())) + '})'
+        return 'State({\t' + '\n\t'.join(str(key) + ':\t' + str(val) for key, val in sorted(self._dict.items())) + '})'
 
     def copy(self):
         """
         Returns a 'deep-ish' copy of the state instance.
         """
-        return self.__class__({key: copy(value) for key, value in self.__dict.items()})
+        return self.__class__({key: copy(value) for key, value in self._dict.items()})
 
     def __copy__(self):
         """
@@ -40,7 +40,7 @@ class State(Mapping):
         Returns a copy with updated state vars, as given by args.
         """
         new_copy = self.copy()
-        new_copy.__dict.update(args)
+        new_copy._dict.update(args)
         return new_copy
 
     def update_item(self, key, value):
@@ -48,39 +48,49 @@ class State(Mapping):
         Returns a copy with updated item.
         """
         new_copy = self.copy()
-        new_copy.__dict[key] = value
+        new_copy._dict[key] = value
         return new_copy
 
     def remove(self, keys):
         """
         Returns a copy with the specified keys removed.
         """
-        return State({key: self.__dict[key] for key in (self.__dict.keys() - set(keys))})
+        return State({key: self._dict[key] for key in (self._dict.keys() - set(keys))})
+
+    def __getstate__(self):
+        """Extract state to pickle."""
+        c = self.__dict__.copy()
+        del c['_hash']
+        return c
+
+    def __setstate__(self, d):
+        """Restore from pickled state."""
+        self.__dict__.update(d)
+        self._hash = None
 
     def __hash__(self):
         """
         Returns a hashable form of the state.
         """
-        if not self.__hash:
-            self.__hash = hash(tuple(self.__dict.items()))
-            # self.__hash = hash(frozenset(self.__dict.items()))
+        if not self._hash:
+            self._hash = hash(tuple(sorted(self._dict.items())))
 
-        return self.__hash
+        return self._hash
 
     def __getitem__(self, key):
-        return self.__dict[key]
+        return self._dict[key]
 
     def __iter__(self):
-        return iter(self.__dict)
+        return iter(self._dict)
 
     def __len__(self):
-        return len(self.__dict)
+        return len(self._dict)
 
     def __eq__(self, other):
-        return self.__dict == other.__dict
+        return self._dict == other._dict
 
     def __lt__(self, other):
-        return tuple(sorted(self.__dict.items())) < tuple(sorted(other.__dict.items()))
+        return tuple(sorted(self._dict.items())) < tuple(sorted(other._dict.items()))
 
     def contains_state(self, state):
         """
@@ -92,7 +102,7 @@ class State(Mapping):
         if self.keys() - state.keys():
             return False
         else:
-            return all(val == state[key] for key, val in self.__dict.items())
+            return all(val == state[key] for key, val in self._dict.items())
 
     def feature_intersection(self, state):
         """

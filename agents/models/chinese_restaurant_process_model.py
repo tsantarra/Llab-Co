@@ -107,6 +107,8 @@ class SparseChineseRestaurantProcessModel:
             # Result: Uniform update / no change.
             return prior[:]
 
+        policy_indices, probabilities = zip(*prior)
+
         state_index = self.__get_state_index(state)
         action_index = self.__get_action_index(observed_action)
 
@@ -117,7 +119,7 @@ class SparseChineseRestaurantProcessModel:
 
         # Calculate posterior
         known_policy_actions = self.policy_matrix[state_index]
-        resulting_probs = [probability * uniform_prob
+        probabilities = [probability * uniform_prob
                            if policy_index == -1 or policy_index not in known_policy_actions
                            else (probability
                                  if action_index == known_policy_actions[policy_index]
@@ -125,12 +127,9 @@ class SparseChineseRestaurantProcessModel:
                            for policy_index, probability in prior]
 
         # Normalize
-        total = sum(resulting_probs)
-        resulting_probs = [prob / total for prob in resulting_probs]
-
-        assert abs(sum(resulting_probs) - 1.0) < 10e-6, 'Posterior not normalized: ' + str(sum(resulting_probs))
-
-        return list(pair for pair in zip((policy for policy in prior), resulting_probs) if pair[1] > 0)
+        total = sum(probabilities)
+        return list((index, probability / total)
+                    for index, probability in zip(policy_indices, probabilities) if probability > 0)
 
     def batch_posterior(self, prior, state_action_pairs):
         """
@@ -162,7 +161,7 @@ class SparseChineseRestaurantProcessModel:
                              else (probability
                                    if probability > 0 and action_index == known_policy_actions[policy_index]
                                    else 0)
-                             for policy_index, probability in zip(policy_indices, probabilities)]
+                             for policy_index, probability in prior]
 
         # Normalize
         total = sum(probabilities)

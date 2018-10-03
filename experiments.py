@@ -16,6 +16,9 @@ from log_config import setup_logger
 import sys
 import logging
 import json
+import pickle
+import os.path
+import gzip
 
 logger = logging.getLogger()
 
@@ -96,7 +99,15 @@ def initialize_agents(scenario, num_initial_models, teammate_identity):
                 - Multiple SampledPolicyTeammate models (one partial policy each; also used for the actual teammate)
                 - One UniformPolicyTeammate model
     """
-    teammate_generator = SampledTeammateGenerator(scenario, teammate_identity)
+    precomputed_policy_graph_file = f'{type(scenario).__name__}.pickle'
+    if os.path.isfile(precomputed_policy_graph_file):
+        with gzip.open(precomputed_policy_graph_file, 'rb') as policy_file:
+            teammate_generator = pickle.load(policy_file)
+    else:
+        teammate_generator = SampledTeammateGenerator(scenario, teammate_identity)
+        with gzip.open(precomputed_policy_graph_file, 'wb') as policy_file:
+            pickle.dump(teammate_generator, policy_file, protocol=pickle.HIGHEST_PROTOCOL)
+
     chinese_restaurant_process = SparseChineseRestaurantProcessModel(teammate_identity, scenario)
     for _ in range(num_initial_models):
         chinese_restaurant_process.add_teammate_model(teammate_generator.sample_partial_policy())

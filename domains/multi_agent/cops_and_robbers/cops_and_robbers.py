@@ -42,7 +42,6 @@ def ad_hoc_carpy():
     # Local imports
     from domains.multi_agent.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
     from agents.modeling_agent import ModelingAgent
-    from agents.communication.communication_scenario import communicate
     from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
     from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import modeling_heuristic
 

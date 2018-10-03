@@ -50,8 +50,9 @@ class PolicyDistributionModel:
         return PolicyDistributionModel(self.scenario, self.identity, self.policy_distribution.copy(), self.crp_history)
 
     def __str__(self):
-        return '\t'.join('{teammate}: {prob} '.format(teammate=index, prob=prob)
-                         for index, prob in self.policy_distribution)
+        return f'PolicyDistributionModel(i={len(self.policy_distribution)})'
+        # '\t'.join('{teammate}: {prob} '.format(teammate=index, prob=prob)
+        #           for index, prob in self.policy_distribution)
 
     def __eq__(self, other):
         if len(self.policy_distribution) != len(other.policy_distribution):

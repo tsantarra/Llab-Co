@@ -17,7 +17,7 @@ from copy import copy
 class ModelingAgent:
     def __init__(self, scenario, identity, models, iterations=100, heuristic=None):
         # Modify scenario with agent-specific adjustments (via function wrappers).
-        self.__original_scenario = scenario
+        self._original_scenario = scenario
         self._set_scenario(scenario)
 
         self.identity = identity
@@ -29,7 +29,7 @@ class ModelingAgent:
         self._last_observation = None
 
     def copy(self):
-        return ModelingAgent(scenario=self.__original_scenario,
+        return ModelingAgent(scenario=self._original_scenario,
                              identity=self.identity,
                              models=self.model_state.copy(),
                              iterations=self.iterations,

@@ -11,36 +11,36 @@ from itertools import product
 
 class Action(Mapping):
     def __init__(self, agent_action_dict):
-        self.__dict = agent_action_dict.copy()
-        self.__hash = None
+        self._dict = agent_action_dict.copy()
+        self._hash = None
 
     def update(self, agent_actions):
-        new_dict = self.__dict.copy()
+        new_dict = self._dict.copy()
         new_dict.update(agent_actions)
         return Action(new_dict)
 
     def __getitem__(self, key):
-        return self.__dict[key]
+        return self._dict[key]
 
     def __iter__(self):
-        return iter(self.__dict)
+        return iter(self._dict)
 
     def __len__(self):
-        return len(self.__dict)
+        return len(self._dict)
 
     def __repr__(self):
-        return 'Action(' + str(self.__dict) + ')'
+        return 'Action(' + str(self._dict) + ')'
 
     def __eq__(self, other):
-        return self.__dict == other.__dict
+        return self._dict == other._dict
 
     def __lt__(self, other):
-        return tuple(sorted(self.__dict.items())) < tuple(sorted(other.__dict.items()))
+        return tuple(sorted(self._dict.items())) < tuple(sorted(other._dict.items()))
 
     def __hash__(self):
-        if not self.__hash:
-            self.__hash = hash(frozenset(self.__dict.items()))
-        return self.__hash
+        if not self._hash:
+            self._hash = hash(frozenset(self._dict.items()))
+        return self._hash
 
 
 class JointActionSpace:

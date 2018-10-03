@@ -1,6 +1,6 @@
 from mdp.graph_planner import search
 from mdp.distribution import Distribution
-from mdp.graph_utilities import map_graph_by_depth
+from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically
 
 from math import inf
 from random import choice
@@ -9,13 +9,18 @@ from collections import deque
 
 class SampledTeammateGenerator:
 
-    def __init__(self, scenario, identity, min_graph_iterations=inf):
+    def __init__(self, scenario, identity, policy_graph=None, min_graph_iterations=inf):
         self.identity = identity
         self.scenario = scenario
-        self._internal_root, self._depth_map, self._graph_map = \
-            self.setup_optimal_policy_graph(min_graph_iterations)
+        self._flat_policy_graph = []
 
-    def setup_optimal_policy_graph(self, graph_iterations=inf):
+        if policy_graph:
+            self._internal_root = policy_graph
+            self._graph_map = {node.state: node for node in map_graph_by_depth(self._internal_root)}
+        else:
+            self._internal_root, self._graph_map = self.setup_optimal_policy_graph(min_graph_iterations)
+
+    def setup_optimal_policy_graph(self, graph_iterations):
         """
         Creates a complete policy search over the state space of the scenario. Prunes out suboptimal joint actions,
         allowing for sampling from only optimal policies as needed.
@@ -29,7 +34,7 @@ class SampledTeammateGenerator:
             node._optimal_joint_actions = list(action for action, value in joint_action_values.items()
                                                 if abs(value - max_action_value) < 10e-5)
 
-        return root, depth_map, {node.state: node for node in depth_map}
+        return root, {node.state: node for node in depth_map}
 
     def sample_partial_policy(self):
         """
@@ -56,6 +61,28 @@ class SampledTeammateGenerator:
     def sample_teammate(self):
         return SampledPolicyTeammate(self.identity, self.sample_partial_policy(), self.scenario, self)
 
+    def __getstate__(self):
+        def _flatten_graph(node, horizon):
+            self._flat_policy_graph.append((node.state, node))
+
+        traverse_graph_topologically(map_graph_by_depth(self._internal_root), _flatten_graph)
+        return self.__dict__
+
+    def __setstate__(self, container_state):
+        self.__dict__.update(container_state)
+
+        node_lookup = dict(self._flat_policy_graph)
+
+        for node in node_lookup.values():
+            node.predecessors = {node_lookup[pred_state] for pred_state in node.predecessor_states}
+            node._successors = {action: Distribution({node_lookup[state]: prob  for state, prob in node_dist})
+                                for action, node_dist in node.flat_successors}
+            node._succ_set = set(successor for successor_dist in node.successors.values()
+                                 for successor in successor_dist)
+            del node.predecessor_states
+            del node.flat_successors
+
+        self._flat_policy_graph = []
 
 class SampledPolicyTeammate:
 
@@ -63,14 +90,16 @@ class SampledPolicyTeammate:
         self.identity = identity
         self.policy = policy
         self.scenario = scenario
-        self.__hash = None
-        self.__generator = generator
+        self._hash = None
+        self._generator = generator
 
     def get_action(self, state):
         if state in self.policy:
             return self.policy[state]
 
-        policy_node = self.__generator._graph_map[state]
+        assert all(key in self._generator._graph_map for key in self._generator._graph_map)
+
+        policy_node = self._generator._graph_map[state]
         if policy_node.action_space:
             return choice(policy_node._optimal_joint_actions)[self.identity]
 
@@ -87,10 +116,10 @@ class SampledPolicyTeammate:
         return self.identity == other.identity and self.policy == other.policy
 
     def __hash__(self):
-        if not self.__hash:
-            self.__hash = hash(frozenset(self.policy.items()))
+        if not self._hash:
+            self._hash = hash(frozenset(self.policy.items()))
 
-        return self.__hash
+        return self._hash
 
 
 if __name__ == '__main__':
