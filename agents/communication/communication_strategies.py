@@ -127,9 +127,13 @@ def weighted(heuristic):
         node_probs[policy_root] = 1.0
 
         def calculate_node_likelihoods(node, _):
+
             prob = node_probs[node]
             if not prune_fn(node, target_agent_name):
                 probs.append(prob)
+
+            if not node.action_space:  # terminal node
+                return
 
             other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                        for other_agent, other_agent_model in node.state['Models'].items()}
@@ -148,7 +152,7 @@ def weighted(heuristic):
 
         traverse_graph_topologically(depth_map, calculate_node_likelihoods, top_down=True)
 
-        results = heuristic(policy_root, target_agent_name, prune_fn, agent_identity)
+        results = heuristic(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma)
 
         return [(state, val * prob) for (state, val), prob in zip(results, probs)]
 
@@ -395,13 +399,12 @@ def immediate_approx_value_of_information(policy_root, depth_map, target_agent_n
             new_model = root_teammate_model.update(future_state, future_action)
             new_root_prediction = new_model.predict(root_state)
 
-            new_agent_predictions = {agent: teammate_predictions[agent] if agent != target_agent_name
-                                                                        else new_root_prediction
-                                     for agent in teammate_predictions}
+            new_agent_predictions = {agent: predictions if agent != target_agent_name else new_root_prediction
+                                     for agent, predictions in teammate_predictions.items()}
 
             new_action_values = individual_agent_action_values(agent_identity, new_agent_predictions,
-                                                               node.action_space,
-                                                               node.action_values())
+                                                               policy_root.action_space,
+                                                               policy_root.action_values())
 
             # sum_{responses} P(response) [V(new policy action, new knowledge) - V(old policy action, new knowledge)]
             value_of_info += future_action_prob * (max(new_action_values.values()) - new_action_values[old_policy_action])
