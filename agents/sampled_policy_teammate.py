@@ -50,11 +50,9 @@ class SampledTeammateGenerator:
             individual_action = choice(node._optimal_joint_actions)[self.identity]
             policy[node.state] = individual_action
 
-            queue.extend(successor for possible_joint_action
-                         in node.action_space  # .fix_actions({self.identity: individual_action})
+            queue.extend(successor for possible_joint_action, successor_dist in node.successors.items()
                          if possible_joint_action[self.identity] == individual_action
-                         for successor in node.successors[possible_joint_action]
-                         if successor.action_space and successor.state not in policy)
+                         for successor in successor_dist if successor.action_space and successor.state not in policy)
 
         return policy
 
@@ -83,6 +81,7 @@ class SampledTeammateGenerator:
             del node.flat_successors
 
         self._flat_policy_graph = []
+
 
 class SampledPolicyTeammate:
 

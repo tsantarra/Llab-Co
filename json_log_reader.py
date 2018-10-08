@@ -18,7 +18,9 @@ where
 from json import loads
 from os import listdir
 from os.path import isfile, join
+
 import warnings
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from pandas.io.json import read_json
@@ -26,13 +28,13 @@ with warnings.catch_warnings():
 
 
 data_dir = 'login.osgconnect.net/out/'
-paramlist = ['plan_iterations',
+paramlist = ['process_no',
+             'scenario_id',
+             'heuristic_id',
              'comm_branch_factor',
              'comm_iterations',
-             'scenario_id',
              'comm_cost',
-             'process_no',
-             'heuristic_id',
+             'plan_iterations',
              'experience',
              'trials']
 
@@ -52,14 +54,32 @@ def read(file):
 
 def read_all_files(directory):
     dataset = {}
+    skipped_files = []
     for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.endswith('.log')):
         params, df = read(join(directory, file))
 
-        grouped_df = df.groupby(['levelname', 'message'])
-        for group, groupdf in grouped_df:
+        if df['levelname'].isin(['ERROR']).any():
+            skipped_files.append(file)
+            continue
+
+        for group, groupdf in df.groupby(['levelname', 'message']):
             dataset[group] = groupdf if not group in dataset else concat([dataset[group], groupdf], sort=False)
 
+    if skipped_files:
+        print('Files skipped due to errors:\n' + '\n\t'.join(skipped_files))
+
     return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
+
+
+def get_files_with_errors(directory):
+    files_with_errors = []
+    for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.endswith('.log')):
+        _, df = read(join(directory, file))
+
+        if df['levelname'].isin(['ERROR']).any():
+            files_with_errors.append(file)
+
+    return files_with_errors
 
 
 def remove_nan_cols(dataframe):
@@ -67,8 +87,4 @@ def remove_nan_cols(dataframe):
 
 
 if __name__ == '__main__':
-    dataset = read_all_files('login.osgconnect.net/out/')
-
-
-
-
+    read_all_files(data_dir)
