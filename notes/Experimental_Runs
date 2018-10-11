@@ -32,3 +32,24 @@
 ('experience', [100]),
 ('trials', [50]),
 
+12 - test plan size/experience - NEW MAZE
+('process_no', [12]),
+('scenario_id', [1]),
+('heuristic_id', [1]),
+('comm_branch_factor', [3]),
+('comm_iterations', [100, 250, 500]),  # comm iterations
+('comm_cost', [1]),
+('plan_iterations', [100, 500, 1000]),  # plan iterations
+('experience', [0, 100, 1000]),         # experience
+('trials', [50]),
+
+13 - test every new heuristic - NEW MAZE
+('process_no', [13]),
+('scenario_id', [1]),
+('heuristic_id', list(range(12))),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),

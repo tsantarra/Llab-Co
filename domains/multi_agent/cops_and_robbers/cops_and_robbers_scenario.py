@@ -28,7 +28,7 @@ _path = './domains/multi_agent/cops_and_robbers/mazes/'
 
 class CopsAndRobbersScenario:
 
-    def __init__(self, filename='a.maze'):
+    def __init__(self, filename='simple.maze'):
         """
         Open the file and read in the maze configuration.
         """
@@ -36,13 +36,13 @@ class CopsAndRobbersScenario:
             maze_lines = maze_file.read().split('\n')
 
         self.initial_maze = {Location(row, col): char for row, line in enumerate(maze_lines) for col, char in enumerate(line)}
-        replace = set((AGENT, PARTNER, ROBBER))
-        self.maze = {loc : char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
+        replace = {AGENT, PARTNER, ROBBER}
+        self.maze = {loc: char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
 
         self._state_transition_cache = {}
 
     def agents(self):
-        return ['A','P']
+        return ['A', 'P']
 
     def heuristic(self, state):
         return 0
@@ -138,7 +138,7 @@ class CopsAndRobbersScenario:
             - Round limit hit. Currently 50.
             - Both agents and at least one robber are located in a single cell.
         """
-        if state['Round'] >= 13:
+        if state['Round'] > 6:
             return True
 
         return self.robber_caught(state)
@@ -155,7 +155,8 @@ class CopsAndRobbersScenario:
         """
         Utility is only granted upon successful completion of the task. It is given as the number of remaining rounds.
         """
-        return (50 - new_state['Round']) if self.robber_caught(new_state) else 0
+        return 100 if self.robber_caught(new_state) else 0
+        # return (50 - new_state['Round']) if self.robber_caught(new_state) else 0
 
     def _serialize_state(self, state):
         return json.dumps({k: tuple(v) if type(v) is Location else v for k, v in state.items()})

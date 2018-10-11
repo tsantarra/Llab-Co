@@ -66,7 +66,7 @@ def read_all_files(directory):
             dataset[group] = groupdf if not group in dataset else concat([dataset[group], groupdf], sort=False)
 
     if skipped_files:
-        print('Files skipped due to errors:\n' + '\n\t'.join(skipped_files))
+        print('Files skipped due to errors:\n\t' + '\n\t'.join(skipped_files))
 
     return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
 

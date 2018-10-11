@@ -347,7 +347,7 @@ class GraphNode:
         Returns a string representation of the node.
         """
         return "<" + "Val:" + "%.2f" % self.future_value + " Vis:" + str(self.visits) + ' ' + str(
-            self.complete) + ">" + '\n' + str(self.state) + '\n' + str(self.state)
+            self.complete) + ">" + '\n' + str(self.state)
 
     def finite_horizon_string(self, horizon=1, indent=0):
         """
