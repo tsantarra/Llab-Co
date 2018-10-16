@@ -53,3 +53,27 @@
 ('plan_iterations', [500]),
 ('experience', [100]),
 ('trials', [50]),
+
+14 - test heuristic baselines (random, next most likely state) - NEW MAZE
+('process_no', [14]),
+('scenario_id', [1]),
+('heuristic_id', [12, 13]),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
+
+15 - test other 'baseline' ---> no comms
+('process_no', [15]),
+('scenario_id', [1]),
+('heuristic_id', [0]),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [1000]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
+
+
