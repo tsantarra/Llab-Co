@@ -47,7 +47,6 @@ def read(file):
 
         df = read_json(json_file, lines=True, convert_dates=True, convert_axes=True)
         df = df.assign(**params)
-        df[['Trial']] = df[['Trial']].fillna(method='ffill')
 
     return params, df
 
@@ -58,15 +57,20 @@ def read_all_files(directory):
     for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.endswith('.log')):
         params, df = read(join(directory, file))
 
+        if df.empty:
+            skipped_files.append(file)
+            continue
+
         if df['levelname'].isin(['ERROR']).any():
             skipped_files.append(file)
             continue
 
+        df[['Trial']] = df[['Trial']].fillna(method='ffill')
         for group, groupdf in df.groupby(['levelname', 'message']):
             dataset[group] = groupdf if not group in dataset else concat([dataset[group], groupdf], sort=False)
 
     if skipped_files:
-        print('Files skipped due to errors:\n\t' + '\n\t'.join(skipped_files))
+        print('Files skipped:\n\t' + '\n\t'.join(skipped_files))
 
     return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
 

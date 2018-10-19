@@ -83,7 +83,7 @@
 """
 from math import log, exp
 from collections import defaultdict
-from random import randint
+from random import random
 from operator import mul
 from functools import reduce
 
@@ -420,7 +420,7 @@ def random_evaluation(policy_root, depth_map, target_agent_name, agent_identity,
     """
     Give random evaluations, as a comparison baseline.
     """
-    return [(node.state['World State'], randint()) for node in depth_map]
+    return [(node.state['World State'], random()) for node in depth_map]
 
 
 def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
@@ -430,7 +430,10 @@ def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, 
     node_probs = defaultdict(float)
     node_probs[policy_root] = 1.0
 
-    def evaluate(node, horizon):
+    def evaluate(node, _):
+        if prune_fn(node, target_agent_name):
+            return
+
         other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                    for other_agent, other_agent_model in node.state['Models'].items()}
         old_action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,

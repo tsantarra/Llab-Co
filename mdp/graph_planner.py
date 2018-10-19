@@ -140,7 +140,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
         node.action_counts[action] = 1
 
     # Calculate initial action values
-    node.calculate_action_values(force_recalculate=True)
+    node.calculate_action_values()
 
     return node
 
@@ -221,6 +221,9 @@ def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristi
 
     passes = iterations - root_node.visits + 1
     for step in count():
+        if step % 100 == 0:
+            print(str(step))
+
         # If entire tree has been searched, halt iteration.
         if root_node.complete or step > passes:
             break
@@ -275,28 +278,22 @@ class GraphNode:
 
     def action_values(self):
         if not self._action_values:
-            return self.calculate_action_values(force_recalculate=True)
+            return self.calculate_action_values()
         else:
             return self._action_values
 
-    def calculate_action_values(self, force_recalculate=True):
+    def calculate_action_values(self):
         """
         For every action, return the expectation over stochastic transitions to successors states.
         """
         if not self.successors:
             return {action: 0 for action in self.action_space}
 
-        if force_recalculate:
-            self._action_values = {
-                    action: sum(probability * (self.successor_transition_values[(successor.state, action)] +
-                                               successor.future_value)
-                                for successor, probability in successor_distribution.items())
-                    for action, successor_distribution in self.successors.items()}
-        else:  # todo - figure out why this occasionally incorrectly adjusts values
-            for action, succ_dist in self._successors.items():
-                for child, probability in succ_dist.items():
-                    if child._has_changed:
-                        self._action_values[action] += probability * (child.future_value - child._old_future_value)
+        self._action_values = {
+                action: sum(probability * (self.successor_transition_values[(successor.state, action)] +
+                                           successor.future_value)
+                            for successor, probability in successor_distribution.items())
+                for action, successor_distribution in self.successors.items()}
 
         return self._action_values
 

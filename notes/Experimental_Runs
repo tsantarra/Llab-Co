@@ -76,4 +76,13 @@
 ('experience', [100]),
 ('trials', [50]),
 
-
+16 - retest all heuristics, including baselines
+('process_no', [13]),
+('scenario_id', [1]),
+('heuristic_id', list(range(14))),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),

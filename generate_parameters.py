@@ -4,12 +4,12 @@ from collections import OrderedDict
 
 def generate_args():
     vals = OrderedDict([
-        ('process_no', [15]),
+        ('process_no', [13]),
         ('scenario_id', [1]),
-        ('heuristic_id', [0]),
+        ('heuristic_id', list(range(14))),
         ('comm_branch_factor', [3]),
         ('comm_iterations', [100]),
-        ('comm_cost', [1000]),
+        ('comm_cost', [0]),
         ('plan_iterations', [500]),
         ('experience', [100]),
         ('trials', [50]),

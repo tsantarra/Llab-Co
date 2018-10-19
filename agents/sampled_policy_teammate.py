@@ -1,3 +1,6 @@
+from functools import reduce
+from operator import mul
+
 from mdp.graph_planner import search
 from mdp.distribution import Distribution
 from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically
@@ -19,6 +22,24 @@ class SampledTeammateGenerator:
             self._graph_map = {node.state: node for node in map_graph_by_depth(self._internal_root)}
         else:
             self._internal_root, self._graph_map = self.setup_optimal_policy_graph(min_graph_iterations)
+
+        self.policy_stats()
+
+    def policy_stats(self):
+        sub_policy_counts = {}
+
+        def count_policies(node, _):
+            if not node.action_space:
+                sub_policy_counts[node] = 1
+                return
+            sub_policy_counts[node] = sum(sub_policy_counts[successor]
+                                          for joint_action in node._optimal_joint_actions
+                                          for successor in node.successors[joint_action])
+
+        map = map_graph_by_depth(self._internal_root)
+        traverse_graph_topologically(map, count_policies, top_down=False)
+
+        print('Optimal trajectories: ' + str(sub_policy_counts[self._internal_root]))
 
     def setup_optimal_policy_graph(self, graph_iterations):
         """
@@ -120,6 +141,3 @@ class SampledPolicyTeammate:
 
         return self._hash
 
-
-if __name__ == '__main__':
-    print(inf)
