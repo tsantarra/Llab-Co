@@ -12,7 +12,7 @@ from domains.multi_agent.recipe_sat.recipe_sat_scenario import RecipeScenario
 from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import CopsAndRobbersScenario
 
 from collections import namedtuple
-from log_config import setup_logger
+from utils.log_config import setup_logger
 import sys
 import logging
 import json
