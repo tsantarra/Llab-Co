@@ -12,10 +12,9 @@ def centralized_carpy():
     """
     # Local imports
     from mdp.graph_planner import search, greedy_action
-    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import base_heuristic
 
     # Initialize map
-    scenario = CopsAndRobbersScenario('./mazes/a.maze')
+    scenario = CopsAndRobbersScenario('a.maze', max_rounds=10)
     state = scenario.initial_state()
     print('Initial state:\n', state)
 
@@ -23,7 +22,7 @@ def centralized_carpy():
     node = None
     while not scenario.end(state):
         # Plan
-        node = search(state, scenario, 1000, heuristic=base_heuristic, root_node=node)
+        node = search(state, scenario, 1000, heuristic=scenario.heuristic, root_node=node)
         action = greedy_action(node)
 
         # Transition
@@ -43,12 +42,11 @@ def ad_hoc_carpy():
     from domains.multi_agent.cops_and_robbers.teammate_models import build_experts_model, AstarTeammate
     from agents.modeling_agent import ModelingAgent
     from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
-    from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import modeling_heuristic
 
     from random import choice
 
     # Initialize map
-    scenario = CopsAndRobbersScenario('./mazes/a.maze')
+    scenario = CopsAndRobbersScenario('a.maze')
     state = scenario.initial_state()
     logging.debug('Initial state:\n' + str(state))
 
@@ -61,8 +59,7 @@ def ad_hoc_carpy():
 
     agent = ModelingAgent(scenario=scenario,
                           identity='A',
-                          models={'P': teammate_model},
-                          heuristic=modeling_heuristic)
+                          models={'P': teammate_model})
     agents = {'A': agent, 'P': teammate}
 
     # Main loop
@@ -96,8 +93,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     try:
-        #centralized_carpy()
-        ad_hoc_carpy()
+        centralized_carpy()
+        #ad_hoc_carpy()
 
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')

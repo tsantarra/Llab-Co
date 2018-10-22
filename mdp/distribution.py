@@ -8,9 +8,7 @@ class Distribution(dict):
         """
         Initializes state distribution from list or given distributions.
         """
-        if type(args) is list:
-            super(Distribution, self).__init__({item: prob for item, prob in args})
-        elif args:
+        if args:
             super(Distribution, self).__init__(args)
         else:
             super(Distribution, self).__init__()
@@ -74,7 +72,7 @@ class Distribution(dict):
         return item
 
     def copy(self):
-        return Distribution({**self})
+        return Distribution(self.items()) #{**self})
 
     def __repr__(self):
         return '\nDistribution {\n' + '\n'.join(str(key) + ' P=' + str(val)

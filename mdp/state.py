@@ -26,7 +26,11 @@ class State(Mapping):
         """
         Returns a 'deep-ish' copy of the state instance.
         """
-        return self.__class__({key: copy(value) for key, value in self._dict.items()})
+        return self.__class__(self._dict.items())
+        return self.__class__(( (key, value.copy()
+                                 if hasattr(value, 'copy')
+                                 else (value.__copy__() if hasattr(value, '__copy__') else copy(value)))
+                                 for key, value in self._dict.items() ))
 
     def __copy__(self):
         """
@@ -47,6 +51,9 @@ class State(Mapping):
         """
         Returns a copy with updated item.
         """
+        if key in self._dict:
+            return self.__class__(( (k, copy(v)) if key != k else (k, value) for k, v in self._dict.items() ))
+
         new_copy = self.copy()
         new_copy._dict[key] = value
         return new_copy

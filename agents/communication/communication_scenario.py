@@ -6,7 +6,7 @@ policy, that is, a series of teammate policy queries that will eventually shape 
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.action import Action
-from mdp.graph_planner import search, greedy_action
+from mdp.graph_planner import search, greedy_action, GraphNode
 from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically
 from agents.modeling_agent import get_max_action, single_agent_policy_backup, individual_agent_action_values
 from agents.communication.communicating_teammate_model import CommunicatingTeammateModel
@@ -43,10 +43,9 @@ class CommScenario:
         self._comm_cost = comm_cost  # Cost per instance of communication
 
         # Helpful references
-        self.initial_state_queries = State(
-            {Query(name, comm_state): action for name, model in initial_model_state.items()
-             for comm_state, action in model.previous_communications.items()})
-        self._initial_policy_state = State({'Queries': State(self.initial_state_queries), 'End?': False})
+        self._initial_policy_state = State({'Queries': State( ( ( agent, State(model.previous_communications.items()) )
+                                                               for agent, model in initial_model_state.items())  ),
+                                            'End?': False})
 
         # Caches of commonly computed items
         self._action_cache = {}
@@ -95,7 +94,7 @@ class CommScenario:
 
         # Termination action
         if query_action == 'Halt':
-            return Distribution({policy_state.update({'End?': True}): 1.0})
+            return Distribution({policy_state.update_item('End?', True): 1.0})
 
         # The transition probabilities are dependent on the model formed by all current queries.
         target_agent_name, query_world_state = query_action
@@ -103,14 +102,12 @@ class CommScenario:
         predicted_responses = model_state[target_agent_name].predict(query_world_state)
 
         # Consider all possible results
-        resulting_states = Distribution()
-        for target_agent_action, probability in predicted_responses.items():
-            # Add query to current queries (as a copy)
-            new_query_set = policy_state['Queries'].update({query_action: target_agent_action})
-            new_policy_state = policy_state.update({'Queries': new_query_set})
-
-            # Construct new policy state
-            resulting_states[new_policy_state] = probability
+        resulting_states = Distribution([ (self._update_policy_queries(policy_state,
+                                                                       target_agent_name,
+                                                                       query_action.state,
+                                                                       action),
+                                           probability)
+                                           for action, probability in predicted_responses.items() ])
 
         # Sanity check.
         assert abs(sum(predicted_responses.values()) - 1.0) < 10e-6, \
@@ -205,7 +202,7 @@ class CommScenario:
         # Call provided query selector function
         def prune_query(node, target_agent_name):
             return node.scenario_end or \
-                   Query(target_agent_name, node.state['World State']) in policy_state['Queries'] or \
+                   node.state['World State'] in policy_state['Queries'][target_agent_name] or \
                    not node.action_space or \
                    len(node.action_space.individual_actions(target_agent_name)) <= 1
 
@@ -306,12 +303,40 @@ class CommScenario:
         assert all(type(model) is CommunicatingTeammateModel for model in old_model_state.values()), \
             'Cannot update non-communicating teammate models with policy queries. '
         # Update the model state given the query information
-        new_model_state = old_model_state
-        for query, response in policy_state['Queries'].items():
-            new_model = new_model_state[query.agent].communicated_policy_update([(query.state, response)])
-            new_model_state = new_model_state.update_item(query.agent, new_model)  # we can cache this
 
-        return new_model_state
+        queries_by_agent = policy_state['Queries']
+        return old_model_state.update(( (name, model.communicated_policy_update(queries_by_agent[name].items()))
+                                         for name, model in old_model_state.items() ))
+
+    def _update_policy_queries(self, policy_state, target_agent_name, state, action):
+        # Add query to current queries
+        old_agent_query_sets = policy_state['Queries']  # agent: queries (as state/dict)
+        new_query_set = old_agent_query_sets[target_agent_name].update_item(state, action)  # update queries (as state)
+        new_agent_query_sets = old_agent_query_sets.update_item(target_agent_name, new_query_set)  # update agent: Qs
+
+        return policy_state.update_item('Queries', new_agent_query_sets)  # update policy state
+
+    def _custom_copy_node(self, original_node, predecessor=None):
+        # Info we copy
+        new_node = GraphNode(original_node.state, original_node.scenario_end, predecessor)
+        new_node.complete = original_node.complete
+        new_node.action_space = original_node.action_space
+        new_node.action_counts = original_node.action_counts
+        new_node.optimal_action = original_node.optimal_action
+        new_node.visits = original_node.visits
+        new_node.future_value = original_node.future_value
+        new_node._has_changed = original_node._has_changed
+        new_node._old_future_value = original_node._old_future_value
+        new_node._action_values = original_node._action_values
+
+        # Info we change
+        new_node.successors = {}
+        new_node.successor_transition_values = {}
+        new_node._incomplete_action_nodes = {}
+
+        # Info we add
+        new_node.__original_node = original_node
+        return new_node
 
     def _get_policy_graph(self, policy_state):
         """
@@ -319,12 +344,7 @@ class CommScenario:
         a single copy of the policy graph for each policy state. A new policy calculation is needed
         for each step of the communicative search model anyway.
         """
-        new_root = copy(self._policy_root)
-        new_root.__original_node = self._policy_root
-        new_root.predecessors = set()
-        new_root.successors = {}
-        new_root.successor_transition_values = {}
-        new_root._incomplete_action_nodes = {}
+        new_root = self._custom_copy_node(self._policy_root)
         new_root.state = new_root.state.update_item('Models', self._update_model_state(new_root.state['Models'],
                                                                                        policy_state))
 
@@ -366,12 +386,8 @@ class CommScenario:
                         new_successor.predecessors.add(node)
                     else:
                         # need to make new copy of successor
-                        new_successor = orig_successor.copy()
-                        new_successor.predecessors = {node}
+                        new_successor = self._custom_copy_node(orig_successor, node)
                         new_successor.state = new_succ_state
-                        new_successor.successors = {}
-                        new_successor.successor_transition_values = {}
-                        new_successor._incomplete_action_nodes = {}
 
                         # add to map and process queue
                         graph_map_by_state[new_succ_state] = new_successor
@@ -486,9 +502,9 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
                                          'Response': json.dumps(response), 'Trial': trial})
 
         # Update position in policy state graph
-        new_query_state = current_policy_state['Queries'].update({query_action: response})
-        new_policy_state = current_policy_state.update({'Queries': new_query_state})
-        comm_graph_node = comm_graph_node.find_matching_successor(new_policy_state, action=action)
+        new_query_state = comm_scenario._update_policy_queries(current_policy_state, query_action.agent,
+                                                               query_action.state, response)
+        comm_graph_node = comm_graph_node.find_matching_successor(new_query_state, action=action)
 
         # Check if graph ends
         if not comm_graph_node.successors:

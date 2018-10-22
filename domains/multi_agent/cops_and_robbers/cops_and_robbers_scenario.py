@@ -18,6 +18,7 @@ from mdp.state import State
 from mdp.action import JointActionSpace
 
 import json
+import os
 
 WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT = \
     '*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<'
@@ -28,10 +29,12 @@ _path = './domains/multi_agent/cops_and_robbers/mazes/'
 
 class CopsAndRobbersScenario:
 
-    def __init__(self, filename='simple.maze'):
+    def __init__(self, filename='simple.maze', max_rounds=6, reward=100):
         """
         Open the file and read in the maze configuration.
         """
+
+        cwd = os.getcwd()
         with open(_path + filename, 'r') as maze_file:
             maze_lines = maze_file.read().split('\n')
 
@@ -40,12 +43,11 @@ class CopsAndRobbersScenario:
         self.maze = {loc: char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
 
         self._state_transition_cache = {}
+        self.max_rounds = max_rounds
+        self.success_reward = reward
 
     def agents(self):
         return ['A', 'P']
-
-    def heuristic(self, state):
-        return 0
 
     def initial_state(self):
         """
@@ -138,7 +140,7 @@ class CopsAndRobbersScenario:
             - Round limit hit. Currently 50.
             - Both agents and at least one robber are located in a single cell.
         """
-        if state['Round'] > 6:
+        if state['Round'] > self.max_rounds:
             return True
 
         return self.robber_caught(state)
@@ -155,8 +157,7 @@ class CopsAndRobbersScenario:
         """
         Utility is only granted upon successful completion of the task. It is given as the number of remaining rounds.
         """
-        return 100 if self.robber_caught(new_state) else 0
-        # return (50 - new_state['Round']) if self.robber_caught(new_state) else 0
+        return self.success_reward if self.robber_caught(new_state) else 0
 
     def _serialize_state(self, state):
         return json.dumps({k: tuple(v) if type(v) is Location else v for k, v in state.items()})
@@ -201,7 +202,7 @@ class CopsAndRobbersScenario:
             tie_prob = 1/len(ties)
             for result_state, state_prob in resulting_distribution.items():
                 for target, _, _ in ties:
-                    new_state = result_state.update({robber: target})  # state.update() returns a modified copy
+                    new_state = result_state.update_item(robber, target)  # state.update() returns a modified copy
                     new_state_dist[new_state] = tie_prob * state_prob
             resulting_distribution = new_state_dist
 
@@ -229,27 +230,23 @@ class CopsAndRobbersScenario:
                                                                               round=state['Round'])
         return string
 
+    def heuristic(self, state):
+        """ If any robber is within (Manhattan) distance of both cops, return an optimistic reward. """
+        if self.end(state):
+            return self.success_reward if self.robber_caught(state) else 0
 
-def base_heuristic(state):
-    """
-    A simple non-admissable heuristic: find the robber who has the smallest distance to the farthest agent.
-    Estimate: 50 (max rounds) - current round - the distance
-    """
-    agent, partner = state['A'], state['P']
-    robbers = [robloc for rob, robloc in state.items() if 'Robber' in rob]
+        agent_loc = state['A']
+        partner_loc = state['P']
+        rounds_left = self.max_rounds - state['Round']
 
-    # Use Manhattan distance to give a sense of how quickly the agents may capture the nearest robber.
-    def dist(loc1, loc2): return abs(loc1[0] - loc2[0]) + abs(loc1[1] - loc2[1])
-    closest = min(max(dist(agent, rob), dist(partner, rob)) for rob in robbers)
+        if any(self.distance(agent_loc, r_loc) <= rounds_left and self.distance(partner_loc, r_loc) <= rounds_left
+               for r, r_loc in state.items() if r.startswith('Rob')):
+            return self.success_reward
 
-    return 50 - (state['Round'] + closest)
+        return 0
 
+    def distance(self, loc1, loc2):
+        return abs(loc1.col - loc2.col) + abs(loc1.row - loc2.row)
 
-def modeling_heuristic(modeler_state):
-    """
-    As the modeling agent has extra state information, this heuristic simply calls the base heuristic
-    function ont he appropriate world-only state representation.
-    """
-    return base_heuristic(modeler_state['World State'])
 
 

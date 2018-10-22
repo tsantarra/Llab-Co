@@ -47,42 +47,26 @@ class JointActionSpace:
     def __init__(self, individual_agent_actions):
         self.agent_actions = {name: actions if type(actions) is set else set(actions)
                               for name, actions in individual_agent_actions.items()}
-        self.joint_actions = self.all_joint_actions()
-
-    def all_joint_actions(self):
-        action_lists = [[(name, action) for action in action_list] for name, action_list in self.agent_actions.items()]
-
-        # potentially make this a generator so we do not need to enumerate all joint actions first
-        return [Action(dict(combination)) for combination in product(*action_lists)]
 
     def individual_actions(self, agent_name=None):
-        if agent_name:
-            return self.agent_actions[agent_name]
-        else:
-            return self.agent_actions
+        return self.agent_actions[agent_name] if agent_name else self.agent_actions
 
     def fix_actions(self, fixed_actions):
         assert all(key in self.agent_actions for key in fixed_actions), 'Missing agent while fixing actions:' + \
                 str(fixed_actions) + ' ' + str(self.agent_actions)
+
         return JointActionSpace({**self.agent_actions, **fixed_actions})
 
     def constrain(self, fixed_agent_actions):
         new_individual_actions = self.agent_actions.copy()
         new_individual_actions.update(fixed_agent_actions)
+
         return JointActionSpace(new_individual_actions)
 
     def __iter__(self):
-        return iter(self.joint_actions)
-
-    def __getitem__(self, item):
-        """ Used for indexing (e.g. actions[2])."""
-        return self.joint_actions[item]
-
-    def __len__(self):
-        return len(self.joint_actions)
+        action_lists = [[(name, action) for action in action_list] for name, action_list in self.agent_actions.items()]
+        return (Action(dict(combination)) for combination in product(*action_lists))
 
     def __str__(self):
         return str(self.agent_actions)
 
-    def __bool__(self):
-        return len(self.joint_actions) != 0

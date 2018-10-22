@@ -465,7 +465,7 @@ def create_myopic_heuristic(policy_root, depth_map, target_agent_name, agent_ide
                 return action_value
 
             new_model = model.communicated_policy_update([(query, action)])
-            new_model_state = policy_root.state['Models'].update({agent: new_model})
+            new_model_state = policy_root.state['Models'].update_item(agent, new_model)
             policy = {}
             #### Update this
             expected_util = recursive_traverse_policy_graph(node=policy_root, node_values={},

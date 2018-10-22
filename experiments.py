@@ -156,11 +156,11 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
 
         # Communicate
         action, _, cost = communicate(scenario, agent, agent_dict,
-                                comm_planning_iterations=comm_iterations,
-                                comm_heuristic=comm_heuristic,
-                                branching_factor=comm_branch_factor,
-                                comm_cost=comm_cost,
-                                trial=trial)
+                                      comm_planning_iterations=comm_iterations,
+                                      comm_heuristic=comm_heuristic,
+                                      branching_factor=comm_branch_factor,
+                                      comm_cost=comm_cost,
+                                      trial=trial)
         utility -= cost
         print('Utility spent in communication: ' + str(cost))
         new_joint_action = joint_action.update({agent_name: action})

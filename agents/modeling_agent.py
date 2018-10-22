@@ -23,7 +23,8 @@ class ModelingAgent:
         self.identity = identity
         self.model_state = State(models)
         self.iterations = iterations
-        self.heuristic = heuristic
+        self.heuristic = heuristic if heuristic else \
+            (modeler_heuristic(scenario.heuristic) if hasattr(scenario, 'heuristic') else lambda s: 0)
         self.policy_graph_root = None
         self.policy_backup = partial(single_agent_policy_backup, agent=self.identity)
         self._last_observation = None
@@ -92,7 +93,7 @@ class ModelingAgent:
 
             # Calculate new successor state
             old_succ_state = successor_node.state
-            new_succ_state = old_succ_state.update({'Models': new_model_state})
+            new_succ_state = old_succ_state.update_item([('Models', new_model_state)])
 
             # Update transition value table for new states.
             node.successor_transition_values[(new_succ_state, joint_action)] = \
@@ -200,10 +201,10 @@ def modeler_transition(transition_fn):
         resulting_combined_state_distribution = Distribution()
         for new_world_state, probability in resulting_states.items():
             # Update all models with individual actions from joint_action
-            new_model_state = old_model_state.update({agent_name:
-                                                          old_model_state[agent_name].update(old_world_state,
-                                                                                             joint_action[agent_name])
-                                                      for agent_name in old_model_state})
+            new_model_state = old_model_state.update(( (agent_name,
+                                                          model.update(old_world_state,
+                                                                                             joint_action[agent_name]))
+                                                      for agent_name, model in old_model_state.items() ))
 
             resulting_combined_state = State({'World State': new_world_state, 'Models': new_model_state})
             resulting_combined_state_distribution[resulting_combined_state] = probability
@@ -234,3 +235,10 @@ def modeler_actions(actions_fn):
         return actions_fn(modeler_state['World State'])
 
     return new_actions
+
+
+def modeler_heuristic(heuristic_fn):
+    def new_heuristic(modeler_state):
+        return heuristic_fn(modeler_state['World State'])
+
+    return new_heuristic

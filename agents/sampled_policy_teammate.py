@@ -46,7 +46,8 @@ class SampledTeammateGenerator:
         Creates a complete policy search over the state space of the scenario. Prunes out suboptimal joint actions,
         allowing for sampling from only optimal policies as needed.
         """
-        root = search(self.scenario.initial_state(), self.scenario, graph_iterations)
+        root = search(self.scenario.initial_state(), self.scenario, graph_iterations,
+                      heuristic=self.scenario.heuristic if hasattr(self.scenario, 'heuristic') else lambda s: 0)
         depth_map = map_graph_by_depth(root)
 
         for node in (n for n in depth_map if n.action_space):

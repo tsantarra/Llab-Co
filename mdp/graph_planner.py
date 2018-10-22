@@ -221,9 +221,6 @@ def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristi
 
     passes = iterations - root_node.visits + 1
     for step in count():
-        if step % 100 == 0:
-            print(str(step))
-
         # If entire tree has been searched, halt iteration.
         if root_node.complete or step > passes:
             break
@@ -253,14 +250,14 @@ class GraphNode:
         Initializes tree node with relevant information.
         """
         # State and action
-        self.state = state  # Current game state (clone of state instance).
-        self.scenario_end = terminal  #scenario.end(state)
-        self.complete = self.scenario_end  # A label to avoid sampling in complete subgraphs.
-        self.action_space = None  # scenario.actions(state)
+        self.state = state                  # Current game state (clone of state instance).
+        self.scenario_end = terminal
+        self.complete = self.scenario_end   # A label to avoid sampling in complete subgraphs.
+        self.action_space = None            # scenario.actions(state)
 
         # Due to the dynamic programming approach, allow multiple predecessors.
         self.predecessors = {predecessor} if predecessor else set()
-        self._successors = {}  # Action: child node dictionary to keep links to successors
+        self._successors = {}               # Action: child node dictionary to keep links to successors
         self._succ_set = set()
         self.successor_transition_values = {}
 
@@ -277,10 +274,7 @@ class GraphNode:
         self._old_future_value = self.future_value
 
     def action_values(self):
-        if not self._action_values:
-            return self.calculate_action_values()
-        else:
-            return self._action_values
+        return self.calculate_action_values() if not self._action_values else self._action_values
 
     def calculate_action_values(self):
         """
@@ -399,6 +393,9 @@ class GraphNode:
     def copy(self):
         return copy(self)
 
+    def __copy__(self):
+        return copy(self)
+
     def copy_subgraph(self):
         # two passes -> create new nodes, then replace links between nodes
         cloned_nodes = {}
@@ -446,7 +443,7 @@ class PolicyContainer:
         self.policy_root = policy_root
 
     def __getstate__(self):
-        def _flatten_graph(node, horizon):
+        def _flatten_graph(node, _):
             self.flat_policy_graph.append((node.state, node))
 
         traverse_graph_topologically(map_graph_by_depth(self.policy_root), _flatten_graph)
