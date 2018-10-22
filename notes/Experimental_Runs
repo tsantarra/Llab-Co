@@ -86,3 +86,31 @@
 ('plan_iterations', [500]),
 ('experience', [100]),
 ('trials', [50]),
+
+17 - Rerun 15 and 16 with action value fixes, optimizations, and heuristic
+17 1 0 3 100 0 500 100 50
+17 1 1 3 100 0 500 100 50
+17 1 2 3 100 0 500 100 50
+17 1 3 3 100 0 500 100 50
+17 1 4 3 100 0 500 100 50
+17 1 5 3 100 0 500 100 50
+17 1 6 3 100 0 500 100 50
+17 1 7 3 100 0 500 100 50
+17 1 8 3 100 0 500 100 50
+17 1 9 3 100 0 500 100 50
+17 1 10 3 100 0 500 100 50
+17 1 11 3 100 0 500 100 50
+17 1 12 3 100 0 500 100 50
+17 1 13 3 100 0 500 100 50
+17 1 0 3 1 1000 500 100 50
+
+18 - Test all heuristics on a.maze (12 rounds)
+('process_no', [18]),
+('scenario_id', [1]),
+('heuristic_id', list(range(14))),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
