@@ -365,7 +365,7 @@ class CommScenario:
                                   for other_agent, other_agent_model in node.state['Models'].items()}
             agent_actions = {agent: set((action for action, prob in predictions.items() if prob > 0.0))
                              for agent, predictions in node.__predictions.items()}
-            node.action_space = original.action_space.constrain(agent_actions)  # JointActionSpace(agent_actions)
+            node.action_space = original.action_space.fix_actions(agent_actions)  # JointActionSpace(agent_actions)
 
             # for only actions in the new action space, consider successors (effectively pruning when possible)
             #   if in graph map, only update predecessors

@@ -39,7 +39,7 @@ class Action(Mapping):
 
     def __hash__(self):
         if not self._hash:
-            self._hash = hash(frozenset(self._dict.items()))
+            self._hash = hash(frozenset(sorted(self._dict.items())))
         return self._hash
 
 
@@ -56,12 +56,6 @@ class JointActionSpace:
                 str(fixed_actions) + ' ' + str(self.agent_actions)
 
         return JointActionSpace({**self.agent_actions, **fixed_actions})
-
-    def constrain(self, fixed_agent_actions):
-        new_individual_actions = self.agent_actions.copy()
-        new_individual_actions.update(fixed_agent_actions)
-
-        return JointActionSpace(new_individual_actions)
 
     def __iter__(self):
         action_lists = [[(name, action) for action in action_list] for name, action_list in self.agent_actions.items()]

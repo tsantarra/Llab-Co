@@ -118,11 +118,10 @@ class SampledPolicyTeammate:
         if state in self.policy:
             return self.policy[state]
 
-        assert all(key in self._generator._graph_map for key in self._generator._graph_map)
-
         policy_node = self._generator._graph_map[state]
-        if policy_node.action_space:
-            return choice(policy_node._optimal_joint_actions)[self.identity]
+        assert policy_node.action_space, 'No action space for state. ' + str(state)
+
+        return choice(policy_node._optimal_joint_actions)[self.identity]
 
     def predict(self, state):
         return Distribution({action: 1.0 if action == self.policy[state] else 0

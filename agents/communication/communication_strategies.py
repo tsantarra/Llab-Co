@@ -420,7 +420,7 @@ def random_evaluation(policy_root, depth_map, target_agent_name, agent_identity,
     """
     Give random evaluations, as a comparison baseline.
     """
-    return [(node.state['World State'], random()) for node in depth_map]
+    return [(node.state['World State'], random()) for node in depth_map if not prune_fn(node, target_agent_name)]
 
 
 def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):

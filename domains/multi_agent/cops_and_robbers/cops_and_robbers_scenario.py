@@ -33,8 +33,6 @@ class CopsAndRobbersScenario:
         """
         Open the file and read in the maze configuration.
         """
-
-        cwd = os.getcwd()
         with open(_path + filename, 'r') as maze_file:
             maze_lines = maze_file.read().split('\n')
 
