@@ -114,3 +114,14 @@
 ('plan_iterations', [500]),
 ('experience', [100]),
 ('trials', [50]),
+
+19 - Test all heuristics on a.maze (12 rounds), CRP alpha=0
+('process_no', [19]),
+('scenario_id', [1]),
+('heuristic_id', list(range(14))),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
