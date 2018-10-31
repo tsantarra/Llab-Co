@@ -5,7 +5,7 @@ from collections import defaultdict
 
 class SparseChineseRestaurantProcessModel:
 
-    def __init__(self, identity, scenario, alpha=1):
+    def __init__(self, identity, scenario, alpha=0):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
@@ -128,8 +128,8 @@ class SparseChineseRestaurantProcessModel:
 
         # Normalize
         total = sum(probabilities)
-        return list((index, probability / total)
-                    for index, probability in zip(policy_indices, probabilities) if probability > 0)
+        return list((index, probability / total if total > 0 else 1)
+                    for index, probability in zip(policy_indices, probabilities) if probability > 0 or index == -1)
 
     def batch_posterior(self, prior, state_action_pairs):
         """
@@ -165,8 +165,8 @@ class SparseChineseRestaurantProcessModel:
 
         # Normalize
         total = sum(probabilities)
-        return list((index, probability / total)
-                    for index, probability in zip(policy_indices, probabilities) if probability > 0)
+        return list((index, probability / total if total > 0 else 1)
+                    for index, probability in zip(policy_indices, probabilities) if probability > 0 or index == -1)
 
     def get_action_distribution(self, state, policy_distribution):
         if len(policy_distribution) == 1 or state not in self.state_to_index:

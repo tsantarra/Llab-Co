@@ -4,6 +4,8 @@ implementation will use 'Trial-based Heuristic Tree Search for Finite Horizon MD
 a future version may accept any solver with a custom backup function (required for predicting the actions
 of the teammate via the model).
 """
+from collections import defaultdict
+
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import search
@@ -140,15 +142,12 @@ def individual_agent_action_values(agent_name, other_agent_predictions, joint_ac
     Given an association of values with all joint actions available, return the expectation over each individual agent
     action.
     """
-
-    agent_actions = joint_action_space.individual_actions(agent_name)
-    agent_action_values = {action: 0 for action in agent_actions}
-    for agent_action in agent_actions:
-        for joint_action in joint_action_space.fix_actions({agent_name: [agent_action]}):
-            agent_action_values[agent_action] += joint_action_values[joint_action] * \
-                                                 reduce(mul,
-                                                        (other_agent_predictions[other_agent][joint_action[other_agent]]
-                                                         for other_agent in other_agent_predictions))
+    agent_action_values = defaultdict(float)
+    for joint_action, value in joint_action_values.items():
+        agent_action_values[joint_action[agent_name]] += value * \
+                                             reduce(mul,
+                                                    (other_agent_predictions[other_agent][joint_action[other_agent]]
+                                                     for other_agent in other_agent_predictions))
 
     return agent_action_values
 

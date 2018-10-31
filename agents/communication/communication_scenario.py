@@ -107,7 +107,7 @@ class CommScenario:
                                                                        query_action.state,
                                                                        action),
                                            probability)
-                                           for action, probability in predicted_responses.items() ])
+                                           for action, probability in predicted_responses.items() if probability > 0])
 
         # Sanity check.
         assert abs(sum(predicted_responses.values()) - 1.0) < 10e-6, \
@@ -170,30 +170,30 @@ class CommScenario:
         def compute_policy_ev_update(node, _):
             # leaf check
             if not node.successors:
-                node.__original_policy_ev = node.future_value
+                node._original_policy_ev = node.future_value
                 return
 
             # New joint action values using original policy values (not equal to the new successor future values)
             new_action_values = {
                 joint_action: sum(
                     probability * (node.successor_transition_values[(successor.state, joint_action)]
-                                   + successor.__original_policy_ev)
+                                   + successor._original_policy_ev)
                     for successor, probability in successor_distribution.items())
                 for joint_action, successor_distribution in node.successors.items()}
 
             # new individual action values
-            new_individual_action_values = individual_agent_action_values(self._agent_identity, node.__predictions,
+            new_individual_action_values = individual_agent_action_values(self._agent_identity, node._predictions,
                                                                           node.action_space,
                                                                           new_action_values)
 
             # Store policy evs
-            node.__original_policy_ev = new_individual_action_values[node.__original_node.optimal_action]
+            node._original_policy_ev = new_individual_action_values[node._original_node.optimal_action]
             return
 
         # Compute EV of old policy given new predictions (in new node graph). Store all info on graph.
-        traverse_graph_topologically(new_policy_root.__depth_map, compute_policy_ev_update, top_down=False)
+        traverse_graph_topologically(new_policy_root._depth_map, compute_policy_ev_update, top_down=False)
 
-        new_value_of_info = new_policy_root.future_value - new_policy_root.__original_policy_ev
+        new_value_of_info = new_policy_root.future_value - new_policy_root._original_policy_ev
         self._value_of_info[policy_state] = new_value_of_info
 
         ########################################################################################################
@@ -210,7 +210,7 @@ class CommScenario:
         query_evaluations = []
         for target_agent in self._teammate_names:
             query_evaluations.extend((Query(target_agent, state), value) for state, value in
-                                     self._evaluate_node_queries_fn(new_policy_root, new_policy_root.__depth_map,
+                                     self._evaluate_node_queries_fn(new_policy_root, new_policy_root._depth_map,
                                                                     target_agent, self._agent_identity, prune_query))
 
         # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
@@ -229,8 +229,8 @@ class CommScenario:
         def compute_ev_bounds(node, _):
             # Leaf check
             if not node.successors:
-                node.__optimistic_ev = node.future_value
-                node.__pessimistic_ev = node.future_value
+                node._optimistic_ev = node.future_value
+                node._pessimistic_ev = node.future_value
                 return
 
             # If communicated policy state, use communicated info. (Fix action)
@@ -246,35 +246,36 @@ class CommScenario:
             optimistic_action_values = {
                 joint_action: sum(
                     probability * (node.successor_transition_values[(successor.state, joint_action)]
-                                   + successor.__optimistic_ev)
+                                   + successor._optimistic_ev)
                     for successor, probability in node.successors[joint_action].items())
-                for joint_action in optimistic_action_space}
+                for joint_action in optimistic_action_space if joint_action in node.successors}
 
             # For pessimistic EV, lock in original action and minimize over teammate actions.
             pessimistic_action_space = optimistic_action_space.fix_actions({self._agent_identity:
-                                                                            [node.__original_node.optimal_action]})
+                                                                            [node._original_node.optimal_action]})
             pessimistic_action_values = {
                 joint_action: sum(
                     probability * (node.successor_transition_values[(successor.state, joint_action)]
-                                   + successor.__pessimistic_ev)
+                                   + successor._pessimistic_ev)
                     for successor, probability in node.successors[joint_action].items())
-                for joint_action in pessimistic_action_space}
+                for joint_action in pessimistic_action_space if joint_action in node.successors}
 
             # Store policy evs
-            node.__optimistic_ev = max(optimistic_action_values.values())
-            node.__pessimistic_ev = min(pessimistic_action_values.values())
+            node._optimistic_ev = max(optimistic_action_values.values())
+            node._pessimistic_ev = min(pessimistic_action_values.values())
 
-            assert (node.__optimistic_ev - node.__original_policy_ev > -10e-5
-                    and node.__original_policy_ev - node.__pessimistic_ev > -10e-5), \
-                "EV bounds calculation incorrect."
+            # The pessimistic ev is no longer guaranteed to be <= the original if we've pruned out possiblities
+            # assert (node._optimistic_ev - node._original_policy_ev > -10e-5
+            #        and node._original_policy_ev - node._pessimistic_ev > -10e-5), \
+            #    "EV bounds calculation incorrect."
 
             return
 
         # Compute EV of old policy given new predictions (in new node graph). Store all info on graph.
-        traverse_graph_topologically(new_policy_root.__depth_map, compute_ev_bounds, top_down=False)
+        traverse_graph_topologically(new_policy_root._depth_map, compute_ev_bounds, top_down=False)
 
         # The greatest Value of Information with the existing constraints is given by:
-        max_value_of_info = new_policy_root.__optimistic_ev - new_policy_root.__pessimistic_ev
+        max_value_of_info = new_policy_root._optimistic_ev - new_policy_root._pessimistic_ev
 
         # The heuristic value, then, is the largest VOI - the current VOI (delta VOI steps) less the cost of at least
         # one query. Of course, if this is less than 0, there is no point in continuing, so the agent should stop.
@@ -286,7 +287,7 @@ class CommScenario:
         ########################################################################################################
         # Cleanup
         ########################################################################################################
-        for node in new_policy_root.__depth_map.values():
+        for node in new_policy_root._depth_map.values():
             del node
 
         del new_policy_root
@@ -335,7 +336,7 @@ class CommScenario:
         new_node._incomplete_action_nodes = {}
 
         # Info we add
-        new_node.__original_node = original_node
+        new_node._original_node = original_node
         return new_node
 
     def _get_policy_graph(self, policy_state):
@@ -355,22 +356,24 @@ class CommScenario:
         while process_queue:
             # have copied node and original
             node, horizon = process_queue.popleft()
-            original = node.__original_node
+            original = node._original_node
             successor_horizon = horizon + 1
 
             assert original.action_space is not None, 'Leaf node encountered unexpectedly.'
 
             # reconstruct new action space based on predictions
-            node.__predictions = {other_agent: other_agent_model.predict(node.state['World State'])
+            node._predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                   for other_agent, other_agent_model in node.state['Models'].items()}
             agent_actions = {agent: set((action for action, prob in predictions.items() if prob > 0.0))
-                             for agent, predictions in node.__predictions.items()}
+                             for agent, predictions in node._predictions.items()}
             node.action_space = original.action_space.fix_actions(agent_actions)  # JointActionSpace(agent_actions)
 
             # for only actions in the new action space, consider successors (effectively pruning when possible)
             #   if in graph map, only update predecessors
             #   otherwise, generate new copies, update state and preds, add to queue
             for joint_action in node.action_space:
+                if joint_action not in original.successors:
+                    continue
                 assert joint_action in original.successors, 'Joint action missing while updating policy graph.'
 
                 action_successors = Distribution()
@@ -393,13 +396,13 @@ class CommScenario:
                         graph_map_by_state[new_succ_state] = new_successor
                         if orig_successor.action_space:
                             # check for leaf node, which doesn't need extra processing
-                            new_successor.__original_node = orig_successor
+                            new_successor._original_node = orig_successor
                             process_queue.append((new_successor, successor_horizon))
 
                     # Add to node data structures
                     action_successors[new_successor] = succ_prob
                     node.successor_transition_values[(new_succ_state, joint_action)] = \
-                        node.__original_node.successor_transition_values[(orig_successor.state, joint_action)]
+                        node._original_node.successor_transition_values[(orig_successor.state, joint_action)]
                     if not new_successor.complete:
                         action_incomplete_succ.add(new_successor)
 
@@ -409,9 +412,9 @@ class CommScenario:
                     node._incomplete_action_nodes[joint_action] = action_incomplete_succ
 
         # Calculate new policy!
-        new_root.__depth_map = map_graph_by_depth(new_root)
+        new_root._depth_map = map_graph_by_depth(new_root)
         horizon_lists = defaultdict(list)
-        for node, horizon in new_root.__depth_map.items():
+        for node, horizon in new_root._depth_map.items():
             horizon_lists[horizon].append(node)
 
         for node in (n for horizon, nodes_at_horizon in sorted(horizon_lists.items(), reverse=True)
@@ -435,7 +438,7 @@ class CommScenario:
                     node._incomplete_action_nodes[action] = child_set
 
         # Reset changed status.
-        for node in new_root.__depth_map:
+        for node in new_root._depth_map:
             node._has_changed = False
 
         return new_root
