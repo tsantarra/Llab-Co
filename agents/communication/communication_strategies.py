@@ -143,7 +143,7 @@ def weighted(heuristic):
                                     .normalize()
 
             for action, action_prob in action_distribution.items():
-                for joint_action in node.action_space.fix_actions({agent_identity: [action]}):
+                for joint_action in (ja for ja in node.action_space.fix_actions({agent_identity: [action]}) if ja in node.successors):
                     for successor, successor_prob in node.successors[joint_action].items():
                         node_probs[successor] += action_prob * successor_prob * \
                                                  reduce(mul,
@@ -440,7 +440,7 @@ def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, 
                                                            node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 
-        for joint_action in node.action_space.fix_actions({agent_identity: [policy_action]}):
+        for joint_action in (ja for ja in node.action_space.fix_actions({agent_identity: [policy_action]}) if ja in node.successors):
             for successor, successor_prob in node.successors[joint_action].items():
                 node_probs[successor] += node_probs[node] * successor_prob * \
                                          reduce(mul, [other_agent_predictions[other_agent][joint_action[other_agent]]

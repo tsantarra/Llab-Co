@@ -30,7 +30,8 @@ Parameters = namedtuple('Parameters', ['process_no',
                                        'comm_cost',
                                        'plan_iterations',
                                        'experience',
-                                       'trials'])
+                                       'trials',
+                                       'alpha'])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
              CopsAndRobbersScenario(filename='a.maze', max_rounds=12),
@@ -76,6 +77,7 @@ def run():
     # Setup teammate generator
     agent_identity, teammate_identity = scenario.agents()
     chinese_restaurant_process, generator = initialize_agents(scenario, parameters.experience, teammate_identity)
+    chinese_restaurant_process.alpha = parameters.alpha
     teammate_model = PolicyDistributionModel(scenario, teammate_identity, chinese_restaurant_process.prior(),
                                              chinese_restaurant_process)
     teammate_model = CommunicatingTeammateModel(teammate_model, scenario)
@@ -149,11 +151,12 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
     agent_dict = {agent_name: agent, teammate_name: teammate}
     utility = 0
 
+    print('Initial state:\n', state, '\n')
+
     # Main loop
     while not scenario.end(state):
         # Have the agents select actions
         joint_action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
-        print('Joint Action:', joint_action)
 
         # Communicate
         action, _, cost = communicate(scenario, agent, agent_dict,
@@ -180,12 +183,14 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         utility += scenario.utility(state, new_joint_action, new_state)
 
         # Output
+        print('\n-----------------')
+        print('Original:\t', joint_action)
+        print('Updated: \t', new_joint_action)
         print('Policy distribution length:', len(agent.model_state[teammate_name].model.policy_distribution))
         print('New Action:', new_joint_action)
-        print('New State')
-        print(new_state)
+        print('New State:\n', new_state)
         print('Utility:', utility)
-        print('-----------------')
+        print('-----------------\n')
 
         state = new_state
 
