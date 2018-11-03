@@ -107,7 +107,7 @@ class CommScenario:
                                                                        query_action.state,
                                                                        action),
                                            probability)
-                                           for action, probability in predicted_responses.items() if probability > 0])
+                                           for action, probability in predicted_responses.items() ])
 
         # Sanity check.
         assert abs(sum(predicted_responses.values()) - 1.0) < 10e-6, \
