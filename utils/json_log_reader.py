@@ -66,7 +66,7 @@ def read_all_files(directory):
             continue
 
         df[['Trial']] = df[['Trial']].fillna(method='ffill')
-        for group, groupdf in df.groupby(['levelname', 'message']):
+        for group, groupdf in df.groupby(['message']):
             dataset[group] = groupdf if not group in dataset else concat([dataset[group], groupdf], sort=False)
 
     if skipped_files:

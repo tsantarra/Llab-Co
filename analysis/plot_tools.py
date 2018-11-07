@@ -127,6 +127,8 @@ def stackedbarplot(x_data, y_data_list, y_data_names, colors =['#539caf', '#7663
     ax.set_title(title)
     ax.legend(loc = 'upper right')
 
+    return ax
+
 
 def groupedbarplot(x_data, y_data_list, y_data_names, colors, x_label, y_label, title):
     _, ax = plt.subplots()

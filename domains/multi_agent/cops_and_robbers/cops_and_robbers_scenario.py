@@ -243,7 +243,8 @@ class CopsAndRobbersScenario:
 
         return 0
 
-    def distance(self, loc1, loc2):
+    @staticmethod
+    def distance(loc1, loc2):
         return abs(loc1.col - loc2.col) + abs(loc1.row - loc2.row)
 
 
