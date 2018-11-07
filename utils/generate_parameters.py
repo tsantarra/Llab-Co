@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 def generate_args():
     vals = OrderedDict([
-        ('process_no', [21]),
+        ('process_no', [22]),
         ('scenario_id', [1,2]),
         ('heuristic_id', list(range(14))),
         ('comm_branch_factor', [3]),
@@ -13,7 +13,7 @@ def generate_args():
         ('plan_iterations', [500]),
         ('experience', [100]),
         ('trials', [50]),
-        ('alpha', [0,1])
+        ('alpha', [0.1])
                         ])
 
     for permutation in product(*vals.values()):
