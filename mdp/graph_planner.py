@@ -291,6 +291,17 @@ class GraphNode:
 
         return self._action_values
 
+    def has_matching_successor(self, state, action=None):
+        if not self.successors:
+            return None
+
+        if action:
+            matches = [successor for successor in self.successors[action] if successor.state == state]
+        else:
+            matches = [successor for successor in self.successor_set() if successor.state == state]
+
+        return len(matches) > 0
+
     def find_matching_successor(self, state, action=None):
         """
         Finds the successor node with matching state.

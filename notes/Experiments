@@ -1,5 +1,15 @@
 
 
+    Vary:
+        Heuristics (done?)
+        Greedy Heuristic Perf
+        Comm branch factor
+        Comm cost
+        Experience
+
+        Variety of teammate policies
+
+
     Goals:
         Things to show:
             Fewer trials BEFORE identifying optimal joint policy

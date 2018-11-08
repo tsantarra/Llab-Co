@@ -39,7 +39,7 @@ class ModelingAgent:
                              heuristic=self.heuristic)
 
     def get_action(self, state):
-        if self.policy_graph_root:
+        if self.policy_graph_root and self.policy_graph_root.has_matching_successor(state):
             self.policy_graph_root = self.policy_graph_root.find_matching_successor(
                 State({'World State': state, 'Models': self.model_state}), action=self._last_observation)
 

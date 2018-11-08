@@ -83,6 +83,8 @@ def run():
     teammate_model = CommunicatingTeammateModel(teammate_model, scenario)
     initial_models = {teammate_identity: teammate_model}
 
+    import gc
+
     for trial in range(parameters.trials):
         ad_hoc_agent = ModelingAgent(scenario, agent_identity, initial_models, parameters.plan_iterations)
         partner = generator.sample_teammate()
@@ -91,6 +93,8 @@ def run():
         reward = run_experiment(scenario, ad_hoc_agent, partner, parameters.comm_cost, parameters.comm_branch_factor,
                                 parameters.comm_iterations, comm_heuristic, trial)
         logger.info('End Trial', extra={'Trial': trial, 'Reward': reward})
+
+        gc.collect()
 
 
 def initialize_agents(scenario, num_initial_models, teammate_identity):
