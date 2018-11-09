@@ -163,7 +163,7 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         joint_action = Action({agent_name: agent.get_action(state) for agent_name, agent in agent_dict.items()})
 
         # Communicate
-        action, _, cost = communicate(scenario, agent, agent_dict,
+        action, cost = communicate(scenario, agent, agent_dict,
                                       comm_planning_iterations=comm_iterations,
                                       comm_heuristic=comm_heuristic,
                                       branching_factor=comm_branch_factor,

@@ -468,22 +468,21 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
                                'Type': 'Begin', 'Trial': trial})
 
     # Complete graph search
-    comm_graph_root = search(state=comm_scenario.initial_state(),
+    comm_graph_node = search(state=comm_scenario.initial_state(),
                              scenario=comm_scenario,
                              iterations=comm_planning_iterations,
                              heuristic=comm_scenario.heuristic_value)
 
     # No communication can help or no communication possible.
-    if not comm_graph_root.successors:
+    if not comm_graph_node.successors:
         print('END COMMUNICATION/// NO COMMS')
         return original_action, agent.policy_graph_root.state, 0
 
-    action = greedy_action(comm_graph_root)
+    action = greedy_action(comm_graph_node)
     query_action = action[agent.identity]
 
     # Initial communication options
-    current_policy_state = comm_graph_root.state
-    comm_graph_node = comm_graph_root
+    current_policy_state = comm_graph_node.state
 
     how = None
     cost = 0
@@ -533,10 +532,4 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
                                'How': how,
                                'Trial': trial})
 
-    # Clean up
-    def del_node(node, _):
-        del node
-    traverse_graph_topologically(map_graph_by_depth(comm_graph_root), del_node, top_down=False)
-    del comm_scenario
-
-    return action, agent.policy_graph_root.state, cost
+    return action, cost
