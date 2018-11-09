@@ -39,16 +39,18 @@ class ModelingAgent:
                              heuristic=self.heuristic)
 
     def get_action(self, state):
-        if self.policy_graph_root and self.policy_graph_root.has_matching_successor(state):
-            self.policy_graph_root = self.policy_graph_root.find_matching_successor(
-                State({'World State': state, 'Models': self.model_state}), action=self._last_observation)
+        if self.policy_graph_root and self.policy_graph_root.state != state:
+            if self.policy_graph_root.has_matching_successor(state):  # found in child node
+                self.policy_graph_root = self.policy_graph_root.find_matching_successor(
+                    State({'World State': state, 'Models': self.model_state}), action=self._last_observation)
+            else:  # not found, reset
+                self.policy_graph_root = None
 
-            assert self.policy_graph_root.state['World State'] == state, \
-                'ModelingAgent.get_action(state) state does not match policy root.'
 
-            modeler_state = self.policy_graph_root.state
-        else:
-            modeler_state = State({'World State': state, 'Models': self.model_state})
+        modeler_state = State({'World State': state, 'Models': self.model_state})
+
+        assert self.policy_graph_root is None or self.policy_graph_root.state['World State'] == state, \
+            'ModelingAgent.get_action(state) state does not match policy root.'
 
         self.policy_graph_root = search(state=modeler_state,
                                         scenario=self.scenario,
