@@ -27,7 +27,7 @@ with warnings.catch_warnings():
     from pandas import concat
 
 
-data_dir = 'login.osgconnect.net/out/'
+data_dir = '../login.osgconnect.net/out/'
 paramlist = ['process_no',
              'scenario_id',
              'heuristic_id',
@@ -75,13 +75,43 @@ def read_all_files(directory):
     return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
 
 
-def get_files_with_errors(directory):
+def read_files_for_experiment(directory, experiment_no):
+    dataset = {}
+    skipped_files = []
+    for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.startswith(f'data-{experiment_no}') and f.endswith('.log')):
+        params, df = read(join(directory, file))
+
+        if df.empty:
+            skipped_files.append(file)
+            continue
+
+        if df['levelname'].isin(['ERROR']).any():
+            skipped_files.append(file)
+            continue
+
+        df[['Trial']] = df[['Trial']].fillna(method='ffill')
+        for group, groupdf in df.groupby(['message']):
+            dataset[group] = groupdf if not group in dataset else concat([dataset[group], groupdf], sort=False)
+
+    if skipped_files:
+        print('Files skipped:\n\t' + '\n\t'.join(skipped_files))
+
+    return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
+
+
+def check_for_errors(directory, filter='', output_errors=True):
     files_with_errors = []
-    for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.endswith('.log')):
+    for file in (f for f in listdir(directory)
+                 if isfile(join(directory, f))
+                  and f.startswith(filter)
+                  and f.endswith('.log')):
         _, df = read(join(directory, file))
 
         if df['levelname'].isin(['ERROR']).any():
             files_with_errors.append(file)
+
+            for row in df[df['levelname'] == 'ERROR']:
+                print(row['message'])
 
     return files_with_errors
 
@@ -91,4 +121,4 @@ def remove_nan_cols(dataframe):
 
 
 if __name__ == '__main__':
-    read_all_files(data_dir)
+    check_for_errors(data_dir)
