@@ -476,7 +476,7 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     # No communication can help or no communication possible.
     if not comm_graph_node.successors:
         print('END COMMUNICATION/// NO COMMS')
-        return original_action, agent.policy_graph_root.state, 0
+        return original_action, 0
 
     action = greedy_action(comm_graph_node)
     query_action = action[agent.identity]
