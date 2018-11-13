@@ -177,3 +177,70 @@
 ('experience', [0, 10, 25, 100, 500]),
 ('trials', [50]),
 ('alpha', [1])
+
+
+
+32 - Rerun all base heuristics on big maze. Alpha 0/1
+('process_no', [32]),
+('scenario_id', [1]),
+('heuristic_id', list(range(14))),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
+('alpha', [0,1])
+
+33 - Rerun all heuristics, but with only 1 comm planning iteration
+('process_no', [33]),
+('scenario_id', [2]),
+('heuristic_id', list(range(14))),
+('comm_branch_factor', [100000]),
+('comm_iterations', [1]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
+('alpha', [1])
+
+
+34 (r24) -  Test comm branch factor with a few heuristics
+('process_no', [34]),
+('scenario_id', [2]),
+('heuristic_id', [3,4,10,11]),
+('comm_branch_factor', [3,5,10,100]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
+('alpha', [1])
+
+35 (r25) - Test comm costs with a few heuristics
+('process_no', [35]),
+('scenario_id', [2]),
+('heuristic_id', [3,4,10,11]),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0, 1, 5, 10]),
+('plan_iterations', [500]),
+('experience', [100]),
+('trials', [50]),
+('alpha', [1])
+
+36 (r26) - Experience with a few heuristics
+('process_no', [36]),
+('scenario_id', [2]),
+('heuristic_id', [3,4,10,11]),
+('comm_branch_factor', [3]),
+('comm_iterations', [100]),
+('comm_cost', [0]),
+('plan_iterations', [500]),
+('experience', [0, 10, 25, 100, 500]),
+('trials', [50]),
+('alpha', [1])
+
+
+
+

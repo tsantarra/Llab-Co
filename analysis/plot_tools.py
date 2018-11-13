@@ -114,21 +114,22 @@ def barplot(x_data, y_data, error_data, x_label, y_label, title):
     ax.set_title(title)
 
 
-def stackedbarplot(x_data, y_data_list, y_data_names, colors =['#539caf', '#7663b0'], x_label='', y_label='', title=''):
+def stackedbarplot(x_data, y_data_list, y_data_names, colors=['#539caf', '#7663b0'], x_label='', y_label='', title=''):
     _, ax = plt.subplots()
     # Draw bars, one category at a time
     for i in range(0, len(y_data_list)):
         if i == 0:
-            ax.bar(x_data, y_data_list[i], color = colors[i], align = 'center', label = y_data_names[i])
+            ax.bar(x_data, y_data_list[i], color=colors[i], align='center', label=y_data_names[i])
         else:
             # For each category after the first, the bottom of the
             # bar will be the top of the last category
-            ax.bar(x_data, y_data_list[i], color = colors[i], bottom = y_data_list[i - 1], align = 'center', label = y_data_names[i])
+            ax.bar(x_data, y_data_list[i], color=colors[i], bottom=y_data_list[i - 1], align='center',
+                   label=y_data_names[i])
 
     ax.set_ylabel(y_label)
     ax.set_xlabel(x_label)
     ax.set_title(title)
-    ax.legend(loc = 'upper right')
+    ax.legend(loc='upper right')
 
     return ax
 
@@ -178,12 +179,67 @@ def boxplot(x_data, y_data, base_color='#539caf', median_color='#539caf', x_labe
     ax.set_title(title)
 
 
-def error_bars(x_data, y_means, y_err, x_label='', y_label='', title=''):
+def error_bars(x_data, y_means, y_err, x_label='', y_label='', title='', y_range=None, **kwargs):
     _, ax = plt.subplots()
 
-    ax.errorbar(x_data, y_means, yerr=y_err, fmt='ks:', ls='none', capsize=2)
+    if y_range:
+        ax.set_ylim(*y_range)
+
+    ax.errorbar(x_data, y_means, yerr=y_err, fmt='ks:', ls='none', capsize=2, **kwargs)
     ax.set_xticklabels(x_data)
 
     ax.set_ylabel(y_label)
     ax.set_xlabel(x_label)
     ax.set_title(title)
+
+
+def grouped_error_bars(x_data, y_means_list, y_err_list, x_label='', y_label='', title='', tick_label=None, y_range=None, **kwargs):
+    _, ax = plt.subplots()
+    ax.set_xticks(list(range(len(y_means_list))))
+
+    if y_range:
+        ax.set_ylim(*y_range)
+
+    # Total width for all bars at one x location
+    total_width = 0.05
+    # Width of each individual bar
+    ind_width = total_width / len(y_means_list)
+    # This centers each cluster of bars about the x tick mark
+    alteration = np.arange(-(total_width / 2), total_width / 2, ind_width)
+
+    # Draw bars, one category at a time
+    for i in range(len(y_means_list)):
+        # Move the bar to the right on the x-axis so it doesn't
+        # overlap with previously drawn ones
+        ax.errorbar(x_data + alteration[i], y_means_list[i], yerr=y_err_list[i], fmt='ks:', ls='none', capsize=2, **kwargs)
+        #ax.errorbar(x_data + alteration[i], y_data_list[i], color=colors[i], label=y_data_names[i], width=ind_width)
+
+    if tick_label is not None:
+        ax.set_xticklabels(tick_label)
+
+    ax.set_ylabel(y_label)
+    ax.set_xlabel(x_label)
+    ax.set_title(title)
+    ax.legend(loc='upper right')
+
+    return ax
+
+
+if __name__== '__main__':
+    import numpy as np
+    import pylab as pl
+
+    # define datasets
+    parameters = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+    mean_1 = [10.1, 12.1, 13.6, 14.5, 18.8, 11.8, 28.5]
+    std_1 = [2.6, 5.7, 4.3, 8.5, 11.8, 5.3, 2.5]
+
+    mean_2 = [10.1, 12.1, 13.6, 14.5, 18.8, 11.8, 28.5]
+    std_2 = [2.6, 5.7, 4.3, 8.5, 11.8, 5.3, 2.5]
+
+    mean_3 = [10.1, 12.1, 13.6, 14.5, 18.8, 11.8, 28.5]
+    std_3 = [2.6, 5.7, 4.3, 8.5, 11.8, 5.3, 2.5]
+
+    grouped_error_bars(parameters, [mean_1, mean_2, mean_3], [std_1, std_2, std_3], ['#539caf', '#539caf', '#539caf'])
+
+    pl.show()

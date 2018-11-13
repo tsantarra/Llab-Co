@@ -42,18 +42,18 @@ heuristics = [
               local_absolute_error,                         # 1
               local_mean_squared_error,                     # 2
               local_delta_policy_entropy,                   # 3
-              local_value_of_information,                   # 4
+              local_value_of_information,                   # 4 *
 
-              weighted(local_action_information_entropy),   # 5
+              weighted(local_action_information_entropy),   # 5 *
               weighted(local_absolute_error),               # 6
               weighted(local_mean_squared_error),           # 7
               weighted(local_delta_policy_entropy),         # 8
-              weighted(local_value_of_information),         # 9
+              weighted(local_value_of_information),         # 9 *
 
               immediate_delta_policy_entropy,               # 10
-              immediate_approx_value_of_information,        # 11
+              immediate_approx_value_of_information,        # 11 *
 
-              random_evaluation,                            # 12
+              random_evaluation,                            # 12 *
               state_likelihood                              # 13
               ]
 

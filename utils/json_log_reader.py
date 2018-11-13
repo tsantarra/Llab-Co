@@ -75,10 +75,13 @@ def read_all_files(directory):
     return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
 
 
-def read_files_for_experiment(directory, experiment_no):
+def read_files_for_experiment(directory, experiment_no, filter=lambda f: True):
     dataset = {}
     skipped_files = []
-    for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.startswith(f'data-{experiment_no}') and f.endswith('.log')):
+    for file in (f for f in listdir(directory) if isfile(join(directory, f))
+                                                  and f.startswith(f'data-{experiment_no}')
+                                                  and filter(f)
+                                                  and f.endswith('.log')):
         params, df = read(join(directory, file))
 
         if df.empty:
@@ -99,11 +102,11 @@ def read_files_for_experiment(directory, experiment_no):
     return {group: groupdf.dropna(axis=1, how='all') for group, groupdf in dataset.items()}
 
 
-def check_for_errors(directory, filter='', output_errors=True):
+def check_for_errors(directory, filter=lambda f: True, output_errors=True):
     files_with_errors = []
     for file in (f for f in listdir(directory)
                  if isfile(join(directory, f))
-                  and f.startswith(filter)
+                  and filter(f)
                   and f.endswith('.log')):
         _, df = read(join(directory, file))
 
