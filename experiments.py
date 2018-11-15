@@ -76,18 +76,21 @@ def run():
 
     # Setup teammate generator
     agent_identity, teammate_identity = scenario.agents()
-    chinese_restaurant_process, generator = initialize_agents(scenario, parameters.experience, teammate_identity)
-    chinese_restaurant_process.alpha = parameters.alpha
-    teammate_model = PolicyDistributionModel(scenario, teammate_identity, chinese_restaurant_process.prior(),
-                                             chinese_restaurant_process)
-    teammate_model = CommunicatingTeammateModel(teammate_model, scenario)
-    initial_models = {teammate_identity: teammate_model}
+    teammate_generator = initialize_teammate_generator(scenario, teammate_identity)
 
     import gc
 
     for trial in range(parameters.trials):
+        chinese_restaurant_process = initialize_crp(scenario, teammate_identity, parameters.experience,
+                                                    teammate_generator)
+        chinese_restaurant_process.alpha = parameters.alpha
+        teammate_model = PolicyDistributionModel(scenario, teammate_identity, chinese_restaurant_process.prior(),
+                                                 chinese_restaurant_process)
+        teammate_model = CommunicatingTeammateModel(teammate_model, scenario)
+        initial_models = {teammate_identity: teammate_model}
+
         ad_hoc_agent = ModelingAgent(scenario, agent_identity, initial_models, parameters.plan_iterations)
-        partner = generator.sample_teammate()
+        partner = teammate_generator.sample_teammate()
 
         logger.info('Begin Trial!', extra={'Trial': trial})
         reward = run_experiment(scenario, ad_hoc_agent, partner, parameters.comm_cost, parameters.comm_branch_factor,
@@ -97,7 +100,7 @@ def run():
         gc.collect()
 
 
-def initialize_agents(scenario, num_initial_models, teammate_identity):
+def initialize_teammate_generator(scenario, teammate_identity):
     """
     Sample num_models worth of teammate policies.
     Due to the modeling needs of the scenario, the teammate model is represented as such:
@@ -115,11 +118,15 @@ def initialize_agents(scenario, num_initial_models, teammate_identity):
         with gzip.open(precomputed_policy_graph_file, 'wb') as policy_file:
             pickle.dump(teammate_generator, policy_file, protocol=pickle.HIGHEST_PROTOCOL)
 
+    return teammate_generator
+
+
+def initialize_crp(scenario, teammate_identity, num_initial_models, teammate_generator):
     chinese_restaurant_process = SparseChineseRestaurantProcessModel(teammate_identity, scenario)
     for _ in range(num_initial_models):
         chinese_restaurant_process.add_teammate_model(teammate_generator.sample_partial_policy())
 
-    return chinese_restaurant_process, teammate_generator
+    return chinese_restaurant_process
 
 
 def perfect_knowledge_val(scenario, agent, teammate):
