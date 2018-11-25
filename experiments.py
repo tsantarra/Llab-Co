@@ -58,18 +58,7 @@ heuristics = [
               ]
 
 
-def run():
-    assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + \
-                                                         ' '.join(str(i) for i in sys.argv) + \
-                                                         '\nExpected: ' + ' '.join(Parameters._fields)
-    parameters = [int(arg) for arg in sys.argv[1:]]
-    parameters = Parameters(*parameters)
-    print('Parameters: ' + str(parameters))
-
-    # Set up logger with process info.
-    setup_logger(id='-'.join(sys.argv[1:]))
-    logger.info('Parameters', extra=parameters._asdict())
-
+def run(parameters):
     # id -> param conversions
     scenario = scenarios[parameters.scenario_id]
     comm_heuristic = heuristics[parameters.heuristic_id]
@@ -210,8 +199,20 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
 
 
 if __name__ == '__main__':
+    assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + \
+                                                         ' '.join(str(i) for i in sys.argv) + \
+                                                         '\nExpected: ' + ' '.join(Parameters._fields)
+    parameters = [int(arg) for arg in sys.argv[1:]]
+    parameters = Parameters(*parameters)
+    print('Parameters: ' + str(parameters))
+
+    # Set up logger with process info.
+    setup_logger(id='-'.join(sys.argv[1:]))
+    logger.info('Parameters', extra=parameters._asdict())
+    logger.info('Environment', extra={'Version': str(sys.version_info)})
+
     try:
-        run()
+        run(parameters)
 
     except KeyboardInterrupt:
         print('KEYBOARD INTERRUPT')

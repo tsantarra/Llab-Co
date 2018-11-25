@@ -196,33 +196,6 @@ class CommScenario:
         self._value_of_info[policy_state] = new_value_of_info
 
         ########################################################################################################
-        # Queries
-        ########################################################################################################
-        # Call provided query selector function
-        def prune_query(node, target_agent_name):
-            return node.scenario_end or \
-                   node.state['World State'] in policy_state['Queries'][target_agent_name] or \
-                   not node.action_space or \
-                   len(node.action_space.individual_actions(target_agent_name)) <= 1
-
-        # Need to consider all teammates involved.
-        query_evaluations = []
-        for target_agent in self._teammate_names:
-            query_evaluations.extend((Query(target_agent, state), value) for state, value in
-                                     self._evaluate_node_queries_fn(new_policy_root, new_policy_root._depth_map,
-                                                                    target_agent, self._agent_identity, prune_query))
-
-        # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
-        # resulting from different nodes having different evaluations (due to different models)
-        action_set = set(Action({self._agent_identity: query_val[0]}) for query_val in
-                         nlargest(min(self._max_branches, len(query_evaluations)),
-                                  query_evaluations, key=lambda qv: qv[1]))
-
-        # Add 'Halt" action for terminating queries
-        action_set.add(Action({self._agent_identity: 'Halt'}))
-        self._action_cache[policy_state] = action_set
-
-        ########################################################################################################
         # End Criterion and Heuristic Evaluation
         ########################################################################################################
         def compute_ev_bounds(node, _):
@@ -282,10 +255,37 @@ class CommScenario:
 
         # The end condition: if max possible value of information - cost of all queries it took to get it is less than
         # the cost of a one more comm, then we know we can't afford the cost of further queries.
-        self._end_cache[policy_state] = max_value_of_info \
-                                        - self._comm_cost * sum(len(queries)
-                                                                for queries in policy_state['Queries'].values()) \
+        is_terminal = max_value_of_info - self._comm_cost * sum(len(queries) for queries in policy_state['Queries'].values()) \
                                         <= self._comm_cost
+        self._end_cache[policy_state] = is_terminal
+
+        ########################################################################################################
+        # Queries
+        ########################################################################################################
+        if not is_terminal:
+            # Call provided query selector function
+            def prune_query(node, target_agent_name):
+                return node.scenario_end or \
+                       node.state['World State'] in policy_state['Queries'][target_agent_name] or \
+                       not node.action_space or \
+                       len(node.action_space.individual_actions(target_agent_name)) <= 1
+
+            # Need to consider all teammates involved.
+            query_evaluations = []
+            for target_agent in self._teammate_names:
+                query_evaluations.extend((Query(target_agent, state), value) for state, value in
+                                         self._evaluate_node_queries_fn(new_policy_root, new_policy_root._depth_map,
+                                                                        target_agent, self._agent_identity, prune_query))
+
+            # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
+            # resulting from different nodes having different evaluations (due to different models)
+            action_set = set(Action({self._agent_identity: query_val[0]}) for query_val in
+                             nlargest(min(self._max_branches, len(query_evaluations)),
+                                      query_evaluations, key=lambda qv: qv[1]))
+
+            # Add 'Halt" action for terminating queries
+            action_set.add(Action({self._agent_identity: 'Halt'}))
+            self._action_cache[policy_state] = action_set
 
         ########################################################################################################
         # Cleanup
