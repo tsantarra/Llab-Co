@@ -81,7 +81,7 @@ class CommScenario:
         cost associated with each communcative action, the agent must minimize the number of queries it poses.
         """
         assert policy_state in self._action_cache, 'The communicative action set should have been precomputed.'
-        return self._action_cache.pop(policy_state)
+        return self._action_cache[policy_state]
 
     def transition(self, policy_state, comm_action):
         """
