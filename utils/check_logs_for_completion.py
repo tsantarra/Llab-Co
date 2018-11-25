@@ -1,29 +1,24 @@
-from collections import OrderedDict
 from itertools import product
 from os.path import isfile
 
 
-def check_logs():
-    vals = OrderedDict([
-        ('process_no', [46]),
-        ('scenario_id', [2]),
-        ('heuristic_id', [3, 4, 10, 11]),
-        ('comm_branch_factor', [3]),
-        ('comm_iterations', [100]),
-        ('comm_cost', [0]),
-        ('plan_iterations', [500]),
-        ('experience', [0, 10, 25, 100, 500]),
-        ('trials', [50]),
-        ('alpha', [1])
-    ])
+def check_logs(vals, log_found=False):
 
-    print('Missing: ')
-    for permutation in product(*vals.values()):
+    for permutation in product(*list(val[1] for val in vals)):
         filename = 'data-' + '-'.join(map(str, permutation)) + '.log'
 
         if not isfile(f'../login.osgconnect.net/out/{filename}'):
             print(' '.join(map(str, permutation)))
+        elif log_found:
+            print(' '.join(map(str, permutation)) + '\tFound')
 
 
 if __name__ == '__main__':
-    check_logs()
+    from notes.Experimental_Runs import data_config
+
+    print('Missing: ')
+    for experiment_number, parameters in data_config.items():
+        if experiment_number < 40:
+            continue
+
+        check_logs(parameters, log_found=True)

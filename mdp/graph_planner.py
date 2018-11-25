@@ -104,7 +104,7 @@ def _expand_leaf(node, scenario, heuristic, node_map):
     """
     assert not node.complete, 'ERROR. SHOULD NOT EXPAND COMPLETE NODE.'
 
-    node.action_space = scenario.actions(node.state) # save computation of actions for fringe nodes
+    node.action_space = scenario.actions(node.state)  # save computation of actions for fringe nodes
 
     # Expand all actions (rather than selecting one randomly)
     for action in list(node.action_space):
@@ -222,7 +222,7 @@ def search(state, scenario, iterations=inf, backup_op=_expectation_max, heuristi
     passes = iterations - root_node.visits + 1
     for step in count():
         # If entire tree has been searched, halt iteration.
-        if root_node.complete or step > passes:
+        if root_node.complete or step >= passes:
             break
 
         # Start at root

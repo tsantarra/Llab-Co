@@ -14,7 +14,6 @@ from agents.communication.communicating_teammate_model import CommunicatingTeamm
 from collections import namedtuple, deque, defaultdict
 from math import inf as infinity
 from heapq import nlargest
-from copy import copy
 import json
 import logging
 
@@ -43,8 +42,8 @@ class CommScenario:
         self._comm_cost = comm_cost  # Cost per instance of communication
 
         # Helpful references
-        self._initial_policy_state = State({'Queries': State( ( ( agent, State(model.previous_communications.items()) )
-                                                               for agent, model in initial_model_state.items())  ),
+        self._initial_policy_state = State({'Queries': State(((agent, State(model.previous_communications.items()))
+                                                              for agent, model in initial_model_state.items())),
                                             'End?': False})
 
         # Caches of commonly computed items
@@ -102,12 +101,12 @@ class CommScenario:
         predicted_responses = model_state[target_agent_name].predict(query_world_state)
 
         # Consider all possible results
-        resulting_states = Distribution([ (self._update_policy_queries(policy_state,
-                                                                       target_agent_name,
-                                                                       query_action.state,
-                                                                       action),
-                                           probability)
-                                           for action, probability in predicted_responses.items() ])
+        resulting_states = Distribution([(self._update_policy_queries(policy_state,
+                                                                      target_agent_name,
+                                                                      query_action.state,
+                                                                      action),
+                                          probability)
+                                         for action, probability in predicted_responses.items()])
 
         # Sanity check.
         assert abs(sum(predicted_responses.values()) - 1.0) < 10e-6, \
@@ -216,7 +215,7 @@ class CommScenario:
         # Ensure that nlargest actually keeps unique queries, and not multipe of the same query,
         # resulting from different nodes having different evaluations (due to different models)
         action_set = set(Action({self._agent_identity: query_val[0]}) for query_val in
-                         nlargest(self._max_branches if self._max_branches != infinity else len(query_evaluations),
+                         nlargest(min(self._max_branches, len(query_evaluations)),
                                   query_evaluations, key=lambda qv: qv[1]))
 
         # Add 'Halt" action for terminating queries
@@ -252,7 +251,7 @@ class CommScenario:
 
             # For pessimistic EV, lock in original action and minimize over teammate actions.
             pessimistic_action_space = optimistic_action_space.fix_actions({self._agent_identity:
-                                                                            [node._original_node.optimal_action]})
+                                                                                [node._original_node.optimal_action]})
             pessimistic_action_values = {
                 joint_action: sum(
                     probability * (node.successor_transition_values[(successor.state, joint_action)]
@@ -279,7 +278,10 @@ class CommScenario:
 
         # The heuristic value, then, is the largest VOI - the current VOI (delta VOI steps) less the cost of at least
         # one query. Of course, if this is less than 0, there is no point in continuing, so the agent should stop.
-        heuristic_val = max(max_value_of_info - new_value_of_info - self._comm_cost, 0)
+        heuristic_val = max(max_value_of_info
+                            - new_value_of_info
+                            - self._comm_cost * (sum(len(queries) for queries in policy_state['Queries'].values()) + 1),
+                            0)
 
         self._heuristic_value_cache[policy_state] = heuristic_val
         self._end_cache[policy_state] = heuristic_val <= 10e-5
@@ -306,8 +308,8 @@ class CommScenario:
         # Update the model state given the query information
 
         queries_by_agent = policy_state['Queries']
-        return old_model_state.update(( (name, model.communicated_policy_update(queries_by_agent[name].items()))
-                                         for name, model in old_model_state.items() ))
+        return old_model_state.update(((name, model.communicated_policy_update(queries_by_agent[name].items()))
+                                       for name, model in old_model_state.items()))
 
     def _update_policy_queries(self, policy_state, target_agent_name, state, action):
         # Add query to current queries
@@ -363,7 +365,7 @@ class CommScenario:
 
             # reconstruct new action space based on predictions
             node._predictions = {other_agent: other_agent_model.predict(node.state['World State'])
-                                  for other_agent, other_agent_model in node.state['Models'].items()}
+                                 for other_agent, other_agent_model in node.state['Models'].items()}
             agent_actions = {agent: set((action for action, prob in predictions.items() if prob > 0.0))
                              for agent, predictions in node._predictions.items()}
             node.action_space = original.action_space.fix_actions(agent_actions)  # JointActionSpace(agent_actions)
@@ -467,30 +469,27 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
     logger.info('Comm', extra={'EV': agent.policy_graph_root.future_value, 'Action': json.dumps(original_action),
                                'Type': 'Begin', 'Trial': trial})
 
-    # Complete graph search
-    comm_graph_node = search(state=comm_scenario.initial_state(),
-                             scenario=comm_scenario,
-                             iterations=comm_planning_iterations,
-                             heuristic=comm_scenario.heuristic_value)
-
-    # No communication can help or no communication possible.
-    if not comm_graph_node.successors:
-        print('END COMMUNICATION/// NO COMMS')
-        return original_action, 0
-
-    action = greedy_action(comm_graph_node)
-    query_action = action[agent.identity]
-
-    # Initial communication options
-    current_policy_state = comm_graph_node.state
-
-    how = None
+    current_policy_state = comm_scenario.initial_state()
+    comm_graph_node = None
     cost = 0
-    while not current_policy_state['End?']:
+
+    while not comm_scenario.end(current_policy_state):
+        # Complete graph search
+        comm_graph_node = search(state=current_policy_state,
+                                 scenario=comm_scenario,
+                                 iterations=comm_planning_iterations,
+                                 heuristic=comm_scenario.heuristic_value,
+                                 root_node=comm_graph_node)
+
+        action = greedy_action(comm_graph_node)
+        query_action = action[agent.identity]
+
+        # Initial communication options
+        current_policy_state = comm_graph_node.state
+
         # Check for termination
         if query_action == 'Halt':
             print('Halt')
-            how = 'Halt'
             break
 
         # Update cost
@@ -505,20 +504,9 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
                                          'Response': json.dumps(response), 'Trial': trial})
 
         # Update position in policy state graph
-        new_query_state = comm_scenario._update_policy_queries(current_policy_state, query_action.agent,
-                                                               query_action.state, response)
-        comm_graph_node = comm_graph_node.find_matching_successor(new_query_state, action=action)
-
-        # Check if graph ends
-        if not comm_graph_node.successors:
-            print('Reached end of comm graph.')
-            how = 'Leaf'
-            break
-
-        # Calculate next step
-        action = greedy_action(comm_graph_node)
-        query_action = action[agent.identity]
-        current_policy_state = comm_graph_node.state
+        current_policy_state = comm_scenario._update_policy_queries(current_policy_state, query_action.agent,
+                                                                    query_action.state, response)
+        comm_graph_node = comm_graph_node.find_matching_successor(current_policy_state, action=action)
 
     agent.policy_graph_root = comm_scenario._get_policy_graph(current_policy_state)
     action = get_max_action(agent.policy_graph_root, agent.identity)
@@ -529,7 +517,6 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
                                'New Action': json.dumps(action),
                                'Original Action': json.dumps(original_action),
                                'Type': 'End',
-                               'How': how,
                                'Trial': trial})
 
     return action, cost

@@ -35,7 +35,7 @@ Parameters = namedtuple('Parameters', ['process_no',
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
              CopsAndRobbersScenario(filename='a.maze', max_rounds=12),
-             CopsAndRobbersScenario(filename='small.maze', max_rounds=6),]
+             CopsAndRobbersScenario(filename='small.maze', max_rounds=6), ]
 
 heuristics = [
               local_action_information_entropy,             # 0
@@ -203,6 +203,7 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         print('Utility:', utility)
         print('-----------------\n')
 
+        # Update state
         state = new_state
 
     return utility
