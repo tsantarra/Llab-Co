@@ -280,11 +280,15 @@ class CommScenario:
         # one query. Of course, if this is less than 0, there is no point in continuing, so the agent should stop.
         heuristic_val = max(max_value_of_info
                             - new_value_of_info
-                            - self._comm_cost * (sum(len(queries) for queries in policy_state['Queries'].values()) + 1),
+                            - self._comm_cost,
+                            # * (sum(len(queries) for queries in policy_state['Queries'].values()) + 1),
                             0)
 
         self._heuristic_value_cache[policy_state] = heuristic_val
-        self._end_cache[policy_state] = heuristic_val <= 10e-5
+        self._end_cache[policy_state] = max_value_of_info \
+                                        - self._comm_cost * sum(len(queries)
+                                                                for queries in policy_state['Queries'].values()) \
+                                        <= self._comm_cost
 
         ########################################################################################################
         # Cleanup
