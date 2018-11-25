@@ -278,13 +278,10 @@ class CommScenario:
 
         # The heuristic value, then, is the largest VOI - the current VOI (delta VOI steps) less the cost of at least
         # one query. Of course, if this is less than 0, there is no point in continuing, so the agent should stop.
-        heuristic_val = max(max_value_of_info
-                            - new_value_of_info
-                            - self._comm_cost,
-                            # * (sum(len(queries) for queries in policy_state['Queries'].values()) + 1),
-                            0)
+        self._heuristic_value_cache[policy_state] = max(max_value_of_info - new_value_of_info - self._comm_cost, 0)
 
-        self._heuristic_value_cache[policy_state] = heuristic_val
+        # The end condition: if max possible value of information - cost of all queries it took to get it is less than
+        # the cost of a one more comm, then we know we can't afford the cost of further queries.
         self._end_cache[policy_state] = max_value_of_info \
                                         - self._comm_cost * sum(len(queries)
                                                                 for queries in policy_state['Queries'].values()) \
