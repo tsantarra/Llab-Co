@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# load necessary modules
-#module --ignore-cache load python/3.6.5-5
-module --ignore-cache load python/3.7.0
-
 # transfer data from stashcache
 # module load stashcp
 # stashcp /user/tsantarra/input_data/$2.npy data.npy
+
+# load necessary modules
+#module --ignore-cache load python/3.6.5-5
+module --ignore-cache load python/3.7.0
 
 # untar local library
 tar -xzf Llab-Co.tar.gz
