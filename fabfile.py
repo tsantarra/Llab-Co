@@ -27,10 +27,24 @@ def setup():
 
 
 def env():
-    run('module --ignore-cache load python/3.7.0')
     with cd('Llab-Co'):
-        run('chmod +x create_virtual_env.sh')
-        run('./create_virtual_env.sh')
+        run('module --ignore-cache load python/3.7.0')
+        run('rm -rf test_env/*')
+        run('virtualenv -p python3 test_env')
+        run('source test_env/bin/activate')
+        run('pip install logmatic-python')
+        run('deactivate')
+
+    #with cd('Llab-Co'):
+    #    run('chmod +x create_virtual_env.sh')
+    #    run('./create_virtual_env.sh')
+
+
+def tar():
+    with cd('Llab-Co'):
+        run('cp remote_run_test.sh ../remote_run_test.sh')
+        run('cp osg_setup.submit ../osg_setup.submit')
+        run('tar -cvzf ../Llab-Co.tar.gz ../Llab-Co')
 
 
 def start():
@@ -63,7 +77,7 @@ def clear_output():
 
 
 def get_logs():
-    get("./Log*")
+    get("./Log/j*")
 
 
 def clear_logs():
