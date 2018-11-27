@@ -1,13 +1,13 @@
 from itertools import product
-from os.path import isfile
+from os import listdir
 
 
 def check_logs(vals, log_found=False):
-
+    filenames = listdir('../login.osgconnect.net/out/');
     for permutation in product(*list(val[1] for val in vals)):
-        filename = 'data-' + '-'.join(map(str, permutation)) + '.log'
+        file_start = 'data-' + '-'.join(map(str, permutation))
 
-        if not isfile(f'../login.osgconnect.net/out/{filename}'):
+        if not any(filename.startswith(file_start) for filename in filenames):
             print(' '.join(map(str, permutation)))
         elif log_found:
             print(' '.join(map(str, permutation)) + '\tFound')

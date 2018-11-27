@@ -7,8 +7,8 @@ Executable = remote_run_test.sh
 # Files to transfer and trasnfer settings
 should_transfer_files = YES
 transfer_input_files = Llab-Co.tar.gz, remote_run_test.sh
-# test_env.tar.gz,
 when_to_transfer_output = ON_EXIT
+
 # Notification = Error  # only email if error
 
 # Log file save location
@@ -25,7 +25,7 @@ request_disk = 1GB
 # Node requirements
 # +WantsStashCache = true
 # HAS_NUMPY == True
-requirements = OSGVO_OS_STRING == "RHEL 7" && Arch == "X86_64" && HAS_MODULES == True
+requirements = OSGVO_OS_STRING == "RHEL 7" && Arch == "X86_64" && HAS_MODULES == True && HAS_CVMFS_oasis_opensciencegrid_org =?= TRUE
 
 # Arguments for the shell file we run
 # Arguments = $(Cluster) $(Process)
@@ -52,6 +52,86 @@ periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) 
 #   Process
 
 Queue Arguments From (
-100 2 0 1 1 110 1 1 1 1 $(Cluster) $(Process)
-101 2 0 1 1 110 1 1 1 1 $(Cluster) $(Process)
+53 2 0 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 1 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 2 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 3 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 4 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 5 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 6 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 7 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 8 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 9 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 10 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 11 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 12 500 1 5 500 100 50 1 $(Cluster) $(Process)
+53 2 13 500 1 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 3 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 3 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 3 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 5 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 5 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 5 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 10 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 10 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 3 10 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 3 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 3 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 3 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 5 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 5 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 5 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 10 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 10 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 4 10 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 3 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 3 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 3 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 5 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 5 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 5 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 10 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 10 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 10 10 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 3 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 3 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 3 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 5 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 5 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 5 100 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 10 10 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 10 60 5 500 100 50 1 $(Cluster) $(Process)
+54 2 11 10 100 5 500 100 50 1 $(Cluster) $(Process)
+55 2 3 3 100 1 500 100 50 1 $(Cluster) $(Process)
+55 2 3 3 100 10 500 100 50 1 $(Cluster) $(Process)
+55 2 3 3 100 99 500 100 50 1 $(Cluster) $(Process)
+55 2 4 3 100 1 500 100 50 1 $(Cluster) $(Process)
+55 2 4 3 100 10 500 100 50 1 $(Cluster) $(Process)
+55 2 4 3 100 99 500 100 50 1 $(Cluster) $(Process)
+55 2 10 3 100 1 500 100 50 1 $(Cluster) $(Process)
+55 2 10 3 100 10 500 100 50 1 $(Cluster) $(Process)
+55 2 10 3 100 99 500 100 50 1 $(Cluster) $(Process)
+55 2 11 3 100 1 500 100 50 1 $(Cluster) $(Process)
+55 2 11 3 100 10 500 100 50 1 $(Cluster) $(Process)
+55 2 11 3 100 99 500 100 50 1 $(Cluster) $(Process)
+56 2 3 3 100 5 500 0 50 1 $(Cluster) $(Process)
+56 2 3 3 100 5 500 10 50 1 $(Cluster) $(Process)
+56 2 3 3 100 5 500 25 50 1 $(Cluster) $(Process)
+56 2 3 3 100 5 500 100 50 1 $(Cluster) $(Process)
+56 2 3 3 100 5 500 500 50 1 $(Cluster) $(Process)
+56 2 4 3 100 5 500 0 50 1 $(Cluster) $(Process)
+56 2 4 3 100 5 500 10 50 1 $(Cluster) $(Process)
+56 2 4 3 100 5 500 25 50 1 $(Cluster) $(Process)
+56 2 4 3 100 5 500 100 50 1 $(Cluster) $(Process)
+56 2 4 3 100 5 500 500 50 1 $(Cluster) $(Process)
+56 2 10 3 100 5 500 0 50 1 $(Cluster) $(Process)
+56 2 10 3 100 5 500 10 50 1 $(Cluster) $(Process)
+56 2 10 3 100 5 500 25 50 1 $(Cluster) $(Process)
+56 2 10 3 100 5 500 100 50 1 $(Cluster) $(Process)
+56 2 10 3 100 5 500 500 50 1 $(Cluster) $(Process)
+56 2 11 3 100 5 500 0 50 1 $(Cluster) $(Process)
+56 2 11 3 100 5 500 10 50 1 $(Cluster) $(Process)
+56 2 11 3 100 5 500 25 50 1 $(Cluster) $(Process)
+56 2 11 3 100 5 500 100 50 1 $(Cluster) $(Process)
+56 2 11 3 100 5 500 500 50 1 $(Cluster) $(Process)
 )

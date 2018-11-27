@@ -199,9 +199,10 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) == len(Parameters._fields) + 3, 'Improper arguments given: ' + \
-                                                         ' '.join(str(i) for i in sys.argv) + \
-                                                         '\nExpected: ' + ' '.join(Parameters._fields)
+    assert len(sys.argv) == len(Parameters._fields) + 3, \
+        'Improper arguments given: ' + ' '.join(str(i) for i in sys.argv) + '\nExpected: ' + \
+        ' '.join(Parameters._fields) + '$(Cluster) $(Process)'
+
     parameters = [int(arg) for arg in sys.argv[1:-2]]
     parameters = Parameters(*parameters)
     print('Parameters: ' + str(parameters))

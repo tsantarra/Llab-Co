@@ -2,9 +2,9 @@ from itertools import product
 
 
 def generate_args(vals):
-    for permutation in product(*list(val[1] for val in vals)):
+    all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
+    for permutation in product(*all_vals):
         print(' '.join(str(v) for v in permutation))
-
 
 
 if __name__ == '__main__':
