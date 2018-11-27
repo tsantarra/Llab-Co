@@ -19,7 +19,7 @@ def setup():
 
     with cd('Llab-Co'):
         # run('git init')
-        # run('git reset --hard')
+        run('git reset --hard')
         run('git pull')
 
         if not exists('Log'):
@@ -28,16 +28,8 @@ def setup():
 
 def env():
     with cd('Llab-Co'):
-        run('module --ignore-cache load python/3.7.0')
-        run('rm -rf test_env/*')
-        run('virtualenv -p python3 test_env')
-        run('source test_env/bin/activate')
-        run('pip install logmatic-python')
-        run('deactivate')
-
-    #with cd('Llab-Co'):
-    #    run('chmod +x create_virtual_env.sh')
-    #    run('./create_virtual_env.sh')
+       run('chmod +x create_virtual_env.sh')
+       run('./create_virtual_env.sh')
 
 
 def tar():
