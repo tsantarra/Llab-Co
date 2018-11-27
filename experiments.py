@@ -31,7 +31,7 @@ Parameters = namedtuple('Parameters', ['process_no',
                                        'plan_iterations',
                                        'experience',
                                        'trials',
-                                       'alpha'])
+                                       'alpha',])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
              CopsAndRobbersScenario(filename='a.maze', max_rounds=12),
@@ -199,10 +199,10 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) == len(Parameters._fields) + 1, 'Improper arguments given: ' + \
+    assert len(sys.argv) == len(Parameters._fields) + 3, 'Improper arguments given: ' + \
                                                          ' '.join(str(i) for i in sys.argv) + \
                                                          '\nExpected: ' + ' '.join(Parameters._fields)
-    parameters = [int(arg) for arg in sys.argv[1:]]
+    parameters = [int(arg) for arg in sys.argv[1:-2]]
     parameters = Parameters(*parameters)
     print('Parameters: ' + str(parameters))
 

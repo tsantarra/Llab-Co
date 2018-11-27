@@ -352,6 +352,7 @@ data_config[46] = [
 
 
 # 5X - Comm cost > 0 now, as we continue communicating until no benefit (all policy for cost = 0)
+# log numbers 1146804
 
 # 53 - Rerun all heuristics, but with only 1 comm planning iteration
 data_config[53] = [

@@ -21,7 +21,7 @@ source ./test_env/bin/activate
 mkdir -p out
 
 # Run python script
-./test_env/bin/python3 experiments.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10}
+./test_env/bin/python3 experiments.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12}
 
 cd ..
 
