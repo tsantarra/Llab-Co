@@ -1,8 +1,5 @@
 #!/bin/bash
 
-source /cvmfs/oasis.opensciencegrid.org/osg/modules/switch-modules/rcc/switch-modules.sh
-switch_modules oasis
-
 # load necessary modules
 #module --ignore-cache load python/3.6.5-5
 module --ignore-cache load python/3.7.0
