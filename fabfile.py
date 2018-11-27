@@ -18,13 +18,17 @@ def setup():
         run('git clone https://github.com/tsantarra/Llab-Co')
 
     with cd('Llab-Co'):
-        run('git init')
-        run('git reset --hard')
+        # run('git init')
+        # run('git reset --hard')
         run('git pull')
 
         if not exists('Log'):
             run('mkdir -p Log')
 
+
+def env():
+    run('module --ignore-cache load python/3.7.0')
+    with cd('Llab-Co'):
         run('chmod +x create_virtual_env.sh')
         run('./create_virtual_env.sh')
 
