@@ -78,16 +78,40 @@ if __name__ == '__main__':
     import warnings
     warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
 
-    # 32 - Pt 1
-    data = read_files_for_experiment(data_dir, 32, filter=lambda f: f.endswith('0.log'))
-    compare_success_rate_error_bars(data['End Trial'].groupby(['heuristic_id'], as_index=False),
-                                    title='Heuristic Success Rate in Cops and Robbers - Alpha=0',
-                                    x_label='Heuristic ID',
-                                    y_label='Average Success',
-                                    y_range=(0, 1))
-    plt.show()
+    if False:
+        # 32 - Pt 1
+        data = read_files_for_experiment(data_dir, 32, filter=lambda f: f.endswith('0.log'))
+        compare_success_rate_error_bars(data['End Trial'].groupby(['heuristic_id'], as_index=False),
+                                        title='Heuristic Success Rate in Cops and Robbers - Alpha=0',
+                                        x_label='Heuristic ID',
+                                        y_label='Average Success',
+                                        y_range=(0, 1))
+        plt.show()
 
-    # 32 - Pt 2
+        # 32 - Pt 2
+        data = read_files_for_experiment(data_dir, 32, filter=lambda f: f.endswith('1.log'))
+        compare_success_rate_error_bars(data['End Trial'].groupby(['heuristic_id'], as_index=False),
+                                        title='Heuristic Success Rate in Cops and Robbers - Alpha=1',
+                                        x_label='Heuristic ID',
+                                        y_label='Average Success',
+                                        y_range=(0, 1))
+        plt.show()
+
+        # 34 - A handful of heuristics evaluated with different branch factors
+        #       (show each heuristic alone with 4 grouped treatments)
+        data = read_files_for_experiment(data_dir, 34)
+        grouped = data['End Trial'].groupby(['comm_branch_factor'], as_index=False)
+        compare_success_rate_error_bars_grouped_treatments(grouped,
+                                                           treatment_var_list=paramlist,
+                                                           tick_label=data['End Trial'].groupby(['heuristic_id']).groups.keys(),
+                                                            title='Heuristic Success Rate in Cops and Robbers - Alpha=1',
+                                                            x_label='Heuristic ID',
+                                                            y_label='Average Success',
+                                                            y_range=(0, 1))
+        plt.show()
+
+
+    # 53 - Rerun all heuristics, but with only 1 comm planning iteration
     data = read_files_for_experiment(data_dir, 32, filter=lambda f: f.endswith('1.log'))
     compare_success_rate_error_bars(data['End Trial'].groupby(['heuristic_id'], as_index=False),
                                     title='Heuristic Success Rate in Cops and Robbers - Alpha=1',
@@ -96,17 +120,8 @@ if __name__ == '__main__':
                                     y_range=(0, 1))
     plt.show()
 
-    # 34 - A handful of heuristics evaluated with different branch factors
-    #       (show each heuristic alone with 4 grouped treatments)
-    data = read_files_for_experiment(data_dir, 34)
-    grouped = data['End Trial'].groupby(['comm_branch_factor'], as_index=False)
-    compare_success_rate_error_bars_grouped_treatments(grouped,
-                                                       treatment_var_list=paramlist,
-                                                       tick_label=data['End Trial'].groupby(['heuristic_id']).groups.keys(),
-                                                        title='Heuristic Success Rate in Cops and Robbers - Alpha=1',
-                                                        x_label='Heuristic ID',
-                                                        y_label='Average Success',
-                                                        y_range=(0, 1))
-    plt.show()
+
+
+
 
 

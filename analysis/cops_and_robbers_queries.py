@@ -5,6 +5,7 @@ from utils.json_log_reader import paramlist, read_all_files, data_dir
 
 import csv
 
+
 def process_queries(data_by_message, out_dir):
     query_data = data_by_message['Query Step']
 
@@ -37,8 +38,6 @@ def process_queries(data_by_message, out_dir):
                 writer.writerow([None] * skip + list(loc_data[(row, col)] for col in range(max_dim+1)) + [None, round_data[row+1]])
 
             writer.writerow([])
-
-
 
 
 if __name__ == '__main__':

@@ -22,6 +22,10 @@ def setup():
         run('git reset --hard')
         run('git pull')
 
+        # Move needed scripts out
+        run('cp remote_run_test.sh ../remote_run_test.sh')
+        run('cp osg_setup.submit ../osg_setup.submit')
+
         if not exists('Log'):
             run('mkdir -p Log')
 
@@ -34,8 +38,6 @@ def env():
 
 def tar():
     with cd('Llab-Co'):
-        run('cp remote_run_test.sh ../remote_run_test.sh')
-        run('cp osg_setup.submit ../osg_setup.submit')
         run('tar -cvzf ../Llab-Co.tar.gz ../Llab-Co')
 
 

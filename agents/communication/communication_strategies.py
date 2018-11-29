@@ -431,7 +431,7 @@ def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, 
     node_probs[policy_root] = 1.0
 
     def evaluate(node, _):
-        if prune_fn(node, target_agent_name):
+        if not node.action_space:
             return
 
         other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
@@ -447,7 +447,7 @@ def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, 
                                                       for other_agent in other_agent_predictions])
 
     traverse_graph_topologically(depth_map, evaluate)
-    return [(node.state['World State'], prob) for node, prob in node_probs.items()]
+    return [(node.state['World State'], prob) for node, prob in node_probs.items() if not prune_fn(node, target_agent_name)]
 
 
 def create_myopic_heuristic(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
