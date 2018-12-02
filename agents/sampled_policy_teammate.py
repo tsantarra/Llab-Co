@@ -3,7 +3,7 @@ from operator import mul
 
 from mdp.graph_planner import search
 from mdp.distribution import Distribution
-from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically
+from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically, map_graph
 
 from math import inf
 from random import choice
@@ -36,8 +36,7 @@ class SampledTeammateGenerator:
                                           for joint_action in node._optimal_joint_actions
                                           for successor in node.successors[joint_action])
 
-        map = map_graph_by_depth(self._internal_root)
-        traverse_graph_topologically(map, count_policies, top_down=False)
+        traverse_graph_topologically(map_graph_by_depth(self._internal_root), count_policies, top_down=False)
 
         print('Optimal trajectories: ' + str(sub_policy_counts[self._internal_root]))
         print('Optimal policy value: ' + str(self._internal_root.future_value))
@@ -104,6 +103,7 @@ class SampledTeammateGenerator:
             del node.flat_successors
 
         self._flat_policy_graph = []
+        self._graph_map = map_graph(self._internal_root)
 
         self.policy_stats()
 

@@ -200,6 +200,16 @@ class SparseChineseRestaurantProcessModel:
         return Distribution({self.action_list[action_index]: probability
                              for action_index, probability in action_index_distribution.items()})
 
+    def consensus(self, state, policy_distribution):
+        """ Do all modeled policies agree. """
+        if len(policy_distribution) == 1 or state not in self.state_to_index:
+            return False
+
+        state_index = self.__get_state_index(state)
+        action_of_first_policy = self.policy_matrix[state_index][0]
+        return all(policy_index == -1 or self.policy_matrix[state_index][policy_index] == action_of_first_policy
+                   for policy_index, policy_probability in policy_distribution)
+
 
 class ChineseRestaurantProcessModel:
 

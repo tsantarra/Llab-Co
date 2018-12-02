@@ -40,6 +40,7 @@ scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1,
              CopsAndRobbersScenario(filename='small.maze', final_round=6),
              CopsAndRobbersScenario(filename='sidekick_first.maze', final_round=9),
              CopsAndRobbersScenario(filename='agent_first.maze', final_round=9),
+             CopsAndRobbersScenario(filename='simultaneous.maze', final_round=9),
              ]
 
 heuristics = [

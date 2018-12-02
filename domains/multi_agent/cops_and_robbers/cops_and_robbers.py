@@ -59,8 +59,8 @@ def ad_hoc_carpy():
 
     agent = ModelingAgent(scenario=scenario,
                           identity='A',
-                          models={'P': teammate_model})
-    agents = {'A': agent, 'P': teammate}
+                          models={'S': teammate_model})
+    agents = {'A': agent, 'S': teammate}
 
     # Main loop
     logging.debug('Beginning simulation.')
