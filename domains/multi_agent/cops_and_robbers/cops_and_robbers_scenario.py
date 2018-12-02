@@ -11,14 +11,13 @@ State variables:
 
 The state can also be extended with a partner model, taking the role of the 'belief state' in POMDPs. 
 """
-from collections import namedtuple
-
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.action import JointActionSpace
 
+from collections import namedtuple
 import json
-import os
+
 
 WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT = \
     '*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<'
@@ -29,19 +28,22 @@ _path = './domains/multi_agent/cops_and_robbers/mazes/'
 
 class CopsAndRobbersScenario:
 
-    def __init__(self, filename='simple.maze', max_rounds=6, reward=100):
+    def __init__(self, filename='simple.maze', final_round=6, reward=100):
         """
         Open the file and read in the maze configuration.
         """
         with open(_path + filename, 'r') as maze_file:
             maze_lines = maze_file.read().split('\n')
 
+        self.rows = len(maze_lines)
+        self.cols = len(maze_lines[0])
+
         self.initial_maze = {Location(row, col): char for row, line in enumerate(maze_lines) for col, char in enumerate(line)}
         replace = {AGENT, PARTNER, ROBBER}
         self.maze = {loc: char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
 
         self._state_transition_cache = {}
-        self.max_rounds = max_rounds
+        self.final_round = final_round
         self.success_reward = reward
 
     def agents(self):
@@ -116,7 +118,7 @@ class CopsAndRobbersScenario:
                 elif individual_action == 'L':
                     col -= 1
 
-                assert 0 < row < 8 and 0 < col < 8, \
+                assert 0 < row < self.rows - 1 and 0 < col < self.cols - 1, \
                     'Illegal action taken. {action} {loc}'.format(action=individual_action, loc=(row, col)) + '\n' + \
                     self.show_state(intermediate_state)
 
@@ -130,15 +132,12 @@ class CopsAndRobbersScenario:
         return new_state_distribution
 
     def end(self, state):
-        return self.end_check(state)
-
-    def end_check(self, state):
         """
         End conditions:
-            - Round limit hit. Currently 50.
+            - Round limit hit.
             - Both agents and at least one robber are located in a single cell.
         """
-        if state['Round'] > self.max_rounds:
+        if state['Round'] > self.final_round:
             return True
 
         return self.robber_caught(state)
@@ -235,7 +234,7 @@ class CopsAndRobbersScenario:
 
         agent_loc = state['A']
         partner_loc = state['P']
-        rounds_left = self.max_rounds - state['Round']
+        rounds_left = self.final_round - state['Round'] + 1
 
         if any(self.distance(agent_loc, r_loc) <= rounds_left and self.distance(partner_loc, r_loc) <= rounds_left
                for r, r_loc in state.items() if r.startswith('Rob')):

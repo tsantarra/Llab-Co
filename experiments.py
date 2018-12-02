@@ -22,20 +22,25 @@ import gzip
 
 logger = logging.getLogger()
 
-Parameters = namedtuple('Parameters', ['process_no',
-                                       'scenario_id',
-                                       'heuristic_id',
-                                       'comm_branch_factor',
-                                       'comm_iterations',
-                                       'comm_cost',
-                                       'plan_iterations',
-                                       'experience',
-                                       'trials',
-                                       'alpha',])
+Parameters = namedtuple('Parameters', [
+                                       'process_no',            # 0
+                                       'scenario_id',           # 1
+                                       'heuristic_id',          # 2
+                                       'comm_branch_factor',    # 3
+                                       'comm_iterations',       # 4
+                                       'comm_cost',             # 5
+                                       'plan_iterations',       # 6
+                                       'experience',            # 7
+                                       'trials',                # 8
+                                       'alpha',                 # 9
+                                       ])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
-             CopsAndRobbersScenario(filename='a.maze', max_rounds=12),
-             CopsAndRobbersScenario(filename='small.maze', max_rounds=6), ]
+             CopsAndRobbersScenario(filename='a.maze', final_round=12),
+             CopsAndRobbersScenario(filename='small.maze', final_round=6),
+             CopsAndRobbersScenario(filename='sidekick_first.maze', final_round=9),
+             CopsAndRobbersScenario(filename='agent_first.maze', final_round=9),
+             ]
 
 heuristics = [
               local_action_information_entropy,             # 0

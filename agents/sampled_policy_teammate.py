@@ -40,6 +40,7 @@ class SampledTeammateGenerator:
         traverse_graph_topologically(map, count_policies, top_down=False)
 
         print('Optimal trajectories: ' + str(sub_policy_counts[self._internal_root]))
+        print('Optimal policy value: ' + str(self._internal_root.future_value))
 
     def setup_optimal_policy_graph(self, graph_iterations):
         """
@@ -103,6 +104,8 @@ class SampledTeammateGenerator:
             del node.flat_successors
 
         self._flat_policy_graph = []
+
+        self.policy_stats()
 
 
 class SampledPolicyTeammate:

@@ -14,7 +14,7 @@ def centralized_carpy():
     from mdp.graph_planner import search, greedy_action
 
     # Initialize map
-    scenario = CopsAndRobbersScenario('a.maze', max_rounds=10)
+    scenario = CopsAndRobbersScenario('a.maze', final_round=10)
     state = scenario.initial_state()
     print('Initial state:\n', state)
 

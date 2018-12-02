@@ -52,6 +52,13 @@ def check():
     # run("watch -n2 condor_q " + env.user)
 
 
+def get_all():
+    get_output()
+    clear_output()
+    get_logs()
+    clear_logs()
+
+
 def get_output():
     run('''files=$(ls out.* 2> /dev/null | wc -l)
            if ls out.* &> /dev/null
