@@ -1,3 +1,4 @@
+from math import log
 from random import uniform
 
 
@@ -71,8 +72,26 @@ class Distribution(dict):
         # Small rounding errors may cause probability to not reach target for last state.
         return item
 
+    @property
+    def entropy(self):
+        assert abs(sum(self.values()) - 1.0) < 10e-6, 'Distribution not normalized.'
+        return -1 * sum(prob * log(prob) for prob in self.values())
+
+    @property
+    def max_item(self):
+        assert abs(sum(self.values()) - 1.0) < 10e-6, 'Distribution not normalized.'
+        return max(self.items(), key=lambda p: p[1])
+
+    @property
+    def max_key(self):
+        return self.max_item[0]
+
+    @property
+    def max_probability(self):
+        return self.max_item[1]
+
     def copy(self):
-        return Distribution(self.items()) #{**self})
+        return Distribution(self.items())
 
     def __repr__(self):
         return '\nDistribution {\n' + '\n'.join(str(key) + ' P=' + str(val)

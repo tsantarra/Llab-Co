@@ -409,3 +409,61 @@ data_config[56] = [
     ('trials', [50]),
     ('alpha', [1])
 ]
+
+# 6X - Comm heuristic = 0
+
+# 63 - Rerun all heuristics, but with only 1 comm planning iteration
+data_config[63] = [
+    ('process_no', [63]),
+    ('scenario_id', [2]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [500]),
+    ('comm_iterations', [1]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [1])
+]
+
+# 64 (r34) -  Vary comm branch factor with a few heuristics; BUDGET = BRANCH * ITERATIONS
+data_config[64] = [
+    ('process_no', [64]),
+    ('scenario_id', [2]),
+    ('heuristic_id', [3, 4, 10, 11]),
+    ('comm_branch_factor', [3, 5, 10]),
+    ('comm_iterations', [10, 60, 100]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [1])
+]
+
+# 65 (r35) - Vary comm costs with a few heuristics
+data_config[65] = [
+    ('process_no', [65]),
+    ('scenario_id', [2]),
+    ('heuristic_id', [3, 4, 10, 11]),
+    ('comm_branch_factor', [3]),
+    ('comm_iterations', [100]),
+    ('comm_cost', [1, 10, 99]),
+    ('plan_iterations', [600]),
+    ('experience', [100]),
+    ('trials', [60]),
+    ('alpha', [1])
+]
+
+# 66 (r36) - Vary experience with a few heuristics
+data_config[66] = [
+    ('process_no', [66]),
+    ('scenario_id', [2]),
+    ('heuristic_id', [3, 4, 10, 11]),
+    ('comm_branch_factor', [3]),
+    ('comm_iterations', [100]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [0, 10, 25, 100, 500]),
+    ('trials', [50]),
+    ('alpha', [1])
+]

@@ -297,6 +297,8 @@ class CommScenario:
 
     def heuristic_value(self, policy_state):
         """ Heuristic used for communication policy search. """
+        return 0
+
         if policy_state['End?']:
             return 0
 

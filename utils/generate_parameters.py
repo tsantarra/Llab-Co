@@ -11,5 +11,5 @@ if __name__ == '__main__':
     from notes.Experimental_Runs import data_config
 
     for exp_no, config in data_config.items():
-        if exp_no > 50:
+        if exp_no > 60:
             generate_args(config)
