@@ -1,10 +1,3 @@
-"""
-What are the requirements of a joint action?
-    - should refer to agents by name; Map?
-    - create a helper static method to generate all possible joint actions from individual agent actions
-
-"""
-
 from collections import Mapping
 from itertools import product
 
@@ -20,7 +13,7 @@ class Action(Mapping):
         return Action(new_dict)
 
     def __getitem__(self, key):
-        return self._dict[key]
+        return self._dict.__getitem__(key)
 
     def __iter__(self):
         return iter(self._dict)

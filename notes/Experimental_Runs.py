@@ -467,3 +467,22 @@ data_config[66] = [
     ('trials', [50]),
     ('alpha', [1])
 ]
+
+
+# 7X - still use a comm heuristic of 0; reduce number of comm iterations, however. 100 is far too many.
+
+# 74 (r74) -  Vary comm branch factor with a few heuristics; BUDGET = BRANCH * ITERATIONS
+data_config[74] = [
+    ('process_no', [74]),
+    ('scenario_id', [2]),
+    ('heuristic_id', [3, 4, 10, 11]),
+    ('comm_branch_factor', [1, 2, 3, 5]),
+    ('comm_iterations', [1, 5, 10, 15, 20]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [1])
+]
+
+

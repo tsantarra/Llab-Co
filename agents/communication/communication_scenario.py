@@ -296,14 +296,21 @@ class CommScenario:
         del new_policy_root
 
     def heuristic_value(self, policy_state):
-        """ Heuristic used for communication policy search. """
-        return 0
+        """
+        Heuristic used for communication policy search.
 
+        Note: The admissible heuristic vastly overestimates the potential value of information remaining. In combination
+        with partial/online planning, it can cause poor query choices. We will leave choice of a communication heuristic
+        as an open direction for research and adopt a flat heuristic (h=0) for the remaining experiments.
+
+        # Old version:
         if policy_state['End?']:
             return 0
 
         assert policy_state in self._heuristic_value_cache, 'Cannot evaluate heuristic on policy state: ' + policy_state
         return self._heuristic_value_cache[policy_state]
+        """
+        return 0
 
     def _update_model_state(self, old_model_state, policy_state):
         assert all(type(model) is CommunicatingTeammateModel for model in old_model_state.values()), \

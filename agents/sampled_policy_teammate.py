@@ -53,8 +53,9 @@ class SampledTeammateGenerator:
         for node in (n for n in depth_map if n.action_space):
             joint_action_values = node.action_values()
             max_action_value = max(joint_action_values.values())
-            node._optimal_joint_actions = list(action for action, value in joint_action_values.items()
-                                                if abs(value - max_action_value) < 10e-5)
+            node._optimal_joint_actions = [action for action, value in joint_action_values.items()
+                                                if abs(value - max_action_value) < 10e-5]
+            node._individual_optimal_actions = [action[self.identity] for action in node._optimal_joint_actions]
 
         return root, {node.state: node for node in depth_map}
 
@@ -69,7 +70,7 @@ class SampledTeammateGenerator:
         while queue:
             node = queue.popleft()
 
-            individual_action = choice(node._optimal_joint_actions)[self.identity]
+            individual_action = choice(node._individual_optimal_actions)
             policy[node.state] = individual_action
 
             queue.extend(successor for possible_joint_action, successor_dist in node.successors.items()
@@ -82,7 +83,7 @@ class SampledTeammateGenerator:
         return SampledPolicyTeammate(self.identity, self.sample_partial_policy(), self.scenario, self)
 
     def __getstate__(self):
-        def _flatten_graph(node, horizon):
+        def _flatten_graph(node, _):
             self._flat_policy_graph.append((node.state, node))
 
         traverse_graph_topologically(map_graph_by_depth(self._internal_root), _flatten_graph)
@@ -124,7 +125,7 @@ class SampledPolicyTeammate:
         policy_node = self._generator._graph_map[state]
         assert policy_node.action_space, 'No action space for state. ' + str(state)
 
-        return choice(policy_node._optimal_joint_actions)[self.identity]
+        return choice(policy_node._individual_optimal_actions)
 
     def predict(self, state):
         return Distribution({action: 1.0 if action == self.policy[state] else 0

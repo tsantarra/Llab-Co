@@ -89,7 +89,7 @@ from functools import reduce
 
 from agents.communication.communication_scenario import Query
 from agents.modeling_agent import individual_agent_action_values
-from mdp.graph_utilities import recursive_traverse_policy_graph, traverse_graph_topologically
+from mdp.graph_utilities import traverse_graph_topologically
 from mdp.distribution import ListDistribution
 
 
@@ -448,44 +448,4 @@ def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, 
 
     traverse_graph_topologically(depth_map, evaluate)
     return [(node.state['World State'], prob) for node, prob in node_probs.items() if not prune_fn(node, target_agent_name)]
-
-
-def create_myopic_heuristic(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
-    """
-    query = argmax(q=s_t) sum_{p(a_t)} [ V(s_0 | a_t, π') - V(s_0 | a_t, π)]
-    """
-    def myopic(node, target_agent, node_probability):
-        """
-        query = argmax(q) E[V(s_0) | \pi']
-        """
-        def calc_ev(agent, model, query, action):
-            def compute_policy(node, action_values, new_policy):
-                action, action_value = max(action_values.items(), key=lambda pair: pair[1])
-                new_policy[node.state] = action
-                return action_value
-
-            new_model = model.communicated_policy_update([(query, action)])
-            new_model_state = policy_root.state['Models'].update_item(agent, new_model)
-            policy = {}
-            #### Update this
-            expected_util = recursive_traverse_policy_graph(node=policy_root, node_values={},
-                                                            model_state=new_model_state,
-                                                            policy=policy, policy_fn=compute_policy,
-                                                            agent_identity=agent_identity)
-
-            return expected_util
-
-        # Info needed to calculate new policy's expected value.
-        world_state = node.state['World State']
-        model = node.state['Models'][target_agent]
-        query = Query(target_agent, world_state)
-
-        # Return the expectation over responses.
-        return sum(prob * calc_ev(target_agent, model, query, action)
-                   for action, prob in model.predict(world_state).items())
-
-    raise Exception('Not checked for correctness. Verify before using.')
-
-    return myopic
-
 
