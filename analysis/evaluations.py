@@ -73,7 +73,6 @@ def compare_success_rate_error_bars_grouped_treatments(grouped_data, treatment_v
                               **plot_kwargs)
 
 
-
 if __name__ == '__main__':
     import warnings
     warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
@@ -112,7 +111,9 @@ if __name__ == '__main__':
 
 
     # 53 - Rerun all heuristics, but with only 1 comm planning iteration
-    data = read_files_for_experiment(data_dir, 32, filter=lambda f: f.endswith('1.log'))
+    # 2 - {3, 4, 10, 11} - {3, 5, 10} - {10, 60, 100} - 5 - 500 - 100 - 5 - 1
+    # varied: heuristic (4), branching (3), comm iterations (3)
+    data = read_files_for_experiment(data_dir, 64, filter=lambda f: f.endswith('1.log'))
     compare_success_rate_error_bars(data['End Trial'].groupby(['heuristic_id'], as_index=False),
                                     title='Heuristic Success Rate in Cops and Robbers - Alpha=1',
                                     x_label='Heuristic ID',

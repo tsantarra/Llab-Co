@@ -2,8 +2,8 @@ from itertools import product
 from os import listdir
 
 
-def check_logs(vals, log_found=False):
-    filenames = listdir('../login.osgconnect.net/out/');
+def check_logs(vals, directory, log_found=False):
+    filenames = listdir(directory);
     for permutation in product(*list(val[1] for val in vals)):
         file_start = 'data-' + '-'.join(map(str, permutation))
 
@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     print('Missing: ')
     for experiment_number, parameters in data_config.items():
-        if experiment_number < 40:
+        if 50 > experiment_number or experiment_number > 60:
             continue
 
-        check_logs(parameters, log_found=True)
+        check_logs(parameters,'../login.osgconnect.net/out/5-series/', log_found=False)

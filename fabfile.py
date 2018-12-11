@@ -41,6 +41,12 @@ def tar():
         run('tar -cvzf ../Llab-Co.tar.gz ../Llab-Co')
 
 
+def setup_all():
+    setup()
+    env()
+    tar()
+
+
 def start():
     run('condor_submit osg_setup.submit')
 

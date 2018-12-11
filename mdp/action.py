@@ -13,7 +13,7 @@ class Action(Mapping):
         return Action(new_dict)
 
     def __getitem__(self, key):
-        return self._dict.__getitem__(key)
+        return self._dict[key]
 
     def __iter__(self):
         return iter(self._dict)

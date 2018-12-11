@@ -36,11 +36,11 @@ Parameters = namedtuple('Parameters', [
                                        ])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
-             CopsAndRobbersScenario(filename='a.maze', final_round=12),
-             CopsAndRobbersScenario(filename='small.maze', final_round=6),
-             CopsAndRobbersScenario(filename='sidekick_first.maze', final_round=9),
-             CopsAndRobbersScenario(filename='agent_first.maze', final_round=9),
-             CopsAndRobbersScenario(filename='simultaneous.maze', final_round=9),
+             CopsAndRobbersScenario(filename='a.maze', end_round=13),
+             CopsAndRobbersScenario(filename='small.maze', end_round=6),
+             CopsAndRobbersScenario(filename='sidekick_first.maze', end_round=10),
+             CopsAndRobbersScenario(filename='agent_first.maze', end_round=10),
+             CopsAndRobbersScenario(filename='simultaneous.maze', end_round=10),
              ]
 
 heuristics = [
@@ -104,6 +104,7 @@ def initialize_teammate_generator(scenario, teammate_identity):
                 - Multiple SampledPolicyTeammate models (one partial policy each; also used for the actual teammate)
                 - One UniformPolicyTeammate model
     """
+    return SampledTeammateGenerator(scenario, teammate_identity)
     precomputed_policy_graph_file = f'{type(scenario).__name__}.pickle'
     if os.path.isfile(precomputed_policy_graph_file):
         with gzip.open(precomputed_policy_graph_file, 'rb') as policy_file:
@@ -157,7 +158,10 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
     agent_dict = {agent_name: agent, teammate_name: teammate}
     utility = 0
 
-    print('Initial state:\n', state, '\n')
+    if hasattr(scenario, 'show_state'):
+        print('Initial state:\n' + scenario.show_state(state),'\n')
+    else:
+        print('Initial state:\n', state, '\n')
 
     # Main loop
     while not scenario.end(state):
@@ -194,7 +198,10 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         print('Updated: \t', new_joint_action)
         print('Policy distribution length:', len(agent.model_state[teammate_name].model.policy_distribution))
         print('New Action:', new_joint_action)
-        print('New State:\n', new_state)
+        if hasattr(scenario, 'show_state'):
+            print('New State:\n' + scenario.show_state(new_state))
+        else:
+            print('New State:\n', new_state)
         print('Utility:', utility)
         print('-----------------\n')
 

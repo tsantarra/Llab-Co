@@ -18,7 +18,6 @@ from mdp.action import JointActionSpace
 from collections import namedtuple
 import json
 
-
 WALL, OPEN, AGENT, PARTNER, ROBBER, GATE_UP, GATE_DOWN, GATE_RIGHT, GATE_LEFT = \
     '*', ' ', 'A', 'S', 'R', '^', 'v', '>', '<'
 
@@ -28,7 +27,7 @@ _path = './domains/multi_agent/cops_and_robbers/mazes/'
 
 class CopsAndRobbersScenario:
 
-    def __init__(self, filename='simple.maze', final_round=6, reward=100):
+    def __init__(self, filename='simple.maze', end_round=6, reward=100):
         """
         Open the file and read in the maze configuration.
         """
@@ -38,12 +37,13 @@ class CopsAndRobbersScenario:
         self.rows = len(maze_lines)
         self.cols = len(maze_lines[0])
 
-        self.initial_maze = {Location(row, col): char for row, line in enumerate(maze_lines) for col, char in enumerate(line)}
+        self.initial_maze = {Location(row, col): char for row, line in enumerate(maze_lines) for col, char in
+                             enumerate(line)}
         replace = {AGENT, PARTNER, ROBBER}
         self.maze = {loc: char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
 
         self._state_transition_cache = {}
-        self.final_round = final_round
+        self.end_round = end_round
         self.success_reward = reward
 
     def agents(self):
@@ -137,18 +137,17 @@ class CopsAndRobbersScenario:
             - Round limit hit.
             - Both agents and at least one robber are located in a single cell.
         """
-        if state['Turn'] > self.final_round:
+        if state['Turn'] > self.end_round:
             return True
 
         return self.robber_caught(state)
 
     def robber_caught(self, state):
         a_loc, p_loc = state[AGENT], state[PARTNER]
-        for loc in [loc for key, loc in state.items() if ROBBER in key]:
-            if a_loc == p_loc == loc:
-                return True
+        if a_loc != p_loc:
+            return False
 
-        return False
+        return any(a_loc == loc for key, loc in state.items() if key.startswith(ROBBER))
 
     def utility(self, old_state, action, new_state):
         """
@@ -183,7 +182,9 @@ class CopsAndRobbersScenario:
                 targets.append(Location(row, col - 1))
 
             # Use Manhattan distance for convenience.
-            def distance(p1, p2): return abs(p1.row - p2.row) + abs(p1.col - p2.col)
+            def distance(p1, p2):
+                return abs(p1.row - p2.row) + abs(p1.col - p2.col)
+
             distances = [(cell, distance(cell, agent_loc), distance(cell, partner_loc)) for cell in targets]
 
             # Find the best target maximizing the minimum distance to the players.
@@ -196,7 +197,7 @@ class CopsAndRobbersScenario:
 
             # Update state distribution.
             new_state_dist = Distribution()
-            tie_prob = 1/len(ties)
+            tie_prob = 1 / len(ties)
             for result_state, state_prob in resulting_distribution.items():
                 for target, _, _ in ties:
                     new_state = result_state.update_item(robber, target)  # state.update() returns a modified copy
@@ -209,7 +210,7 @@ class CopsAndRobbersScenario:
         """
         Returns a printable string representation of the state, showing the locations of the agents within the maze.
         """
-        robbers = [key for key in state if key != 'Turn' and ROBBER in key]
+        robbers = [key for key in state if key.startswith(ROBBER)]
         players = [(AGENT, AGENT), (PARTNER, PARTNER)] + [(rob, ROBBER) for rob in robbers]
 
         maze_copy = self.maze.copy()
@@ -222,7 +223,7 @@ class CopsAndRobbersScenario:
                 string += maze_copy[Location(row, col)]
             string += '\n'
 
-        string += 'Agent: {agent} Partner: {partner} Round: {round}\n'.format(agent=state[AGENT],
+        string += 'Agent: {agent} Partner: {partner} Turn: {round}\n'.format(agent=state[AGENT],
                                                                               partner=state[PARTNER],
                                                                               round=state['Turn'])
         return string
@@ -234,10 +235,11 @@ class CopsAndRobbersScenario:
 
         agent_loc = state[AGENT]
         partner_loc = state[PARTNER]
-        rounds_left = self.final_round - state['Turn'] + 1
+        rounds_left = self.end_round - state['Turn']
 
-        if any(self.distance(agent_loc, r_loc) <= rounds_left and self.distance(partner_loc, r_loc) <= rounds_left
-               for r, r_loc in state.items() if r.startswith(ROBBER)):
+        if rounds_left > 0 and any(self.distance(agent_loc, r_loc) <= rounds_left and
+                                   self.distance(partner_loc, r_loc) <= rounds_left
+                                   for r, r_loc in state.items() if r.startswith(ROBBER)):
             return self.success_reward
 
         return 0
@@ -245,6 +247,3 @@ class CopsAndRobbersScenario:
     @staticmethod
     def distance(loc1, loc2):
         return abs(loc1.col - loc2.col) + abs(loc1.row - loc2.row)
-
-
-
