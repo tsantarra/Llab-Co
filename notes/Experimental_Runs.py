@@ -475,7 +475,7 @@ data_config[66] = [
 data_config[74] = [
     ('process_no', [74]),
     ('scenario_id', [2]),
-    ('heuristic_id', [3, 4, 10, 11]),
+    ('heuristic_id', [0,1,2,5,6,7,8,9,12,13]),  #[3, 4, 10, 11]),
     ('comm_branch_factor', [1, 2, 3, 5]),
     ('comm_iterations', [1, 5, 10, 15, 20]),
     ('comm_cost', [5]),

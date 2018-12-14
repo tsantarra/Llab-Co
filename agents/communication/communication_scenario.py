@@ -192,6 +192,9 @@ class CommScenario:
         # Compute EV of old policy given new predictions (in new node graph). Store all info on graph.
         traverse_graph_topologically(new_policy_root._depth_map, compute_policy_ev_update, top_down=False)
 
+        # So currently we calculate Q(s,a) for comms as E[V_{\pi'}(s | I) - V_\pi(s | I)]
+        # In truth, this is equal to E[V_{\pi'}(s | I) ] - V_\pi(s) (original EV)
+        # We could just store V_{\pi'}(s | I)  and get the original EV off the policy graph in utility()
         new_value_of_info = new_policy_root.future_value - new_policy_root._original_policy_ev
         self._value_of_info[policy_state] = new_value_of_info
 
@@ -465,6 +468,9 @@ def communicate(scenario, agent, agent_dict, comm_planning_iterations, comm_heur
         - Traverse through graph, querying the other agents
         - Recalculate agent models and the primary agent's policy
     """
+    if comm_planning_iterations == 0:
+        return get_max_action(agent.policy_graph_root, agent.identity), 0
+
     # Initialize scenario
     comm_scenario = CommScenario(policy_graph=agent.policy_graph_root,
                                  initial_model_state=agent.policy_graph_root.state['Models'],
