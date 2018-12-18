@@ -81,16 +81,15 @@
             random                          rand()
             most likely next state          p(s)
 """
+from agents.modeling_agent import individual_agent_action_values
+from mdp.graph_utilities import traverse_graph_topologically
+from mdp.distribution import ListDistribution
+
 from math import log, exp
 from collections import defaultdict
 from random import random
 from operator import mul
 from functools import reduce
-
-from agents.communication.communication_scenario import Query
-from agents.modeling_agent import individual_agent_action_values
-from mdp.graph_utilities import traverse_graph_topologically
-from mdp.distribution import ListDistribution
 
 
 def example_heuristic(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
@@ -138,12 +137,13 @@ def weighted(heuristic):
             other_agent_predictions = {other_agent: other_agent_model.predict(node.state['World State'])
                                        for other_agent, other_agent_model in node.state['Models'].items()}
             action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,
-                                                               node.action_values())
-            action_distribution = ListDistribution([(action, exp(value)) for action, value in action_values.items()])\
-                                    .normalize()
+                                                           node.action_values())
+            action_distribution = ListDistribution([(action, exp(value)) for action, value in action_values.items()]) \
+                .normalize()
 
             for action, action_prob in action_distribution.items():
-                for joint_action in (ja for ja in node.action_space.fix_actions({agent_identity: [action]}) if ja in node.successors):
+                for joint_action in (ja for ja in node.action_space.fix_actions({agent_identity: [action]}) if
+                                     ja in node.successors):
                     for successor, successor_prob in node.successors[joint_action].items():
                         node_probs[successor] += action_prob * successor_prob * \
                                                  reduce(mul,
@@ -174,8 +174,8 @@ def local_action_information_entropy(policy_root, depth_map, target_agent_name, 
         # Calculate entropy
         predicted_actions = node.state['Models'][target_agent_name].predict(node.state['World State'])
         eval_list.append((node.state['World State'],
-                         (gamma ** horizon) * sum(-1 * probability * log(probability)
-                                                  for probability in predicted_actions.values() if probability > 0)))
+                          (gamma ** horizon) * sum(-1 * probability * log(probability)
+                                                   for probability in predicted_actions.values() if probability > 0)))
 
     traverse_graph_topologically(depth_map, evaluate)
     return eval_list
@@ -259,7 +259,7 @@ def local_mean_squared_error(policy_root, depth_map, target_agent_name, agent_id
                                                                 node.action_values())
 
         mean_squared_error = sum(prob * pow(teammate_action_values[action] - node.future_value, 2)
-                                      for action, prob in teammate_predictions.items())
+                                 for action, prob in teammate_predictions.items())
 
         eval_list.append((node.state['World State'], (gamma ** horizon) * mean_squared_error))
 
@@ -284,14 +284,17 @@ def local_delta_policy_entropy(policy_root, depth_map, target_agent_name, agent_
         communicating_teammate_model = node.state['Models'][target_agent_name]
 
         # -1 * E[ΔH] = H - E[H | a]  -> we flip it because we end at lower entropy, but we're MAXing values
-        expected_entropy_diff = sum(-1 * prob * log(prob) for policy_index, prob
-                                        in communicating_teammate_model.model.policy_distribution if prob > 0)
+        constraints = {**communicating_teammate_model.previous_communications,
+                       **communicating_teammate_model.previous_observations}
 
-        expected_entropy_diff -= sum(probability * sum(-1 * policy_prob * log(policy_prob)
-                                                       for policy_index, policy_prob
-                                                       in communicating_teammate_model.update(state, prediction).model.policy_distribution
-                                                       if policy_prob > 0)
-                                     for prediction, probability in communicating_teammate_model.predict(state).items())
+        if state in constraints:
+            eval_list.append((state, 0))  # No entropy change for previously observed/communicated info.
+            return
+
+        expected_entropy_diff = communicating_teammate_model.model.entropy(constraints) - \
+                                sum(probability * communicating_teammate_model.update(state, prediction).model.entropy(
+                                    constraints, {state: prediction})
+                                    for prediction, probability in communicating_teammate_model.predict(state).items())
 
         eval_list.append((state, expected_entropy_diff))
 
@@ -325,7 +328,8 @@ def local_value_of_information(policy_root, depth_map, target_agent_name, agent_
             other_agent_predictions[target_agent_name] = defaultdict(float)
             other_agent_predictions[target_agent_name][teammate_action] = 1.0
 
-            new_action_values = individual_agent_action_values(agent_identity, other_agent_predictions, node.action_space,
+            new_action_values = individual_agent_action_values(agent_identity, other_agent_predictions,
+                                                               node.action_space,
                                                                node.action_values())
 
             # sum_{responses} P(response) [V(new policy action, new knowledge) - V(old policy action, new knowledge)]
@@ -346,29 +350,33 @@ def immediate_delta_policy_entropy(policy_root, depth_map, target_agent_name, ag
     eval_list = []
 
     root_teammate_model = policy_root.state['Models'][target_agent_name]
-    base_entropy = sum(-1 * prob * log(prob) for policy_index, prob in root_teammate_model.model.policy_distribution
-                       if prob > 0)
+    constraints = {**root_teammate_model.previous_communications,
+                   **root_teammate_model.previous_observations}
+    base_entropy = root_teammate_model.model.entropy(constraints)
 
     def evaluate(node, _):
         if prune_fn(node, target_agent_name):
             return
 
         # E[ΔH] = E[H | a] - H
-        future_state = node.state['World State']
-        expected_root_entropy = sum(probability *
-                                    sum(-1 * policy_prob * log(policy_prob)
-                                        for policy_index, policy_prob
-                                        in root_teammate_model.update(future_state, prediction).model.policy_distribution
-                                        if policy_prob > 0)
-                                    for prediction, probability in root_teammate_model.predict(future_state).items())
+        state = node.state['World State']
 
-        eval_list.append((future_state, base_entropy - expected_root_entropy))
+        if state in constraints:
+            eval_list.append((state, 0))  # No entropy change for previously observed/communicated info.
+            return
+
+        expected_new_entropy = sum(probability * root_teammate_model.update(state, prediction).model.entropy(
+                                    constraints, {state: prediction})
+                                    for prediction, probability in root_teammate_model.predict(state).items())
+
+        eval_list.append((state, base_entropy - expected_new_entropy))
 
     traverse_graph_topologically(depth_map, evaluate)
     return eval_list
 
 
-def immediate_approx_value_of_information(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
+def immediate_approx_value_of_information(policy_root, depth_map, target_agent_name, agent_identity, prune_fn,
+                                          gamma=1.0):
     """
         Immediate value of information
             E_{M_0}[ V(s_0 | π_i(s_t)) - V(s_0 | π_i(s_t)) ]
@@ -379,7 +387,7 @@ def immediate_approx_value_of_information(policy_root, depth_map, target_agent_n
     root_state = policy_root.state['World State']
     root_teammate_model = policy_root.state['Models'][target_agent_name]
     teammate_predictions = {other_agent: other_agent_model.predict(root_state)
-                               for other_agent, other_agent_model in policy_root.state['Models'].items()}
+                            for other_agent, other_agent_model in policy_root.state['Models'].items()}
 
     old_action_values = individual_agent_action_values(agent_identity, teammate_predictions, policy_root.action_space,
                                                        policy_root.action_values())
@@ -407,13 +415,13 @@ def immediate_approx_value_of_information(policy_root, depth_map, target_agent_n
                                                                policy_root.action_values())
 
             # sum_{responses} P(response) [V(new policy action, new knowledge) - V(old policy action, new knowledge)]
-            value_of_info += future_action_prob * (max(new_action_values.values()) - new_action_values[old_policy_action])
+            value_of_info += future_action_prob * (
+                        max(new_action_values.values()) - new_action_values[old_policy_action])
 
         eval_list.append((node.state['World State'], value_of_info))
 
     traverse_graph_topologically(depth_map, evaluate)
     return eval_list
-
 
 
 def random_evaluation(policy_root, depth_map, target_agent_name, agent_identity, prune_fn, gamma=1.0):
@@ -440,12 +448,13 @@ def state_likelihood(policy_root, depth_map, target_agent_name, agent_identity, 
                                                            node.action_values())
         policy_action, policy_old_value = max(old_action_values.items(), key=lambda pair: pair[1])
 
-        for joint_action in (ja for ja in node.action_space.fix_actions({agent_identity: [policy_action]}) if ja in node.successors):
+        for joint_action in (ja for ja in node.action_space.fix_actions({agent_identity: [policy_action]}) if
+                             ja in node.successors):
             for successor, successor_prob in node.successors[joint_action].items():
                 node_probs[successor] += node_probs[node] * successor_prob * \
                                          reduce(mul, [other_agent_predictions[other_agent][joint_action[other_agent]]
                                                       for other_agent in other_agent_predictions])
 
     traverse_graph_topologically(depth_map, evaluate)
-    return [(node.state['World State'], prob) for node, prob in node_probs.items() if not prune_fn(node, target_agent_name)]
-
+    return [(node.state['World State'], prob) for node, prob in node_probs.items() if
+            not prune_fn(node, target_agent_name)]

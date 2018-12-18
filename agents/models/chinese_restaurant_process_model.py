@@ -5,7 +5,7 @@ from collections import defaultdict
 
 class SparseChineseRestaurantProcessModel:
 
-    def __init__(self, identity, scenario, alpha=0):
+    def __init__(self, identity, scenario, policy_size, alpha=0):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
@@ -14,6 +14,7 @@ class SparseChineseRestaurantProcessModel:
         """
         self.scenario = scenario
         self.identity = identity
+        self.policy_size = policy_size
         self.alpha = alpha
         self.total_observations = 0
 

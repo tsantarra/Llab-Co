@@ -1,6 +1,3 @@
-from functools import reduce
-from operator import mul
-
 from mdp.graph_planner import search
 from mdp.distribution import Distribution
 from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically, map_graph
@@ -23,6 +20,7 @@ class SampledTeammateGenerator:
         else:
             self._internal_root, self._graph_map = self.setup_optimal_policy_graph(min_graph_iterations)
 
+        self.policy_size = len(self._graph_map)
         self.policy_stats()
 
     def policy_stats(self):

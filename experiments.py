@@ -118,7 +118,8 @@ def initialize_teammate_generator(scenario, teammate_identity):
 
 
 def initialize_crp(scenario, teammate_identity, num_initial_models, teammate_generator):
-    chinese_restaurant_process = SparseChineseRestaurantProcessModel(teammate_identity, scenario)
+    chinese_restaurant_process = SparseChineseRestaurantProcessModel(teammate_identity, scenario,
+                                                                     teammate_generator.policy_size)
     for _ in range(num_initial_models):
         chinese_restaurant_process.add_teammate_model(teammate_generator.sample_partial_policy())
 

@@ -1,3 +1,5 @@
+from math import log
+
 
 class PolicyDistributionModel:
 
@@ -49,6 +51,38 @@ class PolicyDistributionModel:
         """
         return PolicyDistributionModel(self.scenario, self.identity, self.policy_distribution.copy(), self.crp_history)
 
+    def entropy(self, *constraints):
+        """
+        Returns the information entropy calculated over the policy distribution. Special handling of the alpha term
+        is required for computation.
+
+        For alpha term, we're using a uniform distribution over the set of all policies.
+        We need to factor out each observation and communicated policy info, constraining the space.
+
+        Entropy = -sum p log p
+        p = 1/x, where x = #policies = A^S
+        For each observation, x = x/A(s) (number of actions for that state)
+        Math:
+            -sum p log p = -sum (1/x) log (1/x)
+                         = -x * (1/x) log (1/x)
+                         = -log (1/x) = log x
+
+            x = x/A(s) => log (x/A(s)) = log x - log A(s)
+                                       = log x - sum log A(s),  for all s/A(s) in constraints
+        """
+        non_alpha_entropy = sum(-1 * prob * log(prob) for policy_index, prob
+                                in self.policy_distribution[:-1] if prob > 0)
+
+        index, alpha_weight = self.policy_distribution[-1]
+        assert index == -1, 'Last term of distribution should be alpha term (index = -1).'
+        log_all = log(self.crp_history.policy_size)
+        crp = self.crp_history
+        sum_log_constraints = sum(log(len(crp.possible_policy_actions[crp.state_to_index[state]]
+                                          if state in crp.state_to_index and crp.state_to_index[state] in crp.possible_policy_actions
+                                          else self.scenario.actions(state).individual_actions(self.identity)))
+                                  for constraint_set in constraints for state in constraint_set)
+        return non_alpha_entropy + alpha_weight * (log_all - sum_log_constraints)
+
     def __str__(self):
         return f'PolicyDistributionModel(i={len(self.policy_distribution)})'
         # '\t'.join('{teammate}: {prob} '.format(teammate=index, prob=prob)
@@ -66,4 +100,3 @@ class PolicyDistributionModel:
             self.__hash = hash(tuple(index for index, prob in self.policy_distribution))
 
         return self.__hash
-

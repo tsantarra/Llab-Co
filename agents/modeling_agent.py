@@ -4,14 +4,13 @@ implementation will use 'Trial-based Heuristic Tree Search for Finite Horizon MD
 a future version may accept any solver with a custom backup function (required for predicting the actions
 of the teammate via the model).
 """
-from collections import defaultdict
-
 from mdp.distribution import Distribution
 from mdp.state import State
 from mdp.graph_planner import search
 from mdp.scenario import Scenario
 
 from functools import reduce, partial
+from collections import defaultdict
 from operator import mul
 from copy import copy
 
