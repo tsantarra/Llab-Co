@@ -1,3 +1,6 @@
+from itertools import product
+
+
 data_config = {}
 
 # 9 - test runs
@@ -475,7 +478,7 @@ data_config[66] = [
 data_config[74] = [
     ('process_no', [74]),
     ('scenario_id', [2]),
-    ('heuristic_id', list(range(14))),
+    ('heuristic_id', [3, 10]), #list(range(14))),
     ('comm_branch_factor', [1, 2, 3, 5]),
     ('comm_iterations', [1, 5, 10, 15, 20]),
     ('comm_cost', [5]),
@@ -499,3 +502,28 @@ data_config[75] = [
     ('alpha', [1])
 ]
 
+# 76 -  Vary cost
+data_config[76] = [
+    ('process_no', [76]),
+    ('scenario_id', [2]),
+    ('heuristic_id', [0, 4, 11, 12]),
+    ('comm_branch_factor', [3]),
+    ('comm_iterations', [20]),
+    ('comm_cost', [0, 5, 25, 50, 99]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [1])
+]
+
+
+def generate_args(vals):
+    all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
+    for permutation in product(*all_vals):
+        print(' '.join(str(v) for v in permutation))
+
+
+if __name__ == '__main__':
+    for exp_no, config in data_config.items():
+        if exp_no == 76:
+            generate_args(config)
