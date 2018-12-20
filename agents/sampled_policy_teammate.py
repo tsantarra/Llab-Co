@@ -3,15 +3,17 @@ from mdp.distribution import Distribution
 from mdp.graph_utilities import map_graph_by_depth, traverse_graph_topologically, map_graph
 
 from math import inf
-from random import choice
-from collections import deque
+from random import choice, randint
+from collections import deque, Counter
 
 
 class SampledTeammateGenerator:
 
-    def __init__(self, scenario, identity, policy_graph=None, min_graph_iterations=inf):
+    def __init__(self, scenario, identity, policy_graph=None, min_graph_iterations=inf, max_unique_policies=inf):
         self.identity = identity
         self.scenario = scenario
+        self.max_unique_policies = max_unique_policies
+        self.sampled_policy_counts = Counter()
         self._flat_policy_graph = []
 
         if policy_graph:
@@ -61,6 +63,24 @@ class SampledTeammateGenerator:
         """
         Returns a policy only complete for reachable states under the single-agent policy.
         """
+        if self.max_unique_policies == inf:     # unbounded, sample from
+            policy, _ = self.sample_new_policy()
+            return policy
+
+        if len(self.sampled_policy_counts) < self.max_unique_policies:
+            policy, flat_policy = self.sample_new_policy()
+            self.sampled_policy_counts[tuple(flat_policy)] += 1
+            return policy
+
+        target = randint(1, sum(self.sampled_policy_counts.values()))
+        total = 0
+        for policy, count in self.sampled_policy_counts.items():
+            total += count
+            if total >= target:
+                return dict(policy)
+
+    def sample_new_policy(self):
+        flat_policy = []
         policy = {}
         queue = deque()
         queue.append(self._internal_root)
@@ -70,12 +90,13 @@ class SampledTeammateGenerator:
 
             individual_action = choice(node._individual_optimal_actions)
             policy[node.state] = individual_action
+            flat_policy.append((node.state, individual_action))
 
             queue.extend(successor for possible_joint_action, successor_dist in node.successors.items()
                          if possible_joint_action[self.identity] == individual_action
                          for successor in successor_dist if successor.action_space and successor.state not in policy)
 
-        return policy
+        return policy, flat_policy
 
     def sample_teammate(self):
         return SampledPolicyTeammate(self.identity, self.sample_partial_policy(), self.scenario, self)

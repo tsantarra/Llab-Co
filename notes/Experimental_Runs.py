@@ -478,7 +478,7 @@ data_config[66] = [
 data_config[74] = [
     ('process_no', [74]),
     ('scenario_id', [2]),
-    ('heuristic_id', [3, 10]), #list(range(14))),
+    ('heuristic_id', list(range(14))),
     ('comm_branch_factor', [1, 2, 3, 5]),
     ('comm_iterations', [1, 5, 10, 15, 20]),
     ('comm_cost', [5]),
@@ -524,6 +524,5 @@ def generate_args(vals):
 
 
 if __name__ == '__main__':
-    for exp_no, config in data_config.items():
-        if exp_no == 76:
-            generate_args(config)
+    generate_args(data_config[74])
+    generate_args(data_config[75])

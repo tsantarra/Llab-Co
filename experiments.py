@@ -1,3 +1,5 @@
+from math import inf
+
 from agents.communication.communication_scenario import communicate
 from agents.communication.communication_strategies import *
 from agents.modeling_agent import ModelingAgent
@@ -71,7 +73,7 @@ def run(parameters):
 
     # Setup teammate generator
     agent_identity, teammate_identity = scenario.agents()
-    teammate_generator = initialize_teammate_generator(scenario, teammate_identity)
+    teammate_generator = initialize_teammate_generator(scenario, teammate_identity, inf)
 
     import gc
 
@@ -95,7 +97,7 @@ def run(parameters):
         gc.collect()
 
 
-def initialize_teammate_generator(scenario, teammate_identity):
+def initialize_teammate_generator(scenario, teammate_identity, policy_cap):
     """
     Sample num_models worth of teammate policies.
     Due to the modeling needs of the scenario, the teammate model is represented as such:
@@ -104,7 +106,7 @@ def initialize_teammate_generator(scenario, teammate_identity):
                 - Multiple SampledPolicyTeammate models (one partial policy each; also used for the actual teammate)
                 - One UniformPolicyTeammate model
     """
-    return SampledTeammateGenerator(scenario, teammate_identity)
+    return SampledTeammateGenerator(scenario, teammate_identity, max_unique_policies=policy_cap)
     precomputed_policy_graph_file = f'{type(scenario).__name__}.pickle'
     if os.path.isfile(precomputed_policy_graph_file):
         with gzip.open(precomputed_policy_graph_file, 'rb') as policy_file:

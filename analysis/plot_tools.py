@@ -187,10 +187,11 @@ def error_bars(x_data, y_means, y_err, x_label='', y_label='', title='', y_range
 
     ax.errorbar(x_data, y_means, yerr=y_err, fmt='ks:', ls='none', capsize=2, **kwargs)
     ax.set_xticklabels(x_data)
-
     ax.set_ylabel(y_label)
     ax.set_xlabel(x_label)
     ax.set_title(title)
+
+    return ax
 
 
 def grouped_error_bars(x_data, y_means_list, y_err_list, x_label='', y_label='', title='', tick_label=None, y_range=None, **kwargs):
@@ -201,7 +202,7 @@ def grouped_error_bars(x_data, y_means_list, y_err_list, x_label='', y_label='',
         ax.set_ylim(*y_range)
 
     # Total width for all bars at one x location
-    total_width = 0.05
+    total_width = 0.5
     # Width of each individual bar
     ind_width = total_width / len(y_means_list)
     # This centers each cluster of bars about the x tick mark
