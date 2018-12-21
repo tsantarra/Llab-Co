@@ -15,6 +15,7 @@ from domains.multi_agent.cops_and_robbers.cops_and_robbers_scenario import CopsA
 
 from collections import namedtuple
 from utils.log_config import setup_logger
+from math import inf
 import sys
 import logging
 import json
@@ -35,6 +36,7 @@ Parameters = namedtuple('Parameters', [
                                        'experience',            # 7
                                        'trials',                # 8
                                        'alpha',                 # 9
+                                       'policy_cap',            # 10
                                        ])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
@@ -46,17 +48,17 @@ scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1,
              ]
 
 heuristics = [
-              local_action_information_entropy,             # 0
+              local_action_information_entropy,             # 0 *
               local_absolute_error,                         # 1
               local_mean_squared_error,                     # 2
               local_delta_policy_entropy,                   # 3
               local_value_of_information,                   # 4 *
 
-              weighted(local_action_information_entropy),   # 5 *
+              weighted(local_action_information_entropy),   # 5
               weighted(local_absolute_error),               # 6
               weighted(local_mean_squared_error),           # 7
               weighted(local_delta_policy_entropy),         # 8
-              weighted(local_value_of_information),         # 9 *
+              weighted(local_value_of_information),         # 9
 
               immediate_delta_policy_entropy,               # 10
               immediate_approx_value_of_information,        # 11 *
@@ -73,11 +75,16 @@ def run(parameters):
 
     # Setup teammate generator
     agent_identity, teammate_identity = scenario.agents()
-    teammate_generator = initialize_teammate_generator(scenario, teammate_identity, inf)
+    teammate_generator = SampledTeammateGenerator(scenario=scenario,
+                                                  identity=teammate_identity,
+                                                  max_unique_policies=parameters.policy_cap
+                                                                      if parameters.policy_cap != 0
+                                                                      else inf)
 
     import gc
 
     for trial in range(parameters.trials):
+        teammate_generator.reset_policy_set()
         chinese_restaurant_process = initialize_crp(scenario, teammate_identity, parameters.experience,
                                                     teammate_generator)
         chinese_restaurant_process.alpha = parameters.alpha
@@ -106,7 +113,6 @@ def initialize_teammate_generator(scenario, teammate_identity, policy_cap):
                 - Multiple SampledPolicyTeammate models (one partial policy each; also used for the actual teammate)
                 - One UniformPolicyTeammate model
     """
-    return SampledTeammateGenerator(scenario, teammate_identity, max_unique_policies=policy_cap)
     precomputed_policy_graph_file = f'{type(scenario).__name__}.pickle'
     if os.path.isfile(precomputed_policy_graph_file):
         with gzip.open(precomputed_policy_graph_file, 'rb') as policy_file:
@@ -217,7 +223,7 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
 if __name__ == '__main__':
     assert len(sys.argv) == len(Parameters._fields) + 3, \
         'Improper arguments given: ' + ' '.join(str(i) for i in sys.argv) + '\nExpected: ' + \
-        ' '.join(Parameters._fields) + '$(Cluster) $(Process)'
+        ' '.join(Parameters._fields) + ' $(Cluster) $(Process)'
 
     parameters = [int(arg) for arg in sys.argv[1:-2]]
     parameters = Parameters(*parameters)

@@ -41,6 +41,9 @@ class SampledTeammateGenerator:
         print('Optimal trajectories: ' + str(sub_policy_counts[self._internal_root]))
         print('Optimal policy value: ' + str(self._internal_root.future_value))
 
+    def reset_policy_set(self):
+        self.sampled_policy_counts.clear()
+
     def setup_optimal_policy_graph(self, graph_iterations):
         """
         Creates a complete policy search over the state space of the scenario. Prunes out suboptimal joint actions,

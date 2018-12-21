@@ -21,12 +21,12 @@ source ./test_env/bin/activate
 mkdir -p out
 
 # Run python script
-./test_env/bin/python3 experiments.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12}
+./test_env/bin/python3 experiments.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13}
 
 cd ..
 
 # tar output file
-tar -czf out.$1-$2-$3-$4-$5-$6-$7-$8-$9-${10}-${11}-${12}.tar.gz Llab-Co/out
+tar -czf out.$1-$2-$3-$4-$5-$6-$7-$8-$9-${10}-${11}-${12}-${13}.tar.gz Llab-Co/out
 
 # Remove loaded files so not copied back
 rm -rf Llab-Co

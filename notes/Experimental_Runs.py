@@ -516,6 +516,22 @@ data_config[76] = [
     ('alpha', [1])
 ]
 
+# 8X series - Added policy cap parameters (caps the number of unique teammate policies)
+# 81 -  Vary cost
+data_config[81] = [
+    ('process_no', [81]),
+    ('scenario_id', [2]),
+    ('heuristic_id', [0, 4, 11, 12]),
+    ('comm_branch_factor', [3]),
+    ('comm_iterations', [20]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [10, 100, 1000]),
+    ('trials', [100]),
+    ('alpha', [1]),
+    ('policy_cap', [0, 5, 25, 125])
+]
+
 
 def generate_args(vals):
     all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
@@ -524,5 +540,4 @@ def generate_args(vals):
 
 
 if __name__ == '__main__':
-    generate_args(data_config[74])
-    generate_args(data_config[75])
+    generate_args(data_config[81])
