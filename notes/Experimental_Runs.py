@@ -14,7 +14,8 @@ data_config[9] = [
     ('plan_iterations', [100, 200]),
     ('experience', [0, 10, 50]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 10 - test plan size/experience
@@ -28,7 +29,8 @@ data_config[10] = [
     ('plan_iterations', [100, 500, 1000]),  # plan iterations
     ('experience', [0, 100, 1000]),  # experience
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 11 - test every new heuristic
@@ -42,7 +44,8 @@ data_config[11] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 12 - test plan size/experience - NEW MAZE
@@ -56,7 +59,8 @@ data_config[12] = [
     ('plan_iterations', [100, 500, 1000]),  # plan iterations
     ('experience', [0, 100, 1000]),  # experience
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 13 - test every new heuristic - NEW MAZE
@@ -70,7 +74,8 @@ data_config[13] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 14 - test heuristic baselines (random, next most likely state) - NEW MAZE
@@ -84,7 +89,8 @@ data_config[14] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 15 - test other 'baseline' ---> no comms
@@ -98,7 +104,8 @@ data_config[15] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 16 - retest all heuristics, including baselines
@@ -112,7 +119,8 @@ data_config[16] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 17 - Rerun 15 and 16 with action value fixes, optimizations, and heuristic
@@ -126,7 +134,8 @@ data_config[17] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 18 - Test all heuristics on a.maze (12 rounds)
@@ -140,7 +149,8 @@ data_config[18] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 19 - Test all heuristics on a.maze (12 rounds), CRP alpha=0
@@ -154,7 +164,8 @@ data_config[19] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 23 - Run greedy heuristics
@@ -168,7 +179,8 @@ data_config[23] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 24 -  Test comm branch factor with a few heuristics
@@ -182,7 +194,8 @@ data_config[24] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 25 - Test comm costs with a few heuristics
@@ -196,7 +209,8 @@ data_config[25] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 26 - Experience with a few heuristics
@@ -210,7 +224,8 @@ data_config[26] = [
     ('plan_iterations', [500]),
     ('experience', [0, 10, 25, 100, 500]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 32 - Rerun all base heuristics on big maze. Alpha 0/1
@@ -224,7 +239,8 @@ data_config[32] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [0, 1])
+    ('alpha', [0, 1]),
+    ('policy_cap', [0]),
 ]
 
 # 33 - Rerun all heuristics, but with only 1 comm planning iteration
@@ -238,7 +254,8 @@ data_config[33] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 34 (r24) -  Test comm branch factor with a few heuristics
@@ -252,7 +269,8 @@ data_config[34] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 35 (r25) - Test comm costs with a few heuristics
@@ -266,7 +284,8 @@ data_config[35] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 36 (r26) - Experience with a few heuristics
@@ -280,7 +299,8 @@ data_config[36] = [
     ('plan_iterations', [500]),
     ('experience', [0, 10, 25, 100, 500]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 42 - Rerun all base heuristics on big maze. Alpha 0/1
@@ -294,7 +314,8 @@ data_config[42] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [0, 1])
+    ('alpha', [0, 1]),
+    ('policy_cap', [0]),
 ]
 
 # 43 - Rerun all heuristics, but with only 1 comm planning iteration
@@ -308,7 +329,8 @@ data_config[43] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 44 (r34) -  Test comm branch factor with a few heuristics
@@ -322,7 +344,8 @@ data_config[44] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 45 (r35) - Test comm costs with a few heuristics
@@ -336,7 +359,8 @@ data_config[45] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 46 (r36) - Experience with a few heuristics
@@ -350,7 +374,8 @@ data_config[46] = [
     ('plan_iterations', [500]),
     ('experience', [0, 10, 25, 100, 500]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 
@@ -368,7 +393,8 @@ data_config[53] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 54 (r34) -  Vary comm branch factor with a few heuristics; BUDGET = BRANCH * ITERATIONS
@@ -382,7 +408,8 @@ data_config[54] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 55 (r35) - Vary comm costs with a few heuristics
@@ -396,7 +423,8 @@ data_config[55] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 56 (r36) - Vary experience with a few heuristics
@@ -410,7 +438,8 @@ data_config[56] = [
     ('plan_iterations', [500]),
     ('experience', [0, 10, 25, 100, 500]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 6X - Comm heuristic = 0
@@ -426,7 +455,8 @@ data_config[63] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 64 (r34) -  Vary comm branch factor with a few heuristics; BUDGET = BRANCH * ITERATIONS
@@ -440,7 +470,8 @@ data_config[64] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 65 (r35) - Vary comm costs with a few heuristics
@@ -454,7 +485,8 @@ data_config[65] = [
     ('plan_iterations', [600]),
     ('experience', [100]),
     ('trials', [60]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 66 (r36) - Vary experience with a few heuristics
@@ -468,7 +500,8 @@ data_config[66] = [
     ('plan_iterations', [500]),
     ('experience', [0, 10, 25, 100, 500]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 
@@ -485,7 +518,8 @@ data_config[74] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 75 -  Vary experience with all heuristics. Certain heuristics will (hopefully) work better with less experience.
@@ -499,7 +533,8 @@ data_config[75] = [
     ('plan_iterations', [500]),
     ('experience', [0, 10, 100, 1000]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 76 -  Vary cost
@@ -513,7 +548,8 @@ data_config[76] = [
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
-    ('alpha', [1])
+    ('alpha', [1]),
+    ('policy_cap', [0]),
 ]
 
 # 8X series - Added policy cap parameters (caps the number of unique teammate policies)
