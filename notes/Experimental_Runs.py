@@ -568,6 +568,21 @@ data_config[81] = [
     ('policy_cap', [0, 5, 25, 125])
 ]
 
+# 84 -  Vary comm branch factor with all heuristics; BUDGET = BRANCH * ITERATIONS
+data_config[84] = [
+    ('process_no', [84]),
+    ('scenario_id', [2]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [1, 3, 5, 10]),
+    ('comm_iterations', [1, 10, 20]),
+    ('comm_cost', [1]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [100]),
+    ('alpha', [1]),
+    ('policy_cap', [0]),
+]
+
 # 85 - COST 1. Vary experience with all heuristics.
 data_config[85] = [
     ('process_no', [85]),
@@ -592,4 +607,4 @@ def generate_args(vals):
 
 
 if __name__ == '__main__':
-    generate_args(data_config[85])
+    generate_args(data_config[84])
