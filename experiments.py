@@ -1,5 +1,3 @@
-from math import inf
-
 from agents.communication.communication_scenario import communicate
 from agents.communication.communication_strategies import *
 from agents.modeling_agent import ModelingAgent

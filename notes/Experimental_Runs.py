@@ -568,6 +568,22 @@ data_config[81] = [
     ('policy_cap', [0, 5, 25, 125])
 ]
 
+# 85 - COST 1. Vary experience with all heuristics.
+data_config[85] = [
+    ('process_no', [85]),
+    ('scenario_id', [2]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [20]),
+    ('comm_cost', [1]),
+    ('plan_iterations', [500]),
+    ('experience', [0, 10, 100, 1000]),
+    ('trials', [100]),
+    ('alpha', [1]),
+    ('policy_cap', [0]),
+]
+
+
 
 def generate_args(vals):
     all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
@@ -576,4 +592,4 @@ def generate_args(vals):
 
 
 if __name__ == '__main__':
-    generate_args(data_config[81])
+    generate_args(data_config[85])

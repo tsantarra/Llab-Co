@@ -11,7 +11,7 @@ def check_logs(vals, directory, log_found=False, min_count=1):
         if permutation_count < min_count:
             print(' '.join(map(str, permutation)) + ' (Cluster) $(Process)')
         elif log_found:
-            print(' '.join(map(str, permutation)) + '\tFound')
+            print(' '.join(map(str, permutation)) + '\tFound ' + str(permutation_count))
 
 
 if __name__ == '__main__':
