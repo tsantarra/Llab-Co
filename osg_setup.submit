@@ -52,6 +52,10 @@ periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) 
 #   Process
 
 Queue Arguments From (
+95 2 0 0 0 1 500 0 100 0 0 $(Cluster) $(Process)
+95 2 0 0 0 1 500 10 100 0 0 $(Cluster) $(Process)
+95 2 0 0 0 1 500 100 100 0 0 $(Cluster) $(Process)
+95 2 0 0 0 1 500 1000 100 0 0 $(Cluster) $(Process)
 95 2 0 5 20 1 500 0 100 0 0 $(Cluster) $(Process)
 95 2 0 5 20 1 500 10 100 0 0 $(Cluster) $(Process)
 95 2 0 5 20 1 500 100 100 0 0 $(Cluster) $(Process)
