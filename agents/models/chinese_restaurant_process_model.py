@@ -111,6 +111,10 @@ class SparseChineseRestaurantProcessModel:
         m = len(self.policies)          # num tables
         n = self.total_observations     # num customers
 
+        # In the situation that the CRP has no experience, we can't compute a posterior. Use 1.
+        if m == 0:
+            return 1
+
         def inv_prob_dist_given_conc(conc):
             """
             Inverse posterior for concentration parameter, given distribution data (m = unique policies, n = total obs).
