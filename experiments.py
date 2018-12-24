@@ -85,8 +85,9 @@ def run(parameters):
         teammate_generator.reset_policy_set()
         chinese_restaurant_process = initialize_crp(scenario, teammate_identity, parameters.experience,
                                                     teammate_generator)
-        chinese_restaurant_process.alpha = parameters.alpha
-        teammate_model = PolicyDistributionModel(scenario, teammate_identity, chinese_restaurant_process.prior(),
+        teammate_model = PolicyDistributionModel(scenario,
+                                                 teammate_identity,
+                                                 chinese_restaurant_process.prior(alpha=parameters.alpha),
                                                  chinese_restaurant_process)
         teammate_model = CommunicatingTeammateModel(teammate_model, scenario)
         initial_models = {teammate_identity: teammate_model}
@@ -116,7 +117,7 @@ def initialize_teammate_generator(scenario, teammate_identity, policy_cap):
         with gzip.open(precomputed_policy_graph_file, 'rb') as policy_file:
             teammate_generator = pickle.load(policy_file)
     else:
-        teammate_generator = SampledTeammateGenerator(scenario, teammate_identity)
+        teammate_generator = SampledTeammateGenerator(scenario, teammate_identity, max_unique_policies=policy_cap)
         with gzip.open(precomputed_policy_graph_file, 'wb') as policy_file:
             pickle.dump(teammate_generator, policy_file, protocol=pickle.HIGHEST_PROTOCOL)
 

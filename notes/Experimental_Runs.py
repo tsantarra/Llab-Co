@@ -573,7 +573,7 @@ data_config[84] = [
     ('process_no', [84]),
     ('scenario_id', [2]),
     ('heuristic_id', list(range(14))),
-    ('comm_branch_factor', [1, 3, 5, 10]),
+    ('comm_branch_factor', [1, 3, 5]),
     ('comm_iterations', [1, 10, 20]),
     ('comm_cost', [1]),
     ('plan_iterations', [500]),
@@ -599,6 +599,21 @@ data_config[85] = [
 ]
 
 
+# 9X - Used MLE alpha for CRP
+data_config[94] = [
+    ('process_no', [94]),
+    ('scenario_id', [2]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [1, 3, 5]),
+    ('comm_iterations', [1, 10, 20]),
+    ('comm_cost', [1]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+
 
 def generate_args(vals):
     all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
@@ -607,4 +622,4 @@ def generate_args(vals):
 
 
 if __name__ == '__main__':
-    generate_args(data_config[84])
+    generate_args(data_config[94])

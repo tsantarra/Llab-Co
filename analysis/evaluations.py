@@ -1,8 +1,10 @@
+from collections import Counter
 from math import sqrt
 from utils.json_log_reader import *
 from matplotlib.pyplot import *
-from pandas import *
+from pandas import Series
 from analysis.plot_tools import *
+from scipy.stats import mannwhitneyu
 
 T_SCORE = 2.01  # 95% Confidence Interval
 
@@ -149,11 +151,12 @@ def compare_end_utility_error_bars_grouped_treatments(grouped_data, treatment_va
 
 
 def filter_by_filename(filename, process=None, scenario_id=None, heuristic_id=None, comm_branch_factor=None,
-                       comm_iterations=None, comm_cost=None, plan_iterations=None, experience=None, alpha=None):
-    _, proc, scen, h, bf, ci, cc, pi, exp, _, a, _, _ = filename.split('-')
-    params = [proc, scen, h, bf, ci, cc, pi, exp, a]
+                       comm_iterations=None, comm_cost=None, plan_iterations=None, experience=None, alpha=None,
+                       policy_cap=None):
+    _, proc, scen, h, bf, ci, cc, pi, exp, _, a, pc, _, _ = filename.split('-')
+    params = [proc, scen, h, bf, ci, cc, pi, exp, a, pc]
     filters = [process, scenario_id, heuristic_id, comm_branch_factor, comm_iterations, comm_cost, plan_iterations,
-               experience, alpha]
+               experience, alpha, policy_cap]
 
     return all(filter is None or
                (filter(param) if callable(filter) else str(filter) == param)
@@ -230,12 +233,7 @@ def evaluate74():
     # plt.show()
 
 
-if __name__ == '__main__':
-    import warnings
-
-    warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
-
-
+def evaluate75():
     for exp in [0, 10, 100, 1000]:
         baseline = read_files_for_experiment(data_dir, 75, filter=lambda f: filter_by_filename(f,
                                                                                                comm_iterations=0,
@@ -244,6 +242,10 @@ if __name__ == '__main__':
                                          filter=lambda f: filter_by_filename(f,
                                                                              experience=exp))
         grouped = data['End Trial'].groupby(['heuristic_id'], as_index=False)
+
+        print('Exp:', exp)
+        mann_whitney_u(grouped, baseline['End Trial'])
+
         compare_end_utility_error_bars(grouped,
                                        baseline_data=baseline['End Trial'],
                                        title=f'Heuristic Success Rate in Cops and Robbers - EXP={exp}',
@@ -251,3 +253,45 @@ if __name__ == '__main__':
                                        y_label='Average Reward',
                                        y_range=(0, 100))
         plt.show()
+
+
+def mann_whitney_u(grouped_data, baseline, alpha=0.05):
+    for group, group_df in grouped_data:
+        u, p = mannwhitneyu(group_df['Reward'], baseline['Reward'], alternative='greater')
+
+        if p < alpha:
+            print(group, group_df['Reward'].mean(), baseline['Reward'].mean(), u, p, '***')
+        else:
+            print(group, group_df['Reward'].mean(), baseline['Reward'].mean(), u, p)
+
+
+if __name__ == '__main__':
+    import warnings
+
+    warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
+
+    tabs = Counter()
+
+    baseline = read_files_for_experiment(data_dir, 74, filter=lambda f: filter_by_filename(f, comm_iterations=0))['End Trial']
+    # for ci in [1, 5, 10, 15, 20]:
+    #     for bf in [1, 2, 3, 5]:
+    data = read_files_for_experiment(data_dir, 74,
+                                     filter=lambda f: filter_by_filename(f,))
+    grouped = data['End Trial'].groupby(['heuristic_id'], as_index=False)
+    # print(f'Iterations={ci}, Branch={bf}')
+
+    alpha = 0.05
+    for group, group_df in grouped:
+        u, p = mannwhitneyu(group_df['Reward'], baseline['Reward'], alternative='greater')
+
+        if p < alpha:
+            print(group, group_df['Reward'].mean(), baseline['Reward'].mean(), u, p, '***')
+            tabs[group] += 1
+        else:
+            print(group, group_df['Reward'].mean(), baseline['Reward'].mean(), u, p)
+
+    #mann_whitney_u(grouped, baseline['End Trial'])
+
+    print('Tally')
+    for i in range(14):
+        print(i, tabs[i])

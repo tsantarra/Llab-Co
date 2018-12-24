@@ -1,3 +1,7 @@
+from functools import reduce
+from itertools import count
+from operator import mul
+
 from mdp.distribution import Distribution
 
 from collections import defaultdict
@@ -5,7 +9,7 @@ from collections import defaultdict
 
 class SparseChineseRestaurantProcessModel:
 
-    def __init__(self, identity, scenario, policy_size, alpha=0):
+    def __init__(self, identity, scenario, policy_size):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
@@ -15,7 +19,6 @@ class SparseChineseRestaurantProcessModel:
         self.scenario = scenario
         self.identity = identity
         self.policy_size = policy_size
-        self.alpha = alpha
         self.total_observations = 0
 
         # Lookup info
@@ -91,11 +94,45 @@ class SparseChineseRestaurantProcessModel:
         for state_index, action_index in converted_policy:
             self.policy_matrix[state_index][policy_index] = action_index
 
-    def prior(self):
-        policy_data = [(policy_index, obvs / (self.total_observations + self.alpha))
+    def prior(self, alpha=None):
+        if not alpha or alpha == 0:
+            alpha = self.compute_mle_alpha()
+
+        policy_data = [(policy_index, obvs / (self.total_observations + alpha))
                        for policy_index, obvs in enumerate(self.observation_counts)]
-        policy_data.append((-1, self.alpha / (self.total_observations + self.alpha)))
+        policy_data.append((-1, alpha / (self.total_observations + alpha)))
         return policy_data
+
+    def compute_mle_alpha(self):
+        """
+        Iterate through potential concentration parameter values until the maximum likelihood value is found (unimodal).
+        Note: we compare inverse probabilities, due to large integer division. Max prob = min prob^-1.
+        """
+        m = len(self.policies)          # num tables
+        n = self.total_observations     # num customers
+
+        def inv_prob_dist_given_conc(conc):
+            """
+            Inverse posterior for concentration parameter, given distribution data (m = unique policies, n = total obs).
+            Inverse due to large integer division.
+            """
+            # https://stats.stackexchange.com/questions/258384/posterior-of-parameter-for-chinese-restaurant-process
+            numerator = conc ** m
+            denominator = reduce(mul, range(conc, conc + n))
+            return denominator // numerator
+
+        min_inverse_prob = inv_prob_dist_given_conc(1)
+        max_likelihood_concentration = None
+
+        for concentration in count(start=1):
+            inverse_prob = inv_prob_dist_given_conc(concentration)
+            if inverse_prob <= min_inverse_prob:
+                min_inverse_prob = inverse_prob
+                max_likelihood_concentration = concentration
+            elif inverse_prob > min_inverse_prob:
+                break
+
+        return max_likelihood_concentration
 
     def posterior(self, prior, state, observed_action):
         """
@@ -212,9 +249,11 @@ class SparseChineseRestaurantProcessModel:
                    for policy_index, policy_probability in policy_distribution)
 
 
+
+
 class ChineseRestaurantProcessModel:
 
-    def __init__(self, identity, scenario, policy_state_order, policy_actions, alpha=1):
+    def __init__(self, identity, scenario, policy_state_order, policy_actions):
         """
         Initializes the frequentist model.
             scenario - the scenario for the planner
@@ -223,7 +262,6 @@ class ChineseRestaurantProcessModel:
         """
         self.scenario = scenario
         self.identity = identity
-        self.alpha = alpha
         self.total_obvs = 0
 
         # The data
