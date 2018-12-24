@@ -553,7 +553,7 @@ data_config[76] = [
 ]
 
 # 8X series - Added policy cap parameters (caps the number of unique teammate policies)
-# 81 -  Vary cost
+# 81 -  Vary experience with policy cap
 data_config[81] = [
     ('process_no', [81]),
     ('scenario_id', [2]),
@@ -600,6 +600,7 @@ data_config[85] = [
 
 
 # 9X - Used MLE alpha for CRP
+# 94 - Vary search params
 data_config[94] = [
     ('process_no', [94]),
     ('scenario_id', [2]),
@@ -607,6 +608,36 @@ data_config[94] = [
     ('comm_branch_factor', [1, 3, 5]),
     ('comm_iterations', [1, 10, 20]),
     ('comm_cost', [1]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+
+# 95 - Vary experience with all heuristics.
+data_config[95] = [
+    ('process_no', [95]),
+    ('scenario_id', [2]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [20]),
+    ('comm_cost', [1]),
+    ('plan_iterations', [500]),
+    ('experience', [0, 10, 100, 1000]),
+    ('trials', [100]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+
+# 96 -  Vary cost
+data_config[96] = [
+    ('process_no', [96]),
+    ('scenario_id', [2]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [20]),
+    ('comm_cost', [1, 5, 10, 99]),
     ('plan_iterations', [500]),
     ('experience', [100]),
     ('trials', [50]),
@@ -622,4 +653,5 @@ def generate_args(vals):
 
 
 if __name__ == '__main__':
-    generate_args(data_config[94])
+    generate_args(data_config[95])
+    generate_args(data_config[96])
