@@ -1,7 +1,9 @@
 from itertools import product
+from os import listdir
 
 
 data_config = {}
+baselines = {}
 
 # 9 - test runs
 data_config[9] = [
@@ -600,6 +602,22 @@ data_config[85] = [
 
 
 # 9X - Used MLE alpha for CRP
+
+# 91 -  Vary experience with policy cap
+data_config[91] = [
+    ('process_no', [91]),
+    ('scenario_id', [2]),
+    ('heuristic_id', [0, 4, 11, 12]),       # Find top heuristics befre
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [20]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [10, 100, 1000]),
+    ('trials', [100]),
+    ('alpha', [0]),
+    ('policy_cap', [0, 5, 25, 125])
+]
+
 # 94 - Vary search params
 data_config[94] = [
     ('process_no', [94]),
@@ -646,12 +664,138 @@ data_config[96] = [
 ]
 
 
-def generate_args(vals):
+# 10X - small2 maze. Fixed alpha. Fixed C&R Heuristic.
+
+# 101 - Vary search params
+data_config[101] = [
+    ('process_no', [101]),
+    ('scenario_id', [6]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [1, 3, 5]),
+    ('comm_iterations', [1, 10, 20]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+baselines[101] = [
+    ('process_no', [101]),
+    ('scenario_id', [6]),
+    ('heuristic_id', [0]),
+    ('comm_branch_factor', [0]),
+    ('comm_iterations', [0]),
+    ('comm_cost', [0]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+
+# 102 -  Vary cost
+data_config[102] = [
+    ('process_no', [102]),
+    ('scenario_id', [6]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [10]),
+    ('comm_cost', [1, 5, 10, 99]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+baselines[102] = [
+    ('process_no', [102]),
+    ('scenario_id', [6]),
+    ('heuristic_id', [0]),
+    ('comm_branch_factor', [0]),
+    ('comm_iterations', [0]),
+    ('comm_cost', [0]),
+    ('plan_iterations', [500]),
+    ('experience', [100]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+
+# 103 - Vary experience with all heuristics.
+data_config[103] = [
+    ('process_no', [103]),
+    ('scenario_id', [6]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [10]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [0, 10, 100, 1000]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+baselines[103] = [
+    ('process_no', [103]),
+    ('scenario_id', [6]),
+    ('heuristic_id', [0]),
+    ('comm_branch_factor', [0]),
+    ('comm_iterations', [0]),
+    ('comm_cost', [0]),
+    ('plan_iterations', [500]),
+    ('experience', [0, 10, 100, 1000]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+
+# 104 -  Vary experience with policy cap  --------------------- TODO
+data_config[104] = [
+    ('process_no', [104]),
+    ('scenario_id', [6]),
+    ('heuristic_id', [0, 4, 11, 12]),       # Find top heuristics befre
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [20]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [10, 100, 1000]),
+    ('trials', [100]),
+    ('alpha', [0]),
+    ('policy_cap', [0, 5, 25, 125])
+]
+
+
+
+
+def generate_args(trial_no):
+    vals = baselines[trial_no]
+    all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
+    for permutation in product(*all_vals):
+        print(' '.join(str(v) for v in permutation))
+
+    vals = data_config[trial_no]
     all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
     for permutation in product(*all_vals):
         print(' '.join(str(v) for v in permutation))
 
 
+
+
+def check_logs(vals, directory, log_found=False, min_count=1):
+    filenames = listdir(directory)
+    for permutation in product(*list(val[1] for val in vals)):
+        file_start = 'data-' + '-'.join(map(str, permutation))
+        permutation_count = sum(1 for filename in filenames if filename.startswith(file_start))
+
+        if permutation_count < min_count:
+            print(' '.join(map(str, permutation)) + ' (Cluster) $(Process)')
+        elif log_found:
+            print(' '.join(map(str, permutation)) + '\tFound ' + str(permutation_count))
+
+
 if __name__ == '__main__':
-    generate_args(data_config[95])
-    generate_args(data_config[96])
+    generate_args(101)
+    generate_args(102)
+    generate_args(103)
+    #check_logs(data_config[85], 'login.osgconnect.net/out/8-series/')

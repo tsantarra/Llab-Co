@@ -37,12 +37,13 @@ Parameters = namedtuple('Parameters', [
                                        'policy_cap',            # 10
                                        ])
 
-scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),
-             CopsAndRobbersScenario(filename='a.maze', end_round=13),
-             CopsAndRobbersScenario(filename='small.maze', end_round=6),
-             CopsAndRobbersScenario(filename='sidekick_first.maze', end_round=10),
-             CopsAndRobbersScenario(filename='agent_first.maze', end_round=10),
-             CopsAndRobbersScenario(filename='simultaneous.maze', end_round=10),
+scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),    # 0
+             CopsAndRobbersScenario(filename='a.maze', end_round=13),                               # 1
+             CopsAndRobbersScenario(filename='small.maze', end_round=5),                            # 2
+             CopsAndRobbersScenario(filename='sidekick_first.maze', end_round=10),                  # 3
+             CopsAndRobbersScenario(filename='agent_first.maze', end_round=10),                     # 4
+             CopsAndRobbersScenario(filename='simultaneous.maze', end_round=10),                    # 5
+             CopsAndRobbersScenario(filename='small2.maze', end_round=5),                           # 6
              ]
 
 heuristics = [
@@ -187,8 +188,10 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         print('Utility spent in communication: ' + str(cost))
         new_joint_action = joint_action.update({agent_name: action})
 
-        logger.info('State-Action', extra={'Trial': trial, 'State': scenario._serialize_state(state),
-                                           'Action': json.dumps(list(new_joint_action.items()))})
+        logger.info('State-Action', extra={'Trial': trial,
+                                           'State': scenario._serialize_state(state),
+                                           'Action': json.dumps(list(new_joint_action.items())),
+                                           'EV': agent.policy_graph_root.future_value})
 
         # Observe
         for participating_agent in agent_dict.values():
@@ -204,6 +207,7 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         print('\n-----------------')
         print('Original:\t', joint_action)
         print('Updated: \t', new_joint_action)
+        print('EV:\t', agent.policy_graph_root.future_value)
         print('Policy distribution length:', len(agent.model_state[teammate_name].model.policy_distribution))
         print('New Action:', new_joint_action)
         if hasattr(scenario, 'show_state'):
@@ -216,6 +220,7 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
         # Update state
         state = new_state
 
+    print('Final Utility:', utility, '\n')
     return utility
 
 

@@ -122,7 +122,7 @@ class SparseChineseRestaurantProcessModel:
             """
             # https://stats.stackexchange.com/questions/258384/posterior-of-parameter-for-chinese-restaurant-process
             numerator = conc ** m
-            denominator = reduce(mul, range(conc, conc + n))
+            denominator = reduce(mul, range(conc, conc + n)) * (1+conc)**2
             return denominator // numerator
 
         min_inverse_prob = inv_prob_dist_given_conc(1)

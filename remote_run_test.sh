@@ -13,8 +13,7 @@ tar -xzf Llab-Co.tar.gz
 
 cd Llab-Co
 
-# untar and activate virtual environment
-# tar -xzf test_env.tar.gz
+# Activate virtual environment
 source ./test_env/bin/activate
 
 # Make directory for output files

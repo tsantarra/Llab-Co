@@ -235,7 +235,7 @@ class CopsAndRobbersScenario:
 
         agent_loc = state[AGENT]
         partner_loc = state[PARTNER]
-        rounds_left = self.end_round - state['Turn']
+        rounds_left = self.end_round - state['Turn'] + 1
 
         if rounds_left > 0 and any(self.distance(agent_loc, r_loc) <= rounds_left and
                                    self.distance(partner_loc, r_loc) <= rounds_left
