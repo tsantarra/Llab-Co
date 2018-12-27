@@ -38,12 +38,13 @@ Parameters = namedtuple('Parameters', [
                                        ])
 
 scenarios = [RecipeScenario(num_conditions=7, num_agents=2, num_valid_recipes=1, recipe_size=5),    # 0
-             CopsAndRobbersScenario(filename='a.maze', end_round=13),                               # 1
-             CopsAndRobbersScenario(filename='small.maze', end_round=5),                            # 2
-             CopsAndRobbersScenario(filename='sidekick_first.maze', end_round=10),                  # 3
-             CopsAndRobbersScenario(filename='agent_first.maze', end_round=10),                     # 4
-             CopsAndRobbersScenario(filename='simultaneous.maze', end_round=10),                    # 5
-             CopsAndRobbersScenario(filename='small2.maze', end_round=5),                           # 6
+             CopsAndRobbersScenario(filename='a.maze', last_round=13),                              # 1
+             CopsAndRobbersScenario(filename='small.maze', last_round=5),                           # 2
+             CopsAndRobbersScenario(filename='sidekick_first.maze', last_round=10),                 # 3
+             CopsAndRobbersScenario(filename='agent_first.maze', last_round=10),                    # 4
+             CopsAndRobbersScenario(filename='simultaneous.maze', last_round=10),                   # 5
+             CopsAndRobbersScenario(filename='small2.maze', last_round=5),                          # 6
+             CopsAndRobbersScenario(filename='small_sidekick_first.maze', last_round=8),            # 7
              ]
 
 heuristics = [

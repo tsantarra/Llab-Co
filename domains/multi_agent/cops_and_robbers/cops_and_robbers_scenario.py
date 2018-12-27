@@ -27,7 +27,7 @@ _path = './domains/multi_agent/cops_and_robbers/mazes/'
 
 class CopsAndRobbersScenario:
 
-    def __init__(self, filename='simple.maze', end_round=6, reward=100):
+    def __init__(self, filename='simple.maze', last_round=6, reward=100):
         """
         Open the file and read in the maze configuration.
         """
@@ -43,7 +43,7 @@ class CopsAndRobbersScenario:
         self.maze = {loc: char if char not in replace else OPEN for loc, char in self.initial_maze.items()}
 
         self._state_transition_cache = {}
-        self.end_round = end_round
+        self.last_round = last_round
         self.success_reward = reward
 
     def agents(self):
@@ -137,7 +137,7 @@ class CopsAndRobbersScenario:
             - Round limit hit.
             - Both agents and at least one robber are located in a single cell.
         """
-        if state['Turn'] > self.end_round:
+        if state['Turn'] > self.last_round:
             return True
 
         return self.robber_caught(state)
@@ -235,7 +235,7 @@ class CopsAndRobbersScenario:
 
         agent_loc = state[AGENT]
         partner_loc = state[PARTNER]
-        rounds_left = self.end_round - state['Turn'] + 1
+        rounds_left = self.last_round - state['Turn'] + 1
 
         if rounds_left > 0 and any(self.distance(agent_loc, r_loc) <= rounds_left and
                                    self.distance(partner_loc, r_loc) <= rounds_left

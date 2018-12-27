@@ -760,12 +760,38 @@ data_config[104] = [
     ('comm_cost', [5]),
     ('plan_iterations', [500]),
     ('experience', [10, 100, 1000]),
-    ('trials', [100]),
+    ('trials', [50]),
     ('alpha', [0]),
     ('policy_cap', [0, 5, 25, 125])
 ]
 
-
+# 105 - Domain structure
+data_config[105] = [
+    ('process_no', [105]),
+    ('scenario_id', [7]),
+    ('heuristic_id', list(range(14))),
+    ('comm_branch_factor', [5]),
+    ('comm_iterations', [10]),
+    ('comm_cost', [5]),
+    ('plan_iterations', [500]),
+    ('experience', [0, 10, 100, 1000]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
+baselines[105] = [
+    ('process_no', [105]),
+    ('scenario_id', [7]),
+    ('heuristic_id', [0]),
+    ('comm_branch_factor', [0]),
+    ('comm_iterations', [0]),
+    ('comm_cost', [0]),
+    ('plan_iterations', [500]),
+    ('experience', [0, 10, 100, 1000]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [0]),
+]
 
 
 def generate_args(trial_no):
@@ -795,7 +821,5 @@ def check_logs(vals, directory, log_found=False, min_count=1):
 
 
 if __name__ == '__main__':
-    generate_args(101)
-    generate_args(102)
-    generate_args(103)
+    generate_args(105)
     #check_logs(data_config[85], 'login.osgconnect.net/out/8-series/')
