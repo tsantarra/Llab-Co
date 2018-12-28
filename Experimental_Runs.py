@@ -795,10 +795,11 @@ baselines[105] = [
 
 
 def generate_args(trial_no):
-    vals = baselines[trial_no]
-    all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
-    for permutation in product(*all_vals):
-        print(' '.join(str(v) for v in permutation))
+    if trial_no in baselines:
+        vals = baselines[trial_no]
+        all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
+        for permutation in product(*all_vals):
+            print(' '.join(str(v) for v in permutation))
 
     vals = data_config[trial_no]
     all_vals = [val[1] for val in vals] + [['$(Cluster)'], ['$(Process)']]
@@ -806,20 +807,35 @@ def generate_args(trial_no):
         print(' '.join(str(v) for v in permutation))
 
 
+def check_logs(trial_no, directory, log_found=False, min_count=1):
+    if trial_no in baselines:
+        vals = baselines[trial_no]
+        filenames = listdir(directory)
+        for permutation in product(*list(val[1] for val in vals)):
+            file_start = 'data-' + '-'.join(map(str, permutation))
+            permutation_count = sum(1 for filename in filenames if filename.startswith(file_start))
 
+            if permutation_count < min_count:
+                print(' '.join(map(str, permutation)) + ' $(Cluster) $(Process)')
+            elif log_found:
+                print(' '.join(map(str, permutation)) + '\tFound ' + str(permutation_count))
 
-def check_logs(vals, directory, log_found=False, min_count=1):
+    vals = data_config[trial_no]
     filenames = listdir(directory)
     for permutation in product(*list(val[1] for val in vals)):
         file_start = 'data-' + '-'.join(map(str, permutation))
         permutation_count = sum(1 for filename in filenames if filename.startswith(file_start))
 
         if permutation_count < min_count:
-            print(' '.join(map(str, permutation)) + ' (Cluster) $(Process)')
+            print(' '.join(map(str, permutation)) + ' $(Cluster) $(Process)')
         elif log_found:
             print(' '.join(map(str, permutation)) + '\tFound ' + str(permutation_count))
 
 
 if __name__ == '__main__':
-    generate_args(105)
-    #check_logs(data_config[85], 'login.osgconnect.net/out/8-series/')
+    #generate_args(105)
+    check_logs(94, 'login.osgconnect.net/out/')
+    check_logs(96, 'login.osgconnect.net/out/')
+    check_logs(101, 'login.osgconnect.net/out/')
+    check_logs(102, 'login.osgconnect.net/out/')
+    check_logs(105, 'login.osgconnect.net/out/')
