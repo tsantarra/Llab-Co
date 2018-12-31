@@ -4,7 +4,8 @@ from utils.json_log_reader import *
 from matplotlib.pyplot import *
 from pandas import Series
 from analysis.plot_tools import *
-from scipy.stats import mannwhitneyu
+from scipy.stats import mannwhitneyu, median_test, ttest_ind, fisher_exact
+from scipy.stats.mstats import kruskalwallis
 
 T_SCORE = 2.01  # 95% Confidence Interval
 
@@ -270,28 +271,44 @@ if __name__ == '__main__':
 
     warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
 
-    tabs = Counter()
+    trial = 105
+    groups = ['heuristic_id', 'experience']  # 'comm_iterations', 'comm_branch_factor']
 
-    baseline = read_files_for_experiment(data_dir, 74, filter=lambda f: filter_by_filename(f, comm_iterations=0))['End Trial']
-    # for ci in [1, 5, 10, 15, 20]:
-    #     for bf in [1, 2, 3, 5]:
-    data = read_files_for_experiment(data_dir, 74,
-                                     filter=lambda f: filter_by_filename(f,))
-    grouped = data['End Trial'].groupby(['heuristic_id'], as_index=False)
-    # print(f'Iterations={ci}, Branch={bf}')
+    tabs = Counter()
+    baseline = read_files_for_experiment(data_dir, trial, filter=lambda f: filter_by_filename(f, comm_iterations=0))['End Trial']
+    data = read_files_for_experiment(data_dir, trial, filter=lambda f: filter_by_filename(f,))
+
+    grouped = data['End Trial'].groupby(groups, as_index=False)
 
     alpha = 0.05
     for group, group_df in grouped:
-        u, p = mannwhitneyu(group_df['Reward'], baseline['Reward'], alternative='greater')
+        #statistic, p = mannwhitneyu(group_df['Reward'].values,  baseline['Reward'].values, alternative='greater')
+        #statistic, p = kruskalwallis(group_df['Reward'].values,  baseline['Reward'].values)
+        #statistic, p, med, tbl = median_test(group_df['Reward'].values,  baseline['Reward'].values, ties='above')
+        statistic, p = ttest_ind(group_df['Reward'].values,  baseline['Reward'].values, equal_var=False)
 
         if p < alpha:
-            print(group, group_df['Reward'].mean(), baseline['Reward'].mean(), u, p, '***')
-            tabs[group] += 1
+            print(group, group_df['Reward'].mean(), group_df['Reward'].var(),  baseline['Reward'].mean(), baseline['Reward'].var(), statistic, p, '***')
+            #tabs[group[0]] += 1
         else:
-            print(group, group_df['Reward'].mean(), baseline['Reward'].mean(), u, p)
+            print(group, group_df['Reward'].mean(), group_df['Reward'].var(),  baseline['Reward'].mean(), baseline['Reward'].var(), statistic, p, '')
 
-    #mann_whitney_u(grouped, baseline['End Trial'])
+        statistic, p = fisher_exact([   [
+                                            len(group_df[group_df['Reward'] > 0]),
+                                            len(group_df[group_df['Reward'] == 0])
+                                        ],
+                                        [
+                                            len(baseline[baseline['Reward'] > 0]),
+                                            len(baseline[baseline['Reward'] == 0])
+                                        ],
+                                    ], alternative='two-sided')
+
+        if p < alpha:
+            print(group, len(group_df[group_df['Reward'] > 0]), len(baseline[baseline['Reward'] > 0]), statistic, p, '***')
+            tabs[group[0]] += 1
+        else:
+            print(group, len(group_df[group_df['Reward'] > 0]), len(baseline[baseline['Reward'] > 0]), statistic, p, '')
+
 
     print('Tally')
-    for i in range(14):
-        print(i, tabs[i])
+    print('\n'.join(str(item) for item in sorted(tabs.items())))

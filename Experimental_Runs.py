@@ -670,7 +670,7 @@ data_config[96] = [
 data_config[101] = [
     ('process_no', [101]),
     ('scenario_id', [6]),
-    ('heuristic_id', list(range(14))),
+    ('heuristic_id', list(range(15))),
     ('comm_branch_factor', [1, 3, 5]),
     ('comm_iterations', [1, 10, 20]),
     ('comm_cost', [5]),
@@ -698,7 +698,7 @@ baselines[101] = [
 data_config[102] = [
     ('process_no', [102]),
     ('scenario_id', [6]),
-    ('heuristic_id', list(range(14))),
+    ('heuristic_id', list(range(15))),
     ('comm_branch_factor', [5]),
     ('comm_iterations', [10]),
     ('comm_cost', [1, 5, 10, 99]),
@@ -726,7 +726,7 @@ baselines[102] = [
 data_config[103] = [
     ('process_no', [103]),
     ('scenario_id', [6]),
-    ('heuristic_id', list(range(14))),
+    ('heuristic_id', list(range(15))),
     ('comm_branch_factor', [5]),
     ('comm_iterations', [10]),
     ('comm_cost', [5]),
@@ -754,7 +754,7 @@ baselines[103] = [
 data_config[104] = [
     ('process_no', [104]),
     ('scenario_id', [6]),
-    ('heuristic_id', list(range(14))),
+    ('heuristic_id', list(range(15))),
     ('comm_branch_factor', [5]),
     ('comm_iterations', [20]),
     ('comm_cost', [5]),
@@ -782,7 +782,7 @@ baselines[104] = [
 data_config[105] = [
     ('process_no', [105]),
     ('scenario_id', [7]),
-    ('heuristic_id', list(range(14))),
+    ('heuristic_id', list(range(15))),
     ('comm_branch_factor', [5]),
     ('comm_iterations', [10]),
     ('comm_cost', [5]),
@@ -846,7 +846,11 @@ def check_logs(trial_no, directory, log_found=False, min_count=1):
 
 
 if __name__ == '__main__':
+    generate_args(101)
+    generate_args(102)
+    generate_args(103)
     generate_args(104)
+    generate_args(105)
     #check_logs(94, 'login.osgconnect.net/out/')
     #check_logs(96, 'login.osgconnect.net/out/')
 
