@@ -18,6 +18,7 @@ where
 from json import loads
 from os import listdir
 from os.path import isfile, join
+from csv import writer
 
 import warnings
 
@@ -84,11 +85,7 @@ def read_files_for_experiment(directory, experiment_no, filter=lambda f: True):
                                                   and f.endswith('.log')):
         params, df = read(join(directory, file))
 
-        if df.empty:
-            skipped_files.append(file)
-            continue
-
-        if df['levelname'].isin(['ERROR']).any():
+        if df.empty or df['levelname'].isin(['ERROR']).any():
             skipped_files.append(file)
             continue
 
@@ -123,5 +120,38 @@ def remove_nan_cols(dataframe):
     return dataframe.dropna(axis=1, how='all')
 
 
+def compile_to_csv(directory):
+    data = []
+    skipped_files = []
+
+    for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.endswith('.log')):
+        print(file)
+        params, df = read(join(directory, file))
+        if not data:
+            data.append([key for key, val in sorted(params.items())])
+
+        if df.empty or df['levelname'].isin(['ERROR']).any():
+            skipped_files.append(file)
+            continue
+
+        df[['Trial']] = df[['Trial']].fillna(method='ffill')
+        groups = df.groupby(['message'])
+        ends = groups.get_group('End Trial')
+
+        n = len(ends)
+        successes = len(ends[ends['Reward'] > 0.0])
+        avg = ends['Reward'].mean(axis=0)
+        std = ends['Reward'].std(axis=0)
+
+        data.append([val for key, val in sorted(params.items())] + [n, successes, avg, std])
+
+    if skipped_files:
+        print('Files skipped:\n\t' + '\n\t'.join(skipped_files))
+
+    with open('../data_aggregates.csv', 'w', newline='') as csvfile:
+        csv_writer = writer(csvfile)
+        csv_writer.writerows(data)
+
+
 if __name__ == '__main__':
-    check_for_errors(data_dir)
+    compile_to_csv(data_dir)

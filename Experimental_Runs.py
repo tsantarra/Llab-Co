@@ -834,8 +834,10 @@ def check_logs(trial_no, directory, log_found=False, min_count=1):
 
 if __name__ == '__main__':
     #generate_args(105)
-    check_logs(94, 'login.osgconnect.net/out/')
-    check_logs(96, 'login.osgconnect.net/out/')
+    #check_logs(94, 'login.osgconnect.net/out/')
+    #check_logs(96, 'login.osgconnect.net/out/')
+
     check_logs(101, 'login.osgconnect.net/out/')
     check_logs(102, 'login.osgconnect.net/out/')
+    check_logs(103, 'login.osgconnect.net/out/')
     check_logs(105, 'login.osgconnect.net/out/')
