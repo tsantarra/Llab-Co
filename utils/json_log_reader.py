@@ -121,14 +121,28 @@ def remove_nan_cols(dataframe):
 
 
 def compile_to_csv(directory):
-    data = []
     skipped_files = []
+    header = [
+        'process_no',
+        'scenario_id',
+        'heuristic_id',
+        'comm_branch_factor',
+        'comm_iterations',
+        'comm_cost',
+        'plan_iterations',
+        'experience',
+        'trials',
+        'alpha',
+        'policy_cap',
+        'successes',
+        'avg',
+        'std',
+    ]
+    data = [header]
 
     for file in (f for f in listdir(directory) if isfile(join(directory, f)) and f.endswith('.log')):
         print(file)
-        params, df = read(join(directory, file))
-        if not data:
-            data.append([key for key, val in sorted(params.items())])
+        file_data, df = read(join(directory, file))
 
         if df.empty or df['levelname'].isin(['ERROR']).any():
             skipped_files.append(file)
@@ -138,12 +152,11 @@ def compile_to_csv(directory):
         groups = df.groupby(['message'])
         ends = groups.get_group('End Trial')
 
-        n = len(ends)
-        successes = len(ends[ends['Reward'] > 0.0])
-        avg = ends['Reward'].mean(axis=0)
-        std = ends['Reward'].std(axis=0)
+        file_data['successes'] = len(ends[ends['Reward'] > 0.0])
+        file_data['avg'] = ends['Reward'].mean(axis=0)
+        file_data['std'] = ends['Reward'].std(axis=0)
 
-        data.append([val for key, val in sorted(params.items())] + [n, successes, avg, std])
+        data.append([file_data[key] for key in header])
 
     if skipped_files:
         print('Files skipped:\n\t' + '\n\t'.join(skipped_files))

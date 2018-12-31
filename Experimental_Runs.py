@@ -750,11 +750,11 @@ baselines[103] = [
     ('policy_cap', [0]),
 ]
 
-# 104 -  Vary experience with policy cap  --------------------- TODO
+# 104 -  Vary experience with policy cap
 data_config[104] = [
     ('process_no', [104]),
     ('scenario_id', [6]),
-    ('heuristic_id', [0, 4, 11, 12]),       # Find top heuristics befre
+    ('heuristic_id', list(range(14))),
     ('comm_branch_factor', [5]),
     ('comm_iterations', [20]),
     ('comm_cost', [5]),
@@ -762,7 +762,20 @@ data_config[104] = [
     ('experience', [10, 100, 1000]),
     ('trials', [50]),
     ('alpha', [0]),
-    ('policy_cap', [0, 5, 25, 125])
+    ('policy_cap', [5, 25, 125])
+]
+baselines[104] = [
+    ('process_no', [104]),
+    ('scenario_id', [6]),
+    ('heuristic_id', [0]),
+    ('comm_branch_factor', [0]),
+    ('comm_iterations', [0]),
+    ('comm_cost', [0]),
+    ('plan_iterations', [500]),
+    ('experience', [10, 100, 1000]),
+    ('trials', [50]),
+    ('alpha', [0]),
+    ('policy_cap', [5, 25, 125]),
 ]
 
 # 105 - Domain structure
@@ -833,11 +846,11 @@ def check_logs(trial_no, directory, log_found=False, min_count=1):
 
 
 if __name__ == '__main__':
-    #generate_args(105)
+    generate_args(104)
     #check_logs(94, 'login.osgconnect.net/out/')
     #check_logs(96, 'login.osgconnect.net/out/')
 
-    check_logs(101, 'login.osgconnect.net/out/')
-    check_logs(102, 'login.osgconnect.net/out/')
-    check_logs(103, 'login.osgconnect.net/out/')
-    check_logs(105, 'login.osgconnect.net/out/')
+    # check_logs(101, 'login.osgconnect.net/out/')
+    # check_logs(102, 'login.osgconnect.net/out/')
+    # check_logs(103, 'login.osgconnect.net/out/')
+    # check_logs(105, 'login.osgconnect.net/out/')
