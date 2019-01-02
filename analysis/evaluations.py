@@ -20,7 +20,7 @@ def compare_success_rate(data_by_message):
 
     for i, (group, df) in enumerate(grouped_data):
         successes[i] = len(df[df['Reward'] == 100.0])
-        failures[i] = len(df[df['Reward'] == 0.0])
+        failures[i] = len(df[df['Reward'] <= 0.0])
 
     return stackedbarplot(x_data=groups,
                           y_data_list=[successes, failures],
@@ -151,12 +151,12 @@ def compare_end_utility_error_bars_grouped_treatments(grouped_data, treatment_va
     return ax
 
 
-def filter_by_filename(filename, process=None, scenario_id=None, heuristic_id=None, comm_branch_factor=None,
+def filter_by_filename(filename, experiment=None, scenario_id=None, heuristic_id=None, comm_branch_factor=None,
                        comm_iterations=None, comm_cost=None, plan_iterations=None, experience=None, alpha=None,
                        policy_cap=None):
-    _, proc, scen, h, bf, ci, cc, pi, exp, _, a, pc, _, _ = filename.split('-')
-    params = [proc, scen, h, bf, ci, cc, pi, exp, a, pc]
-    filters = [process, scenario_id, heuristic_id, comm_branch_factor, comm_iterations, comm_cost, plan_iterations,
+    _, exp_no, scen, h, bf, ci, cc, pi, exp, _, a, pc, _, _ = filename.split('-')
+    params = [exp_no, scen, h, bf, ci, cc, pi, exp, a, pc]
+    filters = [experiment, scenario_id, heuristic_id, comm_branch_factor, comm_iterations, comm_cost, plan_iterations,
                experience, alpha, policy_cap]
 
     return all(filter is None or
@@ -266,49 +266,178 @@ def mann_whitney_u(grouped_data, baseline, alpha=0.05):
             print(group, group_df['Reward'].mean(), baseline['Reward'].mean(), u, p)
 
 
+def output_table(group_cols, header_cols, baseline, data, alpha=0.05, caption='CAPTION'):
+    """
+    Example header:
+        group_cols (separated) & trials & successes & p vs baseline & Avg Util & Util std & p vs baseline \\
+
+    """
+    assert len(group_cols) == len(header_cols)
+    sep = '\t&\t'
+    end = '\t\\\\\n'
+
+    # Begin Table
+    print("\\begin{spacing}{1.0}\n\\begin{longtable}{" +
+          'c'*(len(header_cols)+6) + "}\n\\caption{" +
+          caption +
+          "}\\label{tab:}\\\\\n\\toprule")
+
+    # Header
+    header1 = ['']*(len(header_cols) + 3) + ['\\multicolumn{2}{c}{Reward}'] + ['']
+    print(*header1, sep=sep, end='\t\\\\ \n')
+    header2 = list(header_cols) + ['Trials', 'Successes', '$p_{success}$', 'Avg.', 'Std.', '$p_{util}$']
+    print(*header2, sep=sep, end='\t\\\\ \\midrule\n')
+
+    # Baseline
+    baseline_successes = len(baseline[baseline['Reward'] > 0])
+    baseline_failures = len(baseline[baseline['Reward'] <= 0])
+    baseline_mean = baseline["Reward"].mean()
+    baseline_std = baseline["Reward"].std()
+    values = [baseline[col].iloc[0] for col in group_cols]
+    values += [
+        len(baseline),
+        baseline_successes,
+        'N/A',
+        f'{baseline_mean:0.2f}',
+        f'{baseline_std:0.2f}',
+        'N/A',
+    ]
+    print(*values, sep=sep, end='\t\\\\ \\hline\n')
+
+    # Data
+    for group, group_df in data.groupby(group_cols, as_index=False):
+        # test means
+        mean = group_df['Reward'].mean()
+        mean_statistic, mean_p = ttest_ind(group_df['Reward'].values, baseline['Reward'].values, equal_var=False)
+
+        # test success rate
+        successes = len(group_df[group_df['Reward'] > 0.0])
+        failures = len(group_df[group_df['Reward'] <= 0.0])
+        binom_statistic, binom_p = fisher_exact([[
+                successes,
+                failures,
+            ],
+            [
+                baseline_successes,
+                baseline_failures,
+            ],
+        ], alternative='greater')
+
+        try:
+            values = list(group)
+        except TypeError:
+            values = [group]
+
+        values += [
+                len(group_df),
+                successes,
+                f'${binom_p:0.3f}^*$' if (binom_p < alpha and successes > baseline_successes) else f'{binom_p:0.3f}',
+                #f'\\textbf{{{binom_p:0.3f}}}' if binom_p < alpha else f'{binom_p:0.3f}',
+                f'{group_df["Reward"].mean():0.2f}',
+                f'{group_df["Reward"].std():0.2f}',
+                f'${mean_p:0.3f}^*$' if (mean_p < alpha and mean > baseline_mean) else f'{mean_p:0.3f}',
+                #f'\\textbf{{{mean_p:0.3f}}}' if mean_p < alpha else f'{mean_p:0.3f}',
+            ]
+        print(*values, sep=sep, end=end)
+
+
+    # End Table
+    print("""\\bottomrule\n\\normalsize\n\\end{longtable}\n\\end{spacing}""", '\n\n')
+
+
+def table_101():
+    experiment = 101
+    print(f'% {experiment}')
+    groups = ['heuristic_id', ]
+    group_labels = ['Heuristic', ]
+
+    for it in [1, 10, 20]:
+        for bf in [1, 3, 5]:
+            base_filter = lambda f: filter_by_filename(f, experiment=experiment, comm_iterations=0)
+            data_filter = lambda f: filter_by_filename(f, experiment=experiment, comm_iterations=it, comm_branch_factor=bf)
+
+            baseline = read_files_for_experiment(data_dir, experiment, filter=base_filter)['End Trial']
+            data = read_files_for_experiment(data_dir, experiment, filter=data_filter)['End Trial']
+
+            output_table(groups, group_labels, baseline, data,
+                         caption=f'Heuristics evaluation with communication branch factor, bf={bf}, and {it} iterations per search step.')
+
+
+def table_102():
+    experiment = 102
+    print(f'% {experiment}')
+    groups = ['heuristic_id', ]
+    group_labels = ['Heuristic', ]
+
+    for cost in [1, 5, 10, 99]:
+        baseline = read_files_for_experiment(data_dir, experiment, filter=lambda f: filter_by_filename(f, experiment=experiment, comm_iterations=0))['End Trial']
+        data = read_files_for_experiment(data_dir, experiment, filter=lambda f: filter_by_filename(f, experiment=experiment, comm_cost=cost))['End Trial']
+
+        output_table(groups, group_labels, baseline, data,
+                 caption=f'Agent coordinating with communication cost $C(\query)={cost}$.')
+
+
+def table_103():
+    experiment = 103
+    print(f'% {experiment}')
+    groups = ['heuristic_id', 'experience']
+    group_labels = ['Heuristic', 'Experience']
+
+    for exp in [0, 10, 100, 1000]:
+        baseline = read_files_for_experiment(data_dir, experiment, filter=lambda f: filter_by_filename(f, experiment=experiment, comm_iterations=0, experience=exp))['End Trial']
+        data = read_files_for_experiment(data_dir, experiment, filter=lambda f: filter_by_filename(f, experiment=experiment, experience=exp))['End Trial']
+
+        output_table(groups, group_labels, baseline, data,
+                     caption=f'Agent coordinating with {exp} episodes of past experience.')
+
+
+def table_104():
+    experiment = 104
+    print(f'% {experiment}')
+    groups = ['heuristic_id', 'experience', 'policy_cap']
+    group_labels = ['Heuristic', 'Experience', 'Teammate Policies']
+
+    for cap in [5, 25, 125]:
+        baseline = read_files_for_experiment(data_dir, experiment,
+                                             filter=lambda f: filter_by_filename(f,
+                                                                                 experiment=experiment,
+                                                                                 comm_iterations=0,
+                                                                                 policy_cap=cap))['End Trial']
+        data = read_files_for_experiment(data_dir, experiment,
+                                         filter=lambda f: filter_by_filename(f,
+                                                                             experiment=experiment,
+                                                                             comm_iterations=lambda ci: ci != 0,
+                                                                             policy_cap=cap))['End Trial']
+
+        output_table(groups, group_labels, baseline, data,
+                     caption=f'Agent coordinating with varying experience with {cap} maximum unique teammate policies.')
+
+
+def table_105():
+    experiment = 105
+    print(f'% {experiment}')
+    groups = ['heuristic_id', 'experience']
+    group_labels = ['Heuristic', 'Experience']
+
+    for exp in [0, 10, 100, 1000]:
+        baseline = read_files_for_experiment(data_dir, experiment, filter=lambda f: filter_by_filename(f, experiment=experiment, comm_iterations=0, experience=exp))['End Trial']
+        data = read_files_for_experiment(data_dir, experiment, filter=lambda f: filter_by_filename(f, experiment=experiment, experience=exp))['End Trial']
+
+        output_table(groups, group_labels, baseline, data,
+                     caption=f'Agent coordinating with {exp} past episodes of experience.')
+
+
 if __name__ == '__main__':
     import warnings
-
     warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
 
-    trial = 105
-    groups = ['heuristic_id', 'experience']  # 'comm_iterations', 'comm_branch_factor']
+    print('-'*100, '\n\n\n')
 
-    tabs = Counter()
-    baseline = read_files_for_experiment(data_dir, trial, filter=lambda f: filter_by_filename(f, comm_iterations=0))['End Trial']
-    data = read_files_for_experiment(data_dir, trial, filter=lambda f: filter_by_filename(f,))
-
-    grouped = data['End Trial'].groupby(groups, as_index=False)
-
-    alpha = 0.05
-    for group, group_df in grouped:
-        #statistic, p = mannwhitneyu(group_df['Reward'].values,  baseline['Reward'].values, alternative='greater')
-        #statistic, p = kruskalwallis(group_df['Reward'].values,  baseline['Reward'].values)
-        #statistic, p, med, tbl = median_test(group_df['Reward'].values,  baseline['Reward'].values, ties='above')
-        statistic, p = ttest_ind(group_df['Reward'].values,  baseline['Reward'].values, equal_var=False)
-
-        if p < alpha:
-            print(group, group_df['Reward'].mean(), group_df['Reward'].var(),  baseline['Reward'].mean(), baseline['Reward'].var(), statistic, p, '***')
-            #tabs[group[0]] += 1
-        else:
-            print(group, group_df['Reward'].mean(), group_df['Reward'].var(),  baseline['Reward'].mean(), baseline['Reward'].var(), statistic, p, '')
-
-        statistic, p = fisher_exact([   [
-                                            len(group_df[group_df['Reward'] > 0]),
-                                            len(group_df[group_df['Reward'] == 0])
-                                        ],
-                                        [
-                                            len(baseline[baseline['Reward'] > 0]),
-                                            len(baseline[baseline['Reward'] == 0])
-                                        ],
-                                    ], alternative='two-sided')
-
-        if p < alpha:
-            print(group, len(group_df[group_df['Reward'] > 0]), len(baseline[baseline['Reward'] > 0]), statistic, p, '***')
-            tabs[group[0]] += 1
-        else:
-            print(group, len(group_df[group_df['Reward'] > 0]), len(baseline[baseline['Reward'] > 0]), statistic, p, '')
+    table_101()  # search params
+    # table_103()  # exp
+    # table_104()  # pop cap
+    # table_102()  # cost
+    # table_105()   # domain structure
 
 
-    print('Tally')
-    print('\n'.join(str(item) for item in sorted(tabs.items())))
+
