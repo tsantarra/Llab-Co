@@ -274,13 +274,16 @@ def output_table(group_cols, header_cols, baseline, data, alpha=0.05, caption='C
     """
     assert len(group_cols) == len(header_cols)
     sep = '\t&\t'
-    end = '\t\\\\\n'
+    end = '\t\\\\'
 
     # Begin Table
-    print("\\begin{spacing}{1.0}\n\\begin{longtable}{" +
-          'c'*(len(header_cols)+6) + "}\n\\caption{" +
-          caption +
-          "}\\label{tab:}\\\\\n\\toprule")
+    # print("\\begin{spacing}{1.0}\n\\begin{longtable}{" +
+    #       'c'*(len(header_cols)+6) + "}\n\\caption{" +
+    #       caption +
+    #       "}\\label{tab:}\\\\\n\\toprule")
+    print("\\begin{table}[!h] \n\\centering \n\\footnotesize \n\\caption[" + caption+"]{" + caption +
+          "$\\mathbf{^*}$ denotes significant improvement over baseline.}%\\label{tab:} \n\\begin{tabular}{" +
+          'c'*(len(header_cols)+6)+"}\n\\toprule")
 
     # Header
     header1 = ['']*(len(header_cols) + 3) + ['\\multicolumn{2}{c}{Reward}'] + ['']
@@ -297,12 +300,49 @@ def output_table(group_cols, header_cols, baseline, data, alpha=0.05, caption='C
     values += [
         len(baseline),
         baseline_successes,
-        'N/A',
+        '---',
         f'{baseline_mean:0.2f}',
         f'{baseline_std:0.2f}',
-        'N/A',
+        '---',
     ]
+    values[0] = 'No Comm.'
     print(*values, sep=sep, end='\t\\\\ \\hline\n')
+
+    # subs
+    subs = {
+        0: '$\\sideset{}{_{E(\\action)}^{t}}\heuristic$',
+        1: '$\\sideset{}{_{MAE}^{t}}\heuristic$',
+        2: '$\\sideset{}{_{MSE}^{t}}\heuristic$',
+        3: '$\\sideset{}{_{E(\\teammatepolicy)}^{t}}\heuristic$',
+        4: '$\\sideset{}{_{\\voi}^{t}}\heuristic$',
+        5: '$\\sideset{^w}{_{E(\\action)}^{t}}\heuristic$',
+        6: '$\\sideset{^w}{_{MAE}^{t}}\heuristic$',
+        7: '$\\sideset{^w}{_{MSE}^{t}}\heuristic$',
+        8: '$\\sideset{^w}{_{E(\\teammatepolicy)}^{t}}\heuristic$',
+        9: '$\\sideset{^w}{_{\\voi}^{t}}\heuristic$',
+        10: '$\\sideset{}{_{E(\\teammatepolicy)}^{0}}\heuristic$',
+        11: '$\\sideset{}{_{\\voi}^{0}}\heuristic$',
+        12: '$\\sideset{}{_{U}^{t}}\heuristic$',
+        13: '$\\sideset{^w}{_{}^{t}}\heuristic$',
+        14: '$\\sideset{^w}{_{U}^{t}}\heuristic$',
+        }
+    subs = {
+        0: 'Action Entropy',
+        1: 'Mean Absolute Error',
+        2: 'Mean Squared Error',
+        3: '$\Delta$ Policy Entropy',
+        4: 'Approx. Value of Info.',
+        5: 'Weighted Action Entropy',
+        6: 'Weighted Mean Abs. Error',
+        7: 'Weighted Mean Sq. Error',
+        8: 'Weighted $\Delta$ Policy Ent.',
+        9: 'Weighted Approx. \\voi',
+        10: 'Immediate Policy Ent.',
+        11: 'Immediate Value of Info.',
+        12: 'Uniform Random',
+        13: 'State Likelihood',
+        14: 'Weighted Uniform Random',
+        }
 
     # Data
     for group, group_df in data.groupby(group_cols, as_index=False):
@@ -331,18 +371,24 @@ def output_table(group_cols, header_cols, baseline, data, alpha=0.05, caption='C
         values += [
                 len(group_df),
                 successes,
-                f'${binom_p:0.3f}^*$' if (binom_p < alpha and successes > baseline_successes) else f'{binom_p:0.3f}',
+                f'$\\mathbf{{{binom_p:0.3f}^*}}$' if (binom_p < alpha and successes > baseline_successes) else f'{binom_p:0.3f}',
                 #f'\\textbf{{{binom_p:0.3f}}}' if binom_p < alpha else f'{binom_p:0.3f}',
                 f'{group_df["Reward"].mean():0.2f}',
                 f'{group_df["Reward"].std():0.2f}',
-                f'${mean_p:0.3f}^*$' if (mean_p < alpha and mean > baseline_mean) else f'{mean_p:0.3f}',
+                f'$\\mathbf{{{mean_p:0.3f}^*}}$' if (mean_p < alpha and mean > baseline_mean) else f'{mean_p:0.3f}',
                 #f'\\textbf{{{mean_p:0.3f}}}' if mean_p < alpha else f'{mean_p:0.3f}',
             ]
-        print(*values, sep=sep, end=end)
+
+        # sub out heuristic id
+        h = values[0]
+        values[0] = subs[h]
+
+        print(*values, sep=sep, end=end + ('\\midrule\n' if h in [4, 9, 11] else '\n'))
 
 
     # End Table
-    print("""\\bottomrule\n\\normalsize\n\\end{longtable}\n\\end{spacing}""", '\n\n')
+    #print("""\\bottomrule\n\\normalsize\n\\end{longtable}\n\\end{spacing}""", '\n\n')
+    print("""\\bottomrule\n\\end{tabular}\n\\end{table}""", '\n\n')
 
 
 def table_101():
@@ -360,7 +406,7 @@ def table_101():
             data = read_files_for_experiment(data_dir, experiment, filter=data_filter)['End Trial']
 
             output_table(groups, group_labels, baseline, data,
-                         caption=f'Heuristics evaluation with communication branch factor, bf={bf}, and {it} iterations per search step.')
+                         caption=f'Heuristics evaluation with communication branch factor of {bf} and {it} iteration(s) per search step.')
 
 
 def table_102():
@@ -394,30 +440,33 @@ def table_103():
 def table_104():
     experiment = 104
     print(f'% {experiment}')
-    groups = ['heuristic_id', 'experience', 'policy_cap']
-    group_labels = ['Heuristic', 'Experience', 'Teammate Policies']
+    groups = ['heuristic_id',]# 'experience', 'policy_cap']
+    group_labels = ['Heuristic',]# 'Experience', 'Teammate Policies']
 
     for cap in [5, 25, 125]:
-        baseline = read_files_for_experiment(data_dir, experiment,
+        for exp in [10, 100, 1000]:
+            baseline = read_files_for_experiment(data_dir, experiment,
+                                                 filter=lambda f: filter_by_filename(f,
+                                                                                     experiment=experiment,
+                                                                                     comm_iterations=0,
+                                                                                     policy_cap=cap,
+                                                                                     experience=exp))['End Trial']
+            data = read_files_for_experiment(data_dir, experiment,
                                              filter=lambda f: filter_by_filename(f,
                                                                                  experiment=experiment,
-                                                                                 comm_iterations=0,
-                                                                                 policy_cap=cap))['End Trial']
-        data = read_files_for_experiment(data_dir, experiment,
-                                         filter=lambda f: filter_by_filename(f,
-                                                                             experiment=experiment,
-                                                                             comm_iterations=lambda ci: ci != 0,
-                                                                             policy_cap=cap))['End Trial']
+                                                                                 comm_iterations=lambda ci: ci != 0,
+                                                                                 policy_cap=cap,
+                                                                                 experience=exp))['End Trial']
 
-        output_table(groups, group_labels, baseline, data,
-                     caption=f'Agent coordinating with varying experience with {cap} maximum unique teammate policies.')
+            output_table(groups, group_labels, baseline, data,
+                         caption=f'Agent coordinating with {exp} experience with {cap} maximum unique teammate policies.')
 
 
 def table_105():
     experiment = 105
     print(f'% {experiment}')
-    groups = ['heuristic_id', 'experience']
-    group_labels = ['Heuristic', 'Experience']
+    groups = ['heuristic_id',]
+    group_labels = ['Heuristic']
 
     for exp in [0, 10, 100, 1000]:
         baseline = read_files_for_experiment(data_dir, experiment, filter=lambda f: filter_by_filename(f, experiment=experiment, comm_iterations=0, experience=exp))['End Trial']
@@ -427,17 +476,30 @@ def table_105():
                      caption=f'Agent coordinating with {exp} past episodes of experience.')
 
 
+def print_section(title):
+    print('\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\\clearpage\\section{' + title +
+          '}\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
+
 if __name__ == '__main__':
     import warnings
     warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
 
     print('-'*100, '\n\n\n')
 
+    print_section("Communication Search Parameters")
     table_101()  # search params
-    # table_103()  # exp
-    # table_104()  # pop cap
-    # table_102()  # cost
-    # table_105()   # domain structure
+
+    print_section("Past Experience")
+    table_103()  # exp
+
+    print_section("Population Dynamics")
+    table_104()  # pop cap
+
+    print_section("Communication Cost")
+    table_102()  # cost
+
+    print_section("Domain Structure")
+    table_105()   # domain structure
 
 
 

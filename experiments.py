@@ -226,6 +226,35 @@ def run_experiment(scenario, agent, teammate, comm_cost, comm_branch_factor, com
     return utility
 
 
+def compute_alphas(parameters):
+
+    # id -> param conversions
+    scenario = scenarios[parameters.scenario_id]
+
+    # Setup teammate generator
+    agent_identity, teammate_identity = scenario.agents()
+
+    teammate_generator = SampledTeammateGenerator(scenario=scenario,
+                                                  identity=teammate_identity,
+                                                  max_unique_policies=parameters.policy_cap
+                                                                      if parameters.policy_cap != 0
+                                                                      else inf)
+    for policy_cap in [5, 25, 125]:
+        teammate_generator.max_unique_policies = policy_cap
+
+        for exp in [0, 10, 100, 1000]:
+            alphas = 0
+
+            for trial in range(parameters.trials):
+                teammate_generator.reset_policy_set()
+                chinese_restaurant_process = initialize_crp(scenario, teammate_identity, exp,
+                                                            teammate_generator)
+                alphas += chinese_restaurant_process.compute_mle_alpha()
+
+            print(policy_cap, exp, alphas/parameters.trials)
+
+
+
 if __name__ == '__main__':
     assert len(sys.argv) == len(Parameters._fields) + 3, \
         'Improper arguments given: ' + ' '.join(str(i) for i in sys.argv) + '\nExpected: ' + \
@@ -241,7 +270,8 @@ if __name__ == '__main__':
     logger.info('Environment', extra={'Version': str(sys.version_info)})
 
     try:
-        run(parameters)
+        # run(parameters)
+        compute_alphas(parameters)
 
     except KeyboardInterrupt:
         print('KEYBOARD INTERRUPT')
