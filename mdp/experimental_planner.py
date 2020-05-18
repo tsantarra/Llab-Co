@@ -45,7 +45,6 @@ class StateNode:
         """
         self.state = state
         self.value = value
-        self.terminal = terminal
         self.complete = terminal
         self.action_nodes = None
         self.predecessors = {predecessor} if predecessor else set()
